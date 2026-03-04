@@ -166,8 +166,8 @@ const styles = {
   },
 
   bubbleSyncca: {
-    backgroundColor: Theme.colors.bubbleSyncca,
-    border:          `1px solid ${Theme.colors.bubbleBorder}`,
+    backgroundColor: Theme.colors.bgBubbleSyncca,
+    border:          `1px solid ${Theme.colors.border}`,
     borderRadius:    Theme.radius.bubbleIn,
     boxShadow:       Theme.shadows.bubble,
     fontFamily:      Theme.fonts.body,       // Lora — Syncca's voice
@@ -176,7 +176,7 @@ const styles = {
   },
 
   bubbleUser: {
-    backgroundColor: Theme.colors.bubbleUser,
+    backgroundColor: Theme.colors.bgBubbleUser,
     borderRadius:    Theme.radius.bubbleOut,
     fontFamily:      Theme.fonts.ui,         // DM Sans — user's voice
     fontSize:        Theme.fontSizes.md,
