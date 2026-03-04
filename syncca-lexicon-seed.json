@@ -1,0 +1,262 @@
+{
+  "table": "Relationship_Lexicon",
+  "description": "Seed data for Syncca's Relationship_Lexicon table in Airtable. Import via Airtable CSV import or the Airtable API. Field names must match exactly.",
+  "records": [
+    {
+      "fields": {
+        "English_Term": "Demand",
+        "Hebrew_Term": "דרישה",
+        "Description_EN": "A forceful expression of a need that creates a sense of threat and fear of sanctions in the other person. It triggers the limbic system and shuts down the cortex.",
+        "Description_HE": "דרישה היא ביטוי כוחני של צורך, והיא יוצרת אצל הצד השני תחושת איום וחשש שתגיע סנקציה אם לא יציית. זה מוריד אותו למערכת הלימבית ומכבה את הקורטקס."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Sanction",
+        "Hebrew_Term": "סנקציה",
+        "Description_EN": "Any unpleasant reaction when a need is not met (complaints, criticism, the cold shoulder). It's a powerful trigger that causes stress to the other and sends them to the limbic system.",
+        "Description_HE": "סנקציה היא כל תגובה לא נעימה של הדורש לאחר שהצורך שלו לא נענה, כמו פרצופים, תלונה, ביקורת, ועוד. זה טריגר עוצמתי שפוגע את הצד השני ויוצר סטרס, מכבה את הקורטקס ומעורר את המערכת הלימבית."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Functional Extension",
+        "Hebrew_Term": "שלוחת הביצוע",
+        "Description_EN": "Seeing the other person as an extension of oneself rather than an independent entity; believing one's way is the only right way and using force to achieve their needs.",
+        "Description_HE": "הדורש רואה באחר שלוחת ביצוע שלו, בטוח שהוא צודק, חושב שהוא יודע הכי טוב, ומפעיל כוחניות כדי להשיג את צרכיו. הוא כועס ומתוסכל כאשר לא מצייתים לו."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Hierarchy",
+        "Hebrew_Term": "היררכיה",
+        "Description_EN": "Relationships should be non-hierarchical. Demands trigger resistance and push the other person into either compliance (to avoid sanctions) or a power struggle.",
+        "Description_HE": "בזוגיות לא אמורה להיות היררכיה, לכן כאשר מופיעה דרישה היא מעוררת התנגדות ומפעילה את המערכת הלימבית של הנדרש והוא נכנס או לריצוי כדי להימנע מסנקציה או למלחמת כוח כדי להחזיר לעצמו את תחושת הכוח."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Counter-Sanction",
+        "Hebrew_Term": "סנקציה על סנקציה",
+        "Description_EN": "An escalation where one sanction triggers another from the partner, leading to a limbic clash where neither side can truly see the other.",
+        "Description_HE": "כמעט תמיד סנקציה גוררת תגובה של סנקציה מהצד השני שלא נשאר חייב ולרוב יש הסלמה של שתי מערכות לימביות שכל אחת רואה רק את עצמה."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Compliance",
+        "Hebrew_Term": "ריצוי",
+        "Description_EN": "Acting out of fear of conflict rather than choice. This results in poor quality of execution, procrastination, and deep-seated resentment.",
+        "Description_HE": "המרצה מבצע את הדרישה כדי להימנע מסנקציה או עימות, אך עושה זאת באיכות ירודה, בדחיינות, מרגיש מוחלש ומפתח טינה עמוקה כלפי הדורש."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "War Mode",
+        "Hebrew_Term": "מלחמה",
+        "Description_EN": "A state of active resistance, power struggles, and tension. Cooperation stops, and shared goals are neglected in favor of mutual threats.",
+        "Description_HE": "כאשר דרישה יוצרת התנגדות פעילה בצד השני, ויכוחים ומלחמות כוח. נוצר מצב של מתח ואיומים שבו דברים לא מתבצעים, אין שיתוף פעולה ואין התקדמות במטרות המשותפות."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Compliance-War Cycle",
+        "Hebrew_Term": "מעגל הריצוי והמלחמה",
+        "Description_EN": "A destructive cycle where accumulated resentment from compliance eventually explodes into frequent heated arguments.",
+        "Description_HE": "ככל שדפוסי הריצוי מעמיקים – קורים פיצוצים מידי פעם של מלחמה בהם כל הטינה שהצטברה פורצת החוצה. האירועים האלו נעשים יותר ויותר שכיחים."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Injury Time",
+        "Hebrew_Term": "זמן פציעות",
+        "Description_EN": "The period of withdrawal or silence following a sanction. It is not just a break, but a time when love withers due to a lack of loving gestures.",
+        "Description_HE": "זמן פציעות – אותו זמן של ברוגז, שתיקה או ריחוק בעקבות סנקציה – הוא לא סתם הפסקה, אלא זמן שבו האהבה גוועת מרעב מחוסר במחוות אוהבות."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Biological Shift",
+        "Hebrew_Term": "הסטה ביולוגית",
+        "Description_EN": "The concept that the brain operates in different modes: the regulatory Cortex, the egocentric Limbic system, or the survivalist Reptilian brain.",
+        "Description_HE": "בכל רגע נתון המוח נשלט על ידי אחד משלושת החלקים: הקורטקס החושב שמסוגל לתכנן, לווסת ולעבד, המערכת הלימבית האגוצנטרית, ייצרית ורגשית, והמוח הזוחלי הקדום הישרדותי."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Reptilian Brain",
+        "Hebrew_Term": "מוח זוחלי",
+        "Description_EN": "Manages critical systems (breathing, heart rate, digestion). It floods the body with adrenaline during perceived danger, triggering fight, flight, or freeze reflexes.",
+        "Description_HE": "המוח הזוחלי מנהל את מערכות הגוף הכי קריטיות כמו נשימה, זרימת הדם והעיכול, מציף באדרנלין כאשר הוא חש סכנה חמורה ומפעיל אינסטינקטיבית רפלקס של לחימה או בריחה או קפיאה."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Limbic System",
+        "Hebrew_Term": "המערכת הלימבית",
+        "Description_EN": "Driven by impulses and emotions; often hyper-vigilant (Amygdala). It is focused on self-preservation and may attack or withdraw to reduce anxiety.",
+        "Description_HE": "המערכת הלימבית, היונקית, מלאה דחפים ותשוקות ומוצפת רגשות, נוטה לדריכות יתר (אמיגדלה). עסוקה בלקדם רק את עצמה ומוכנה לתקוף אם צריך או לברוח ולנתק מגע כדי לשרוד ולהפחית חרדה."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Cortex",
+        "Hebrew_Term": "קורטקס",
+        "Description_EN": "The rational brain. It processes data, regulates emotions, and makes decisions based on values, goals, life experience and the ability to see both oneself and the other.",
+        "Description_HE": "הקורטקס משקלל נתונים שהוא מקבל מהמערכת הלימבית ומהמוח הזוחלי אבל גם מנתונים שהוא קולט בסביבה. הוא יכול לראות את האחר ואת עצמו, מעבד ומווסת, ומקבל החלטות מבוססות ניסיון חיים, מטרות וערכים."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Separateness",
+        "Hebrew_Term": "נפרדות",
+        "Description_EN": "The ability of an individual to perceive themselves as a distinct entity, with desires, thoughts, and feelings independent of others. This process (Separation-Individuation) allows us to maintain healthy connections and intimacy without losing our sense of self.",
+        "Description_HE": "נפרדות היא היכולת של אדם לתפוס את עצמו כיישות עצמאית, בעלת רצונות, מחשבות ורגשות השונים מאחרים. זהו תהליך פסיכולוגי המאפשר לקיים קשרים בריאים מבלי לוותר על עצמך בתוך מערכת יחסים."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Clean Request",
+        "Hebrew_Term": "בקשה נקייה",
+        "Description_EN": "Expressing a need directly while granting the other person total freedom to choose. This keeps the listener in their cortex, allowing for a yes based on love and not on fear.",
+        "Description_HE": "היכולת לבטא צורך שלי בצורה ישירה תוך יכולת לראות את הצד השני ולתת לו את חופש הבחירה האם להיענות לבקשתי או לא. פנייה כזאת משאירה את השומע בקורטקס ויוצרת עבורו הזדמנות למחוות היענות מתוך אהבה ולא מפחד."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Separateness Recognition",
+        "Hebrew_Term": "הכרה בנפרדות",
+        "Description_EN": "Remembering that my need is a potential disturbance to my partner's natural flow. They are an independent entity, not my functional extension.",
+        "Description_HE": "היכולת לזכור שהצורך נולד אצלי ואני בעצם גורמת לבן הזוג הפרעה מסוימת לזרימה הטבעית שלו. הוא לא שלוחת הביצוע שלי אלא ישות נפרדת שונה ממני."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Plan B",
+        "Hebrew_Term": "תוכנית ב",
+        "Description_EN": "Taking personal responsibility for my needs. Knowing what I will do if the answer is no (do it myself, ask someone else, or let it go) reduces pressure and makes the other feel free and calm. Note: excessive use of Plan B may create distance.",
+        "Description_HE": "תוכנית ב היא לקיחת האחריות שלי על הצרכים שלי. מה אעשה אם יגידו לי לא: אבקש ממישהו אחר, אבצע בעצמי, או אוותר על הצורך. הגישה הזו מפחיתה לחץ ומשדרת קבלה ומשאירה את הצד ששומע רגוע וחופשי. שים לב: שימוש יתר בתוכנית ב עלול ליצור ריחוק."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Zero-Sanction Policy",
+        "Hebrew_Term": "בלי סנקציות",
+        "Description_EN": "A commitment to be aware of one's tendency to use sanctions and taking full responsibility to avoid them when a request is denied.",
+        "Description_HE": "המבקש חותר להיות מודע לסנקציות שהוא עלול ואף נוטה לעשות, ולוקח אחריות לא לעשות אותן לאחר אי היענות לבקשתו."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Request Test",
+        "Hebrew_Term": "בקשה או דרישה",
+        "Description_EN": "A clean request does not need to sound nice. It is judged by the aftermath: if a no is followed by a sanction, it was a demand in disguise.",
+        "Description_HE": "בקשה נקייה לא צריכה להיות מתקתקה, היא יכולה להיות עניינית וישירה. רק אם מופיעה אחר כך סנקציה זו בעצם היתה דרישה שהתחפשה לבקשה."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Yes Logic",
+        "Hebrew_Term": "למה כן",
+        "Description_EN": "When free from the fear of sanctions, a person can stay in their cortex and find genuine joy in fulfilling their partner's need as an act of love.",
+        "Description_HE": "המבוקש, שאינו חושש מסנקציה, נשאר בקורטקס ומצליח לראות גם את עצמו וגם את צרכי בן הזוג המבקש, ונוצרת הזדמנות עבורו לשמח את בן הזוג. כן הוא אקט של אהבה."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "No Logic",
+        "Hebrew_Term": "למה לא",
+        "Description_EN": "No is a legitimate way to protect one's resources (time, energy) or values. It is a healthy boundary, not a rejection of love.",
+        "Description_HE": "אדם אומר לא כשהבקשה מייצרת הפרעה גדולה מדי למשאביו (זמן, אנרגיה, עייפות) או כשהיא מתנגשת עם הערכים או ההתחייבויות הקודמות שלו. זה לגיטימי, כי כך הוא שומר על עצמו."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Yes Bonus",
+        "Hebrew_Term": "כן עם בונוס",
+        "Description_EN": "Receiving a yes to a clean request provides the need itself plus the bonus of feeling truly seen and loved, plus a high quality of execution.",
+        "Description_HE": "תשובה חיובית על בקשה נקייה היא נעימה מאד: גם קיבלתי את הצורך, גם באיכות ביצוע טובה, פלוס בונוס: להרגיש נאהבת, רואים אותי."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "No Value",
+        "Hebrew_Term": "לא עם בונוס",
+        "Description_EN": "Accepting no protects the partner's well-being and prevents burnout, fostering an environment of true freedom and long-term honesty.",
+        "Description_HE": "קבלת לא מייצרת אכזבה כפולה (כי הצורך לא סופק, אולי הוא לא מספיק אוהב אותי?). אך ברובד העמוק, קבלת הלא מאפשרת תקשורת אמיתית וחופשית ומונעת שחיקה."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Needs Responsiveness",
+        "Hebrew_Term": "הקשבה והיענות לצרכים",
+        "Description_EN": "The foundation of a loving bond: being attentive and responsive to the other's needs, signaling your well-being matters to me.",
+        "Description_HE": "הקשבה, רגישות והיענות לצרכים של האחר. זה הבסיס לקשר אוהב. זה משדר: חשוב לי שיהיה לך טוב."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Affirmative Communication",
+        "Hebrew_Term": "תקשורת חיובית",
+        "Description_EN": "Respectful and appreciative communication, including warm body language, validation, and the ability to have deep, meaningful conversations.",
+        "Description_HE": "תקשורת נעימה, חמה, מכבדת בשפת הגוף ובמילים, פרגון, הוקרה, התעניינות. וגם היכולת לנהל שיחות עומק טובות על עניינים ובעיות חשובות."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Bonding Actions",
+        "Hebrew_Term": "פעולות גיבוש זוגי",
+        "Description_EN": "Creating intentional time for shared joy, from physical intimacy to shared hobbies and experiences that strengthen the bond.",
+        "Description_HE": "פינוי זמן לחוויות זוגיות כייפיות מחיבוק וסקס ועד טיול ובילוי. חוויות של גיבוש זוגי."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Communicate A Need",
+        "Hebrew_Term": "לתקשר צורך",
+        "Description_EN": "Expressing a need as a clean request instead of complaining or blaming. If unmet over time, inviting the partner to a Deep Dialogue.",
+        "Description_HE": "היכולת לבטא צורך או משהו שמפריע, ולבקש אותו בתור בקשה נקייה במקום להתלונן, לנזוף, להאשים. במידה ולאורך זמן אין היענות רצוי להזמין את בן הזוג לשיחת עומק על הנושא."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Holding Environment",
+        "Hebrew_Term": "החזקה",
+        "Description_EN": "The ability to create a safe emotional space where one can express difficulty, vulnerability, or anger without fear of rejection or escalation. It combines steady presence with healthy boundaries and gentle challenge.",
+        "Description_HE": "החזקה בין בני זוג היא היכולת ליצור עבור האחר מרחב רגשי בטוח שבו ניתן לבטא קושי, פגיעות או כעס מבלי לחשוש מדחייה, זלזול או הסלמה. היא משלבת נוכחות יציבה והכלה עם שמירה על גבולות ואתגור עדין."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Deep Dialogue",
+        "Hebrew_Term": "שיחת עומק",
+        "Description_EN": "A structured conversation where the speaker shares their experience without blame, and the listener reflects back with empathy to ensure clarity.",
+        "Description_HE": "ניהול שיחה מתוכננת ומוסכמת בה המשמיע מדבר עם פוקוס על עצמו – משתף חוויה, רגש, מחשבה – ללא ביקורת והאשמות, והמקשיב משקף באמפתיה לפני שמגיב, כדי לוודא שהבין מה נאמר, וכדי ליצור רוגע."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Reframing",
+        "Hebrew_Term": "מיסגור מחדש",
+        "Description_EN": "Identifying the positive need behind a partner's anger and expressing it with respect, allowing them to feel seen and release the anger.",
+        "Description_HE": "היכולת לזהות את הצורך שהניע את האחר לכעוס. כאשר מצליחים לזהות זאת ולהגיד את הצורך במילים חיוביות ומכבדות – הצד השני מסוגל לוותר על הכעס כי הוא מרגיש שרואים אותו."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Self-Reframing",
+        "Hebrew_Term": "מיסגור מחדש לעצמי",
+        "Description_EN": "Identifying the root of your own anger (pain, fear, or a core value) and expressing that vulnerability instead of projecting anger outward.",
+        "Description_HE": "היכולת לזהות בעצמך את המקור שגרם לכעס שלך ולבטא במילים את מה שהיה לך חשוב או כואב או מדאיג – במקום להשפריץ כעס."
+      }
+    },
+    {
+      "fields": {
+        "English_Term": "Healing Apology",
+        "Hebrew_Term": "התנצלות מרפאת",
+        "Description_EN": "Acknowledging the harmful action, validating the partner's feelings, and committing to practical steps to prevent it from happening again.",
+        "Description_HE": "היכולת של המתנצל להכיר במה הוא עשה שפגע, מה הרגיש זה שנפגע, ומה הוא לוקח על עצמו בצורה מעשית ויישומית כדי שזה לא יקרה בעתיד."
+      }
+    }
+  ]
+}
