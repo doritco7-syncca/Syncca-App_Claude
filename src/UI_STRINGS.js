@@ -22,16 +22,19 @@ export const UI_STRINGS = {
 
   // ── Login / Welcome Screen ──────────────────────────────────
   login: {
-    headline:    { en: "The Space for Conscious Love", he: "המרחב שבו אהבה מודעת נולדת" },
+    headline:    { en: "The Space for Conscious Love", he: "המרחב שבו האהבה נושמת" },
     subheadline: {
       en: "We are here to help you replace the day of fighting with a day of love. To replace the language of demands with the loving language of directness, and to find yourself again.",
-      he: "אנחנו כאן כדי לעזור לך להחליף את יום המריבה ביום אהבה. להחליף את שפת הדרישות בשפה האוהבת של הישירות, ולמצוא את עצמך שוב."
+      he: "אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים"
+            he: "יום אחר יום את האהבה, בשפה של תקשורת ישירה"            
+he: "ובוגרת, שרואה גם את העצמי וגם את האחר",
+"",
     },
     emailLabel:       { en: "Email", he: "אימייל" },
     emailPlaceholder: { en: "judi@gmail.com", he: "judi@gmail.com" },
-    ctaButton:        { en: "Start a Session with Syncca", he: "שניכנס לסינקה?" },
+    ctaButton:        { en: "Start a Session with Syncca", he: "שניכנס ל"סינק?" },
     ctaIcon:          { en: "↺", he: "↺" },
-    backToLogin:      { en: "Back to home page", he: "חזירה לספר הבית" },
+    backToLogin:      { en: "Back to home page", he: "חזרה למסך הבית" },
     secureNote:       { en: "Secure & Private Connection", he: "חיבור מאובטח ופרטי" },
   },
 
@@ -40,7 +43,7 @@ export const UI_STRINGS = {
     welcomeBack:    { en: "Welcome back to Syncca", he: "ברוכים הבאים לסינקה" },
     instruction:    {
       en: "To start, save your session and get to the insights — we need to log in.",
-      he: "כדי להגיע לאיכות השיחה ולשמור על התובנות — נבקש להתחבר."
+      he: "כדי להגיע לשיחה איכותית ולשמור על התובנות — נבקש להתחבר."
     },
     saveAndStart:   { en: "Save & Start Session ✦", he: "שמור והתחל שיחה ✦" },
     secureNote:     { en: "Secure & Private Connection", he: "חיבור מאובטח ופרטי" },
