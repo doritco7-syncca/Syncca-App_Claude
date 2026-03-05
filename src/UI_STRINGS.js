@@ -21,23 +21,20 @@ export const UI_STRINGS = {
   },
 
   // ── Login / Welcome Screen ──────────────────────────────────
-  login: {
+ login: {
     headline:    { en: "The Space for Conscious Love", he: "המרחב שבו האהבה נושמת" },
-    subheadline: {
-      en: "We are here to help you replace the day of fighting with a day of love. To replace the language of demands with the loving language of directness, and to find yourself again.",
-      he: "אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים"
-            he: "יום אחר יום את האהבה, בשפה של תקשורת ישירה"            
-he: "ובוגרת, שרואה גם את העצמי וגם את האחר",
-"",
-    },
+    line1: { en: "We are here to help you replace", he: "אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים" },
+    line2: { en: "the power struggles that dim love,", he: "יום אחר יום את האהבה, בשפה של תקשורת ישירה" },
+    line3: { en: "with mature, direct communication.", he: "ובוגרת, שרואה גם את העצמי וגם את האחר." },
+    line4: { en: "", he: "" },
     emailLabel:       { en: "Email", he: "אימייל" },
     emailPlaceholder: { en: "judi@gmail.com", he: "judi@gmail.com" },
-    ctaButton:        { en: "Start a Session with Syncca", he: "שניכנס ל"סינק?" },
+    ctaButton:        { en: "Start a Session with Syncca", he: "שניכנס ל״סינק״?" },
     ctaIcon:          { en: "↺", he: "↺" },
     backToLogin:      { en: "Back to home page", he: "חזרה למסך הבית" },
     secureNote:       { en: "Secure & Private Connection", he: "חיבור מאובטח ופרטי" },
   },
-
+  
   // ── Session Start Screen ────────────────────────────────────
   sessionStart: {
     welcomeBack:    { en: "Welcome back to Syncca", he: "ברוכים הבאים לסינקה" },
