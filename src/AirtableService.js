@@ -25,7 +25,7 @@ export const AIRTABLE_SCHEMA = {
     USER_LINK:               "User_Link",
     FULL_TRANSCRIPT:         "Full_Transcript",
     FEEDBACK:                "Feedback",
-    SESSION_ID:              "Session_Id",
+    SESSION_ID:              "Session_ID",
     CREATED_AT:              "Created_At",
     SESSION_DURATION_MINUTES:"Session_Duration_Minutes",
     LANGUAGE_USED:           "Language_Used",

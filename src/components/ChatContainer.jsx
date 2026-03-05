@@ -12,12 +12,25 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageBubble }  from "./MessageBubble.jsx";
 import { PersonalCard }   from "./PersonalCard.jsx";
 import { SessionTimer }   from "./SessionTimer.jsx";
-import { sendToSyncca, parseResponse } from "../SynccaService.js";
+import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "../SynccaService.js";
 import { syncSession, finalizeSession, updateSavedConcepts } from "../AirtableService.js";
 import { Theme }          from "../Theme.js";
-import { t, UI_STRINGS }  from "../UI_STRINGS.js";
+import { t, UI_STRINGS, DEFAULT_UI_LANGUAGE }  from "../UI_STRINGS.js";
 
 const SESSION_DURATION_MS = 30 * 60 * 1000;
+
+// ── Opening message — shown before user writes anything ───────
+function buildOpeningMessage() {
+  const lang = DEFAULT_UI_LANGUAGE || "he";
+  const text = SYNCCA_OPENING_MESSAGE[lang] ?? SYNCCA_OPENING_MESSAGE["he"];
+  return {
+    id:        "opening",
+    role:      "assistant",
+    content:   text,
+    timestamp: new Date().toISOString(),
+    meta:      null,
+  };
+}
 
 export function ChatContainer({ sessionState, stateRef, updateState }) {
   const [inputText,     setInputText]     = useState("");
@@ -25,6 +38,15 @@ export function ChatContainer({ sessionState, stateRef, updateState }) {
   const [cardOpen,      setCardOpen]      = useState(false);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // Inject opening message once when chat mounts, if messages list is empty
+  useEffect(() => {
+    const s = stateRef.current;
+    if (!s.messages || s.messages.length === 0) {
+      updateState({ messages: [buildOpeningMessage()] });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -55,12 +77,23 @@ export function ChatContainer({ sessionState, stateRef, updateState }) {
       content:   text,
       timestamp: new Date().toISOString(),
     };
-    const updatedMessages   = [...s.messages, userMsg];
-    const updatedTranscript = s.fullTranscript + `\n[User]: ${text}`;
+
+    // Filter out the opening message from API history — it's UI only
+    const existingMessages = s.messages.filter(m => m.id !== "opening");
+    const updatedMessages  = [...s.messages, userMsg];
+
+    // No leading newline on first line — so Airtable shows preview correctly
+    const updatedTranscript = s.fullTranscript
+      ? s.fullTranscript + `\n[User]: ${text}`
+      : `[User]: ${text}`;
+
     updateState({ messages: updatedMessages, fullTranscript: updatedTranscript });
 
     try {
-      const apiMessages = updatedMessages.map((m) => ({ role: m.role, content: m.content }));
+      const apiMessages = [...existingMessages, userMsg].map((m) => ({
+        role:    m.role,
+        content: m.content,
+      }));
       const elapsed     = Math.floor((Date.now() - new Date(s.sessionStartTime).getTime()) / 60000);
       const rawResponse = await sendToSyncca(apiMessages, elapsed);
       const { visibleText, meta } = parseResponse(rawResponse);
@@ -108,10 +141,8 @@ export function ChatContainer({ sessionState, stateRef, updateState }) {
   }, [updateState]);
 
   return (
-    // ── Lavender outer frame ──────────────────────────────
     <div style={styles.frame}>
 
-      {/* Header floats on lavender — transparent, no box */}
       <header style={styles.header}>
         <div style={styles.headerLeft}>
           <SessionTimer
@@ -144,10 +175,8 @@ export function ChatContainer({ sessionState, stateRef, updateState }) {
         </div>
       </header>
 
-      {/* Stone chat container — rests on lavender */}
       <div style={styles.chatContainer}>
 
-        {/* Message list — scrollable stone surface */}
         <div style={styles.messageList}>
           {sessionState.messages.map(msg => (
             <MessageBubble
@@ -165,7 +194,6 @@ export function ChatContainer({ sessionState, stateRef, updateState }) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input bar — bottom of stone container, no border, same surface */}
         <div style={styles.inputBar}>
           <textarea
             value={inputText}
@@ -189,7 +217,6 @@ export function ChatContainer({ sessionState, stateRef, updateState }) {
         </div>
       </div>
 
-      {/* Personal Card */}
       <PersonalCard
         isOpen={cardOpen}
         onClose={() => setCardOpen(false)}
@@ -259,8 +286,6 @@ function CardIcon() {
   );
 }
 
-
-// ── SynccaLogoMark (same as LoginScreen) ─────────────────────
 function SynccaLogoMark({ size = 32 }) {
   const s = size;
   const cx = s / 2, cy = s / 2, r = s * 0.38;
@@ -287,8 +312,6 @@ function SynccaLogoMark({ size = 32 }) {
 
 // ── Styles ────────────────────────────────────────────────────
 const styles = {
-
-  // Lavender fills the entire viewport
   frame: {
     height:          "100vh",
     display:         "flex",
@@ -300,8 +323,6 @@ const styles = {
     position:        "relative",
     overflow:        "hidden",
   },
-
-  // Header: transparent, floats on lavender
   header: {
     height:         Theme.layout.headerHeight,
     width:          "100%",
@@ -311,12 +332,10 @@ const styles = {
     justifyContent: "space-between",
     flexShrink:     0,
     zIndex:         10,
-    // No backgroundColor, no border, no box
   },
   headerLeft:   { display: "flex", alignItems: "center", minWidth: 80 },
   headerCenter: { display: "flex", flexDirection: "column", alignItems: "center" },
   headerRight:  { display: "flex", alignItems: "center", gap: Theme.spacing.sm, minWidth: 80, justifyContent: "flex-end" },
-
   logoRow: {
     display:    "flex",
     alignItems: "center",
@@ -337,13 +356,13 @@ const styles = {
     display:       "block",
   },
   tagline: {
-    fontFamily:    Theme.fonts.body,
-    fontSize:      Theme.fontSizes.xs,
-    fontStyle:     "italic",
-    color:         Theme.colors.textOnLavender,
-    opacity:       0.75,
-    lineHeight:    1,
-    display:       "block",
+    fontFamily: Theme.fonts.body,
+    fontSize:   Theme.fontSizes.xs,
+    fontStyle:  "italic",
+    color:      Theme.colors.textOnLavender,
+    opacity:    0.75,
+    lineHeight: 1,
+    display:    "block",
   },
   cardToggle: {
     background:   "none",
@@ -354,8 +373,6 @@ const styles = {
     display:      "flex",
     alignItems:   "center",
   },
-
-  // Stone container: rounded, resting shadow, all chat content inside
   chatContainer: {
     flex:            1,
     display:         "flex",
@@ -367,7 +384,6 @@ const styles = {
     boxShadow:       Theme.shadows.container,
     overflow:        "hidden",
   },
-
   messageList: {
     flex:          1,
     overflowY:     "auto",
@@ -376,15 +392,13 @@ const styles = {
     flexDirection: "column",
     gap:           Theme.spacing.md,
   },
-
-  // Input bar: no top border — it's the same stone surface
   inputBar: {
-    display:      "flex",
-    alignItems:   "flex-end",
-    gap:          Theme.spacing.sm,
-    padding:      `${Theme.spacing.sm} ${Theme.spacing.md} ${Theme.spacing.md}`,
-    borderTop:    `1px solid ${Theme.colors.border}`,
-    flexShrink:   0,
+    display:    "flex",
+    alignItems: "flex-end",
+    gap:        Theme.spacing.sm,
+    padding:    `${Theme.spacing.sm} ${Theme.spacing.md} ${Theme.spacing.md}`,
+    borderTop:  `1px solid ${Theme.colors.border}`,
+    flexShrink: 0,
   },
   input: {
     flex:            1,
@@ -418,20 +432,20 @@ const styles = {
 
 const counterStyles = {
   pill: {
-    display:        "flex",
-    flexDirection:  "column",
-    alignItems:     "center",
-    backgroundColor:"rgba(255,255,255,0.25)",
-    borderRadius:   Theme.radius.sm,
-    padding:        "3px 8px",
-    minWidth:       "36px",
+    display:         "flex",
+    flexDirection:   "column",
+    alignItems:      "center",
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius:    Theme.radius.sm,
+    padding:         "3px 8px",
+    minWidth:        "36px",
   },
   value: {
-    fontFamily:  Theme.fonts.ui,
-    fontSize:    Theme.fontSizes.base,
-    fontWeight:  Theme.fontWeights.bold,
-    color:       Theme.colors.textOnLavender,
-    lineHeight:  1,
+    fontFamily: Theme.fonts.ui,
+    fontSize:   Theme.fontSizes.base,
+    fontWeight: Theme.fontWeights.bold,
+    color:      Theme.colors.textOnLavender,
+    lineHeight: 1,
   },
   label: {
     fontFamily: Theme.fonts.ui,
