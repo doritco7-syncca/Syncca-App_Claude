@@ -16,7 +16,7 @@ export const UI_STRINGS = {
   // ── App-wide ────────────────────────────────────────────────
   app: {
     name:    { en: "Syncca", he: "Syncca" },
-    tagline: { en: "Conscious Love", he: "אהבה מודעת" },
+    tagline: { en: "Conscious Love", he: "המרחב שבו האהבה נושמת" },
     beta:    { en: "Beta Phase · Secure & Private", he: "גרסת בטא · מאובטח ופרטי" },
   },
 
