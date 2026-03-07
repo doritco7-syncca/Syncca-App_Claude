@@ -23,7 +23,8 @@ async function findOrCreateUser(email) {
   };
 
   // Search for existing user
-  const searchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}?filterByFormula=LOWER({Email})="${email.toLowerCase()}"`;
+  const formula = `LOWER({Email})="${email.toLowerCase()}"`;
+  const searchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}?filterByFormula=${encodeURIComponent(formula)}`;
   const searchRes = await fetch(searchUrl, { headers });
   const searchData = await searchRes.json();
 
