@@ -3,10 +3,10 @@
 // Includes: Airtable auth, session management, AI concept logic (starts at sync #3)
 
 import { useState, useEffect, useCallback } from "react";
-import WelcomeScreen  from "./WelcomeScreen";
-import LoginScreen    from "./LoginScreen";
-import ChatScreen     from "./ChatScreen";
-import PersonalCard   from "./PersonalCard";
+import WelcomeScreen  from "./components/WelcomeScreen";
+import LoginScreen    from "./components/LoginScreen";
+import ChatScreen     from "./components/ChatScreen";
+import PersonalCard   from "./components/PersonalCard";
 
 // ─── CONFIG ──────────────────────────────────────────────────────
 // These are read from environment variables (set in Vercel dashboard)
