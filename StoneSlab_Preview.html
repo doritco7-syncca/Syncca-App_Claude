@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Syncca — Stone Slab Shadow Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: #E8E0F0; /* lavender frame */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+@keyframes stoneRise {
+  from { opacity: 0; transform: translateY(32px) scale(0.978); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.slab {
+  background: #F9F6EE;
+  border-radius: 32px;
+  width: 100%;
+  max-width: 400px;
+
+  /* 
+   * THE HEAVY STONE SLAB SHADOW
+   * Layer 1 — tight contact shadow directly under the card (sharp, dark)
+   * Layer 2 — mid diffusion layer (wider, medium)
+   * Layer 3 — long ambient throw (very wide, lightest)
+   * Layer 4 — bottom-weighted bloom (asymmetric: heavy bottom, soft top)
+   * Inset   — inner top-edge highlight (the "stone surface" catch-light)
+   */
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.06),
+    0 6px 12px rgba(0,0,0,0.07),
+    0 18px 36px -6px rgba(0,0,0,0.11),
+    0 40px 80px -16px rgba(0,0,0,0.14),
+    inset 0 1px 0px rgba(255,255,255,0.90);
+
+  height: calc(100dvh - 20px);
+  max-height: 880px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(44px,9vh,72px) clamp(28px,7vw,44px) clamp(36px,7vh,56px);
+  overflow: hidden;
+  animation: stoneRise 0.75s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+/* ── Rows ── */
+.r { opacity: 0; animation: fadeUp 0.5s ease both; }
+.r:nth-child(1) { animation-delay: 0.22s; }
+.r:nth-child(2) { animation-delay: 0.32s; }
+.r:nth-child(3) { animation-delay: 0.42s; }
+.r:nth-child(4) { animation-delay: 0.52s; }
+.r:nth-child(5) { animation-delay: 0.62s; }
+.r:nth-child(6) { animation-delay: 0.70s; }
+
+/* Logo */
+.logo-sym { transform: rotate(180deg); display: block; }
+.logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.8rem, 9vw, 3.4rem);
+  font-weight: 700;
+  color: #ea580c;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+/* Mid zone */
+.tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.3rem, 4.5vw, 1.6rem);
+  font-weight: 700;
+  color: #1e3a8a;
+  text-align: center;
+  direction: rtl;
+  line-height: 1.35;
+}
+.rule {
+  width: 52px; height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(234,88,12,0.45), transparent);
+}
+.body-text {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.87rem, 3vw, 0.96rem);
+  color: #1a1a1a;
+  text-align: center;
+  line-height: 1.78;
+  direction: rtl;
+  max-width: 300px;
+  opacity: 0.82;
+}
+
+/* Email input */
+.label {
+  font-size: 0.68rem; font-weight: 600;
+  color: #ea580c; letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: right; direction: rtl;
+  margin-bottom: 7px; display: block;
+}
+.field {
+  width: 100%; height: 52px;
+  background: #FCFAF5;
+  border: 1.5px solid transparent;
+  border-radius: 9999px;
+  padding: 0 22px;
+  font-family: 'Inter', sans-serif; font-size: 1rem;
+  color: #1a1a1a; outline: none;
+  direction: ltr; text-align: center;
+  transition: border-color 0.18s;
+}
+.field:focus { border-color: #ea580c; }
+.field::placeholder { color: #6b7280; }
+
+/* Button */
+.btn {
+  width: 100%; height: 56px;
+  background: #ea580c;
+  color: #fff; border: none; border-radius: 9999px;
+  font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 18px rgba(234,88,12,0.30);
+  transition: all 0.18s ease;
+}
+.btn:hover {
+  background: #c2410c;
+  box-shadow: 0 8px 28px rgba(234,88,12,0.40);
+  transform: translateY(-2px);
+}
+
+.caption {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase;
+  color: #ea580c; text-align: center;
+}
+.back {
+  background: none; border: none; cursor: pointer;
+  color: #6b7280; font-size: 0.82rem;
+  font-family: 'Inter', sans-serif;
+  text-decoration: underline;
+  text-decoration-color: #d1d5db;
+}
+</style>
+</head>
+<body>
+
+<div class="slab">
+
+  <!-- TOP: Logo -->
+  <div class="r" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <svg class="logo-sym" width="60" height="60" viewBox="0 0 100 100" fill="none">
+      <path d="M25 20C15 30 10 45 10 60C10 82 28 100 50 100C72 100 90 82 90 60C90 45 85 30 75 20C82 30 85 42 85 55C85 75 70 90 50 90C30 90 15 75 15 55C15 42 18 30 25 20Z" fill="#ea580c"/>
+      <path d="M40 35C35 40 32 48 32 58C32 70 40 80 50 80C60 80 68 70 68 58C68 48 65 40 60 35C65 40 68 48 68 55C68 65 60 73 50 73C40 73 32 65 32 55C32 48 35 40 40 35Z" fill="#1e3a8a"/>
+    </svg>
+    <div class="logo-text">Syncca</div>
+  </div>
+
+  <!-- MIDDLE: Heading + rule + body -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:18px;flex:1;justify-content:center;width:100%">
+    <div class="r tagline">!ברוכים הבאים</div>
+    <div class="r rule"></div>
+    <div class="r body-text">
+      כדי להבטיח בקרת איכות ולשמור על התובנות –<br/>נבקש להזדהות.
+    </div>
+  </div>
+
+  <!-- BOTTOM: Input + button + footer -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%">
+    <div class="r" style="width:100%">
+      <label class="label">כתובת אימייל</label>
+      <input class="field" type="email" placeholder="your@email.com"/>
+    </div>
+
+    <div class="r" style="width:100%">
+      <button class="btn">
+        <span>✦</span>
+        <span>שמור והתחל שיחה</span>
+      </button>
+    </div>
+
+    <div class="r caption">SECURE &amp; PRIVATE CONNECTION</div>
+
+    <div class="r">
+      <button class="back">חזרה למסך הבית</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
