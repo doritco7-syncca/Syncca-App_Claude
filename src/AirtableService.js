@@ -100,8 +100,15 @@ export async function updateUserProfile(recordId, fields) {
     "First_Name", "Full_Name", "Age_Range",
     "Marital_Status", "Gender", "Language_Preference",
   ];
+  // Select fields must not be sent as empty string — Airtable throws 422
+  const selectFields = ["Age_Range", "Marital_Status", "Gender"];
+
   const safeFields = Object.fromEntries(
-    Object.entries(fields).filter(([k]) => allowed.includes(k))
+    Object.entries(fields).filter(([k, v]) => {
+      if (!allowed.includes(k)) return false;
+      if (selectFields.includes(k) && !v) return false;
+      return true;
+    })
   );
   return airtableFetch(TABLES.users, recordId, {
     method: "PATCH",
