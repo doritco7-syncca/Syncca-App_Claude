@@ -300,13 +300,6 @@ export default function App() {
 
   // ── LOGIN ──────────────────────────────────────────────────────
   async function handleLogin(email) {
-    // Debug: log env vars presence (not values) to console
-    console.log("ENV check:", {
-      hasToken:  !!AIRTABLE_TOKEN,
-      hasBaseId: !!AIRTABLE_BASE_ID,
-      table:     AIRTABLE_TABLE,
-    });
-
     const { recordId: rid, fields, isNew } = await findOrCreateUser(email);
 
     if (!rid) {
