@@ -1,224 +1,142 @@
-// ============================================================
 // AirtableService.js
-// ROLE: All Airtable API communication lives here.
-// No component should call Airtable directly — always go
-// through this service. Field names reference AIRTABLE_SCHEMA
-// so a schema change only requires editing this one file.
-// ============================================================
+// Single source of truth for ALL Airtable API calls in Syncca.
+// Uses REACT_APP_ env vars (Create React App convention).
 
-// ── Schema: edit field names here if Airtable columns change ──
-export const AIRTABLE_SCHEMA = {
-  tables: {
-    USERS:             "Users",
-    CONVERSATION_LOGS: "Conversation_Logs",
-    RELATIONSHIP_LEXICON: "Relationship_Lexicon",
-  },
-  users: {
-    USERNAME:            "Username",
-    EMAIL:               "Email",
-    GENERAL_NOTES:       "General_Notes",
-    CREATED_AT:          "Created_At",
-    LANGUAGE_PREFERENCE: "Language_Preference",
-    SAVED_CONCEPTS:      "Saved_Concepts",
-  },
-  logs: {
-    USER_LINK:               "User_Link",
-    FULL_TRANSCRIPT:         "Full_Transcript",
-    FEEDBACK:                "Feedback",
-    SESSION_ID:              "Session_Id",
-    CREATED_AT:              "Created_At",
-    SESSION_DURATION_MINUTES:"Session_Duration_Minutes",
-    LANGUAGE_USED:           "Language_Used",
-    CONCEPTS_SURFACED:       "Concepts_Surfaced",
-  },
-  lexicon: {
-    ENGLISH_TERM:   "English_Term",
-    HEBREW_TERM:    "Hebrew_Term",
-    DESCRIPTION_HE: "Description_HE",
-    DESCRIPTION_EN: "Description_EN",
-  },
-};
+const TOKEN   = process.env.REACT_APP_AIRTABLE_TOKEN;
+const BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
+const TABLE   = "Users";
 
-// ── API config (values come from .env) ────────────────────────
-const BASE_ID  = process.env.REACT_APP_AIRTABLE_BASE_ID;
-const API_KEY  = process.env.REACT_APP_AIRTABLE_API_KEY;
-const API_ROOT = "https://api.airtable.com/v0";
-
-// ── In-session concept ID cache ───────────────────────────────
-const _conceptCache = {};
-
-// ── Low-level fetch wrapper ───────────────────────────────────
-async function atFetch(endpoint, method = "GET", body = null) {
-  const opts = {
-    method,
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      "Content-Type": "application/json",
-    },
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(`${API_ROOT}/${BASE_ID}/${endpoint}`, opts);
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(`Airtable [${res.status}]: ${JSON.stringify(err)}`);
+// ─── Shared fetch wrapper ─────────────────────────────────────────
+async function airtableFetch(path, options = {}) {
+  if (!TOKEN || !BASE_ID) {
+    throw new Error(
+      `Airtable env vars missing. TOKEN: ${!!TOKEN}, BASE_ID: ${!!BASE_ID}`
+    );
   }
-  return res.json();
-}
 
-// ─────────────────────────────────────────────────────────────
-// USER OPERATIONS
-// ─────────────────────────────────────────────────────────────
-
-// Find a user by email. Returns the full Airtable record or null.
-export async function findUserByEmail(email) {
-  const formula = encodeURIComponent(
-    `{${AIRTABLE_SCHEMA.users.EMAIL}} = "${email}"`
-  );
-  const data = await atFetch(
-    `${AIRTABLE_SCHEMA.tables.USERS}?filterByFormula=${formula}`
-  );
-  return data.records[0] ?? null;
-}
-
-// Create a new user record. Returns the new record (with its ID).
-export async function createUser(email, username) {
-  const { users } = AIRTABLE_SCHEMA;
-  return atFetch(AIRTABLE_SCHEMA.tables.USERS, "POST", {
-    fields: {
-      [users.EMAIL]:      email,
-      [users.USERNAME]:   username || email.split("@")[0],
-      [users.CREATED_AT]: new Date().toISOString(),
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${path}`;
+  const res  = await fetch(url, {
+    ...options,
+    headers: {
+      "Authorization": `Bearer ${TOKEN}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
     },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    const msg = data?.error?.message || data?.error?.type || `HTTP ${res.status}`;
+    throw new Error(`Airtable error (${res.status}): ${msg}`);
+  }
+
+  return data;
+}
+
+// ─── Find user by email ───────────────────────────────────────────
+export async function findUserByEmail(email) {
+  const formula = `LOWER({Email})="${email.toLowerCase()}"`;
+  const data = await airtableFetch(
+    `${TABLE}?filterByFormula=${encodeURIComponent(formula)}`
+  );
+
+  if (data.records && data.records.length > 0) {
+    return {
+      recordId: data.records[0].id,
+      fields:   data.records[0].fields,
+      isNew:    false,
+    };
+  }
+  return null;
+}
+
+// ─── Create new user ─────────────────────────────────────────────
+export async function createUser(email) {
+  const data = await airtableFetch(TABLE, {
+    method: "POST",
+    body: JSON.stringify({
+      fields: {
+        Email:      email,
+        Sync_Count: 0,
+      },
+    }),
+  });
+
+  return {
+    recordId: data.id,
+    fields:   data.fields,
+    isNew:    true,
+  };
+}
+
+// ─── Find or create user (main login entry point) ─────────────────
+export async function findOrCreateUser(email) {
+  const existing = await findUserByEmail(email);
+  if (existing) return existing;
+  return createUser(email);
+}
+
+// ─── Increment Sync_Count ────────────────────────────────────────
+// Called once per session start. Sync_Count is internal — never shown to user.
+export async function incrementSyncCount(recordId, currentCount) {
+  const newCount = (currentCount || 0) + 1;
+  await airtableFetch(`${TABLE}/${recordId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      fields: { Sync_Count: newCount },
+    }),
+  });
+  return newCount;
+}
+
+// ─── Update user profile fields ───────────────────────────────────
+// Called from PersonalCard "Save" button.
+export async function updateUserProfile(recordId, fields) {
+  const allowed = [
+    "First_Name",
+    "Full_Name",
+    "Age_Range",
+    "Marital_Status",
+    "Gender",
+    "Language_Preference",
+  ];
+
+  // Only send allowed fields to avoid accidental overwrites
+  const safeFields = Object.fromEntries(
+    Object.entries(fields).filter(([k]) => allowed.includes(k))
+  );
+
+  return airtableFetch(`${TABLE}/${recordId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ fields: safeFields }),
   });
 }
 
-// Update saved concepts on the user's Personal Card
-export async function updateSavedConcepts(userRecordId, englishTerms) {
-  const conceptIds = await lookupConceptIds(englishTerms);
-  return atFetch(
-    `${AIRTABLE_SCHEMA.tables.USERS}/${userRecordId}`,
-    "PATCH",
-    { fields: { [AIRTABLE_SCHEMA.users.SAVED_CONCEPTS]: conceptIds } }
-  );
+// ─── Save concept to user record ─────────────────────────────────
+export async function saveConceptToUser(recordId, conceptWord, existingSaved = "") {
+  const updated = existingSaved
+    ? `${existingSaved}, ${conceptWord}`
+    : conceptWord;
+
+  return airtableFetch(`${TABLE}/${recordId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      fields: { Saved_Concepts: updated },
+    }),
+  });
 }
 
-// ─────────────────────────────────────────────────────────────
-// SESSION LOG OPERATIONS
-// ─────────────────────────────────────────────────────────────
-
-// Create a new Conversation_Logs record at session start.
-// Returns the new record's Airtable ID — store as logRecordId.
-export async function createSessionLog(userRecordId, sessionId, language) {
-  const { logs } = AIRTABLE_SCHEMA;
-  const data = await atFetch(
-    AIRTABLE_SCHEMA.tables.CONVERSATION_LOGS,
-    "POST",
-    {
+// ─── Save feedback (Timeout modal) ───────────────────────────────
+export async function saveFeedback(recordId, feedbackText) {
+  return airtableFetch(`Feedbacks`, {
+    method: "POST",
+    body: JSON.stringify({
       fields: {
-        [logs.USER_LINK]:      [userRecordId],
-        [logs.SESSION_ID]:     sessionId,
-        [logs.CREATED_AT]:     new Date().toISOString(),
-        [logs.LANGUAGE_USED]:  language,
-        [logs.FULL_TRANSCRIPT]:"",
-        [logs.FEEDBACK]:       "",
+        Feedback_Text: feedbackText,
+        User:          [recordId], // linked record
+        Created_At:    new Date().toISOString(),
       },
-    }
-  );
-  return data.id;
-}
-
-// Incremental sync — called after every AI response.
-// Always pass userFeedback directly from React state (never stale).
-export async function syncSession({
-  logRecordId,
-  fullTranscript,
-  userFeedback,
-  conceptsSurfaced,
-}) {
-  if (!logRecordId) return;
-  const { logs } = AIRTABLE_SCHEMA;
-  const conceptIds = await lookupConceptIds(conceptsSurfaced || []);
-  return atFetch(
-    `${AIRTABLE_SCHEMA.tables.CONVERSATION_LOGS}/${logRecordId}`,
-    "PATCH",
-    {
-      fields: {
-        [logs.FULL_TRANSCRIPT]:  fullTranscript,
-        [logs.FEEDBACK]:         userFeedback,
-        [logs.CONCEPTS_SURFACED]:conceptIds,
-      },
-    }
-  );
-}
-
-// Final sync at session end — adds duration.
-export async function finalizeSession({
-  logRecordId,
-  fullTranscript,
-  userFeedback,
-  sessionStartTime,
-  conceptsSurfaced,
-}) {
-  if (!logRecordId) return;
-  const { logs } = AIRTABLE_SCHEMA;
-  const duration = Math.round(
-    (Date.now() - new Date(sessionStartTime).getTime()) / 60000
-  );
-  const conceptIds = await lookupConceptIds(conceptsSurfaced || []);
-  return atFetch(
-    `${AIRTABLE_SCHEMA.tables.CONVERSATION_LOGS}/${logRecordId}`,
-    "PATCH",
-    {
-      fields: {
-        [logs.FULL_TRANSCRIPT]:            fullTranscript,
-        [logs.FEEDBACK]:                   userFeedback,
-        [logs.SESSION_DURATION_MINUTES]:   duration,
-        [logs.CONCEPTS_SURFACED]:          conceptIds,
-      },
-    }
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// LEXICON OPERATIONS
-// ─────────────────────────────────────────────────────────────
-
-// Fetch a single concept by English_Term for tooltip display
-export async function fetchConcept(englishTerm, language = "he") {
-  const ids = await lookupConceptIds([englishTerm]);
-  if (!ids.length) return null;
-  const data = await atFetch(
-    `${AIRTABLE_SCHEMA.tables.RELATIONSHIP_LEXICON}/${ids[0]}`
-  );
-  const { fields } = data;
-  return {
-    id:          ids[0],
-    englishTerm: fields[AIRTABLE_SCHEMA.lexicon.ENGLISH_TERM],
-    hebrewTerm:  fields[AIRTABLE_SCHEMA.lexicon.HEBREW_TERM],
-    description: language === "he"
-      ? fields[AIRTABLE_SCHEMA.lexicon.DESCRIPTION_HE]
-      : fields[AIRTABLE_SCHEMA.lexicon.DESCRIPTION_EN],
-  };
-}
-
-// Resolve English_Term strings → Airtable Record IDs
-// Cached per session to avoid redundant API calls
-export async function lookupConceptIds(englishTerms) {
-  if (!englishTerms?.length) return [];
-  const uncached = englishTerms.filter((t) => !_conceptCache[t]);
-  if (uncached.length) {
-    const formula =
-      uncached.length === 1
-        ? `{${AIRTABLE_SCHEMA.lexicon.ENGLISH_TERM}} = "${uncached[0]}"`
-        : `OR(${uncached
-            .map((t) => `{${AIRTABLE_SCHEMA.lexicon.ENGLISH_TERM}} = "${t}"`)
-            .join(",")})`;
-    const data = await atFetch(
-      `${AIRTABLE_SCHEMA.tables.RELATIONSHIP_LEXICON}?filterByFormula=${encodeURIComponent(formula)}`
-    );
-    data.records.forEach((r) => {
-      _conceptCache[r.fields[AIRTABLE_SCHEMA.lexicon.ENGLISH_TERM]] = r.id;
-    });
-  }
-  return englishTerms.map((t) => _conceptCache[t]).filter(Boolean);
+    }),
+  });
 }
