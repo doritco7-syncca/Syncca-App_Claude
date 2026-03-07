@@ -4,6 +4,7 @@
 //   savedConcepts ([{word, explanation}]), onClose () => void
 
 import { useState, useCallback } from "react";
+import { updateUserProfile } from "../AirtableService";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -30,22 +31,9 @@ const FIELDS = [
   { key: "Language_Preference", label: "שפה מועדפת",     type: "text",   placeholder: "עברית / English" },
 ];
 
-async function patchAirtable({ baseId, tableId, recordId, token, fields }) {
-  const res = await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}/${recordId}`, {
-    method: "PATCH",
-    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ fields }),
-  });
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e?.error?.message || `Airtable ${res.status}`);
-  }
-  return res.json();
-}
-
 export default function PersonalCard({
-  record = {}, airtableBaseId, airtableTableId = "Users",
-  airtableToken, airtableRecordId,
+  record = {},
+  airtableRecordId,
   savedConcepts = [], onClose,
 }) {
   const [form, setForm] = useState({
@@ -67,18 +55,15 @@ export default function PersonalCard({
   const handleSave = useCallback(async () => {
     setSaveState("saving"); setErrMsg("");
     try {
-      if (airtableBaseId && airtableToken && airtableRecordId) {
-        await patchAirtable({
-          baseId: airtableBaseId, tableId: airtableTableId,
-          recordId: airtableRecordId, token: airtableToken, fields: form,
-        });
+      if (airtableRecordId) {
+        await updateUserProfile(airtableRecordId, form);
       }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2800);
     } catch (e) {
       setSaveState("error"); setErrMsg(e.message || "שגיאה בשמירה");
     }
-  }, [form, airtableBaseId, airtableTableId, airtableToken, airtableRecordId]);
+  }, [form, airtableRecordId]);
 
   const saveBg    = { idle: COLORS.primary, saving: "#f97316", saved: COLORS.success, error: "#dc2626" }[saveState];
   const saveLabel = { idle: "שמירה  💾", saving: "שומר...", saved: "✓  נשמר!", error: "שגיאה — נסי שוב" }[saveState];
