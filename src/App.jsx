@@ -10,10 +10,10 @@ import PersonalCard   from "./components/PersonalCard";
 
 // ─── CONFIG ──────────────────────────────────────────────────────
 // These are read from environment variables (set in Vercel dashboard)
-const AIRTABLE_TOKEN   = import.meta.env.VITE_AIRTABLE_TOKEN;
-const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
+const AIRTABLE_TOKEN   = process.env.REACT_APP_AIRTABLE_TOKEN;
+const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 const AIRTABLE_TABLE   = "Users";
-const ANTHROPIC_KEY    = import.meta.env.VITE_ANTHROPIC_KEY; // only if calling Claude directly
+const ANTHROPIC_KEY    = process.env.REACT_APP_ANTHROPIC_KEY;
 
 // ─── AIRTABLE HELPERS ────────────────────────────────────────────
 async function findOrCreateUser(email) {
@@ -27,6 +27,11 @@ async function findOrCreateUser(email) {
   const searchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}?filterByFormula=${encodeURIComponent(formula)}`;
   const searchRes = await fetch(searchUrl, { headers });
   const searchData = await searchRes.json();
+  console.log("Airtable search response:", searchRes.status, searchData?.error || "ok");
+
+  if (searchData.error) {
+    throw new Error(`Airtable: ${searchData.error.type} — ${searchData.error.message}`);
+  }
 
   if (searchData.records && searchData.records.length > 0) {
     const record = searchData.records[0];
@@ -355,7 +360,18 @@ export default function App() {
 
   // ── LOGIN ──────────────────────────────────────────────────────
   async function handleLogin(email) {
+    // Debug: log env vars presence (not values) to console
+    console.log("ENV check:", {
+      hasToken:  !!AIRTABLE_TOKEN,
+      hasBaseId: !!AIRTABLE_BASE_ID,
+      table:     AIRTABLE_TABLE,
+    });
+
     const { recordId: rid, fields, isNew } = await findOrCreateUser(email);
+
+    if (!rid) {
+      throw new Error("לא ניתן למצוא או ליצור משתמש — בדקי את פרטי Airtable");
+    }
 
     setUserEmail(email);
     setUserRecord(fields);
@@ -363,9 +379,13 @@ export default function App() {
     localStorage.setItem("syncca_email",     email);
     localStorage.setItem("syncca_record_id", rid);
 
-    // Increment sync count
+    // Track sync count — save to Airtable AND localStorage
+    const countKey = `syncca_sync_count_${email}`;
+    const prevCount = parseInt(localStorage.getItem(countKey) || "0", 10);
+    const newCount = (fields.Sync_Count || prevCount) + 1;
+    localStorage.setItem(countKey, String(newCount));
     await incrementSyncCount(rid, fields.Sync_Count || 0);
-    setUserRecord(prev => ({ ...prev, Sync_Count: (fields.Sync_Count || 0) + 1 }));
+    setUserRecord(prev => ({ ...prev, Sync_Count: newCount }));
 
     // Start session
     const now = new Date();
