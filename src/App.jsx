@@ -1,77 +1,17 @@
 // App.jsx — Syncca · Main Application Router
 // Connects: WelcomeScreen → LoginScreen → ChatScreen ↔ PersonalCard
-// Includes: Airtable auth, session management, AI concept logic (starts at sync #3)
 
 import { useState, useEffect, useCallback } from "react";
 import WelcomeScreen  from "./components/WelcomeScreen";
 import LoginScreen    from "./components/LoginScreen";
 import ChatScreen     from "./components/ChatScreen";
 import PersonalCard   from "./components/PersonalCard";
+import {
+  findOrCreateUser,
+  incrementSyncCount,
+} from "./AirtableService";
 
-// ─── CONFIG ──────────────────────────────────────────────────────
-// These are read from environment variables (set in Vercel dashboard)
-const AIRTABLE_TOKEN   = process.env.REACT_APP_AIRTABLE_TOKEN;
-const AIRTABLE_BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
-const AIRTABLE_TABLE   = "Users";
-const ANTHROPIC_KEY    = process.env.REACT_APP_ANTHROPIC_KEY;
-
-// ─── AIRTABLE HELPERS ────────────────────────────────────────────
-async function findOrCreateUser(email) {
-  const headers = {
-    "Authorization": `Bearer ${AIRTABLE_TOKEN}`,
-    "Content-Type": "application/json",
-  };
-
-  // Search for existing user
-  const formula = `LOWER({Email})="${email.toLowerCase()}"`;
-  const searchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}?filterByFormula=${encodeURIComponent(formula)}`;
-  const searchRes = await fetch(searchUrl, { headers });
-  const searchData = await searchRes.json();
-  console.log("Airtable search response:", searchRes.status, searchData?.error || "ok");
-
-  if (searchData.error) {
-    throw new Error(`Airtable: ${searchData.error.type} — ${searchData.error.message}`);
-  }
-
-  if (searchData.records && searchData.records.length > 0) {
-    const record = searchData.records[0];
-    return {
-      recordId: record.id,
-      fields: record.fields,
-      isNew: false,
-    };
-  }
-
-  // Create new user
-  const createRes = await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ fields: { Email: email, Sync_Count: 0 } }),
-    }
-  );
-  const createData = await createRes.json();
-  return {
-    recordId: createData.id,
-    fields: createData.fields,
-    isNew: true,
-  };
-}
-
-async function incrementSyncCount(recordId, currentCount) {
-  await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}/${recordId}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Authorization": `Bearer ${AIRTABLE_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ fields: { Sync_Count: (currentCount || 0) + 1 } }),
-    }
-  );
-}
+const ANTHROPIC_KEY = process.env.REACT_APP_ANTHROPIC_KEY;
 
 // ─── BETA MODAL LOGIC (show only first 2 sessions) ───────────────
 function shouldShowBetaModal() {
@@ -492,9 +432,6 @@ export default function App() {
       {screen === "personal" && (
         <PersonalCard
           record={{ ...userRecord, email: userEmail }}
-          airtableBaseId={AIRTABLE_BASE_ID}
-          airtableTableId={AIRTABLE_TABLE}
-          airtableToken={AIRTABLE_TOKEN}
           airtableRecordId={recordId}
           savedConcepts={savedConcepts}
           onClose={() => setScreen("chat")}
