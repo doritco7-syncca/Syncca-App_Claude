@@ -1,7 +1,6 @@
-// AirtableService.js
-// Single source of truth for ALL Airtable API calls in Syncca.
-// Table: Users + Conversation_Logs
-// Field names match Airtable exactly — do not rename without updating here.
+// AirtableService.js — Syncca
+// Single source of truth for ALL Airtable API calls.
+// Tables: Users, Conversation_Logs
 
 const TOKEN   = process.env.REACT_APP_AIRTABLE_TOKEN;
 const BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
@@ -9,6 +8,34 @@ const BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
 const TABLES = {
   users: "Users",
   logs:  "Conversation_Logs",
+};
+
+// ─── Hebrew → English mappings for Single Select fields ──────────
+// Airtable Single Select fields only accept the exact English strings
+// defined in the field options. The UI shows Hebrew — we translate before saving.
+export const FIELD_MAPS = {
+  Marital_Status: {
+    "רווק/ה":    "Single",
+    "זוגיות":    "In a relationship",
+    "נשוי/ה":    "Married",
+    "גרוש/ה":    "Divorced",
+    "אלמן/ה":    "Separated",
+  },
+  Gender: {
+    "אישה":               "Female",
+    "גבר":                "Male",
+    "נון-בינארי/ת":       "Other",
+    "מעדיף/ה לא לציין":   "Prefer not to say",
+  },
+  Age_Range: {
+    "20-29": "20-29",
+    "30-39": "30-39",
+    "40-49": "40-49",
+    "50-59": "50-59",
+    "60-69": "60-69",
+    "70-79": "70-79",
+    "80-100": "80-100",
+  },
 };
 
 // ─── Shared fetch wrapper ─────────────────────────────────────────
@@ -98,21 +125,32 @@ export async function incrementSyncCount(recordId, currentCount) {
 }
 
 // Called from PersonalCard save button
+// Translates Hebrew UI values → English Airtable values before saving
 export async function updateUserProfile(recordId, fields) {
-  const allowed = [
-    "First_Name", "Full_Name", "Age_Range",
-    "Marital_Status", "Gender", "Language_Preference",
-  ];
-  // Select fields must not be sent as empty string — Airtable throws 422
   const selectFields = ["Age_Range", "Marital_Status", "Gender"];
+  const textFields   = ["First_Name", "Full_Name", "Language_Preference"];
+  const allowed      = [...selectFields, ...textFields];
 
-  const safeFields = Object.fromEntries(
-    Object.entries(fields).filter(([k, v]) => {
-      if (!allowed.includes(k)) return false;
-      if (selectFields.includes(k) && !v) return false;
-      return true;
-    })
-  );
+  const safeFields = {};
+  for (const [k, v] of Object.entries(fields)) {
+    if (!allowed.includes(k)) continue;
+
+    if (selectFields.includes(k)) {
+      if (!v) continue; // skip empty — Airtable 422 on empty select
+      const mapped = FIELD_MAPS[k]?.[v];
+      if (mapped) {
+        safeFields[k] = mapped;        // save English value
+      } else if (Object.values(FIELD_MAPS[k] || {}).includes(v)) {
+        safeFields[k] = v;             // already English (returning user)
+      }
+      // if neither, skip — unknown value
+    } else {
+      safeFields[k] = v;              // text fields pass through as-is
+    }
+  }
+
+  if (Object.keys(safeFields).length === 0) return;
+
   return airtableFetch(TABLES.users, recordId, {
     method: "PATCH",
     body: JSON.stringify({ fields: safeFields }),
@@ -133,41 +171,39 @@ export async function updateSavedConcepts(recordId, conceptsArray) {
 
 // ═══════════════════════════════════════════════════
 // CONVERSATION_LOGS TABLE
-// Columns: Session_Id, Created_At, User_Link, Full_Transcript,
-//          Concepts_Surfaced, Feedback, Session_Duration_Minutes,
-//          Language_Used
+// Columns: Session_Id (primary), Created_At, User_Link (linked),
+//          Full_Transcript, Concepts_Surfaced, Feedback,
+//          Session_Duration_Minutes, Language_Used
 // ═══════════════════════════════════════════════════
 
 // Create a new log record at session start — returns logRecordId
-export async function createSessionLog(userRecordId, userEmail) {
+export async function createSessionLog(userRecordId) {
   const data = await airtableFetch(TABLES.logs, "", {
     method: "POST",
     body: JSON.stringify({
       fields: {
-        // User_Link is a linked record field → array of record IDs
-        User_Link:        userRecordId ? [userRecordId] : undefined,
-        Created_At:       new Date().toISOString(),
-        Full_Transcript:  "",
+        User_Link:         userRecordId ? [userRecordId] : undefined,
+        Created_At:        new Date().toISOString(),
+        Full_Transcript:   "",
         Concepts_Surfaced: "",
-        Feedback:         "",
-        Language_Used:    "Hebrew",
+        Feedback:          "",
+        Language_Used:     "Hebrew",
       },
     }),
   });
   return data.id;
 }
 
-// Sync session state mid-conversation (called after each exchange)
-export async function syncSession({ logRecordId, fullTranscript, conceptsSurfaced, userFeedback, languageUsed }) {
+// Sync session mid-conversation (called after each exchange)
+export async function syncSession({ logRecordId, fullTranscript, conceptsSurfaced, languageUsed }) {
   if (!logRecordId) return;
 
   const fields = {};
-  if (fullTranscript   !== undefined) fields.Full_Transcript    = fullTranscript;
-  if (conceptsSurfaced !== undefined) fields.Concepts_Surfaced  = Array.isArray(conceptsSurfaced)
+  if (fullTranscript   !== undefined) fields.Full_Transcript   = fullTranscript;
+  if (conceptsSurfaced !== undefined) fields.Concepts_Surfaced = Array.isArray(conceptsSurfaced)
     ? conceptsSurfaced.join(", ")
     : conceptsSurfaced;
-  if (userFeedback  !== undefined) fields.Feedback       = userFeedback;
-  if (languageUsed  !== undefined) fields.Language_Used  = languageUsed;
+  if (languageUsed !== undefined) fields.Language_Used = languageUsed;
 
   if (Object.keys(fields).length === 0) return;
 
@@ -177,35 +213,33 @@ export async function syncSession({ logRecordId, fullTranscript, conceptsSurface
   });
 }
 
-// Finalize session at timeout or close
-export async function finalizeSession({ logRecordId, fullTranscript, userFeedback, conceptsSurfaced, sessionStartTime }) {
+// Save feedback from PersonalCard or timeout modal
+export async function saveFeedback(logRecordId, feedbackText) {
+  if (!logRecordId || !feedbackText) return;
+  return airtableFetch(TABLES.logs, logRecordId, {
+    method: "PATCH",
+    body: JSON.stringify({ fields: { Feedback: feedbackText } }),
+  });
+}
+
+// Finalize session at timeout
+export async function finalizeSession({ logRecordId, fullTranscript, conceptsSurfaced, sessionStartTime }) {
   if (!logRecordId) return;
 
-  // Calculate session duration in minutes
   const durationMinutes = sessionStartTime
     ? Math.round((Date.now() - new Date(sessionStartTime).getTime()) / 60000)
     : null;
 
-  return airtableFetch(TABLES.logs, logRecordId, {
-    method: "PATCH",
-    body: JSON.stringify({
-      fields: {
-        Full_Transcript:        fullTranscript  || "",
-        Feedback:               userFeedback    || "",
-        Concepts_Surfaced:      Array.isArray(conceptsSurfaced)
-          ? conceptsSurfaced.join(", ")
-          : (conceptsSurfaced || ""),
-        Session_Duration_Minutes: durationMinutes,
-      },
-    }),
-  });
-}
+  const fields = {
+    Full_Transcript:          fullTranscript || "",
+    Concepts_Surfaced:        Array.isArray(conceptsSurfaced)
+      ? conceptsSurfaced.join(", ")
+      : (conceptsSurfaced || ""),
+  };
+  if (durationMinutes !== null) fields.Session_Duration_Minutes = durationMinutes;
 
-// Save feedback from timeout modal
-export async function saveFeedback(logRecordId, feedbackText) {
-  if (!logRecordId) return;
   return airtableFetch(TABLES.logs, logRecordId, {
     method: "PATCH",
-    body: JSON.stringify({ fields: { Feedback: feedbackText } }),
+    body: JSON.stringify({ fields }),
   });
 }

@@ -7,7 +7,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
-import { findOrCreateUser, findUserByEmail, incrementSyncCount } from "./AirtableService";
+import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
 
 // ─── BETA MODAL — show only on first 2 sessions ──────────────────
@@ -185,6 +185,7 @@ export default function App() {
   const [sessionStartTime,   setSessionStartTime]   = useState(null);
   const [conceptsIntroduced, setConceptsIntroduced] = useState([]);
   const [savedConcepts,      setSavedConcepts]      = useState([]);
+  const [logRecordId,        setLogRecordId]        = useState(null);
   const [isLoading,          setIsLoading]          = useState(false);
 
   const [showBetaModal,    setShowBetaModal]    = useState(false);
@@ -221,6 +222,10 @@ export default function App() {
     localStorage.setItem(countKey, String(newCount));
     await incrementSyncCount(rid, fields.Sync_Count || 0);
     setUserRecord(prev => ({ ...(prev || fields), Sync_Count: newCount }));
+
+    // Create Conversation_Logs record for this session
+    const logId = await createSessionLog(rid, email).catch(() => null);
+    setLogRecordId(logId);
 
     // Fresh session with opening message
     setSessionStartTime(new Date());
@@ -342,8 +347,10 @@ export default function App() {
         <PersonalCard
           record={{ ...userRecord, email: userEmail }}
           airtableRecordId={recordId}
+          logRecordId={logRecordId}
           savedConcepts={savedConcepts}
           onClose={() => setScreen("chat")}
+          onLogout={handleLogout}
         />
       )}
 
