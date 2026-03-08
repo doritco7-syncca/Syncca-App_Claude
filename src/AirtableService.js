@@ -22,6 +22,8 @@ async function airtableFetch(tableName, path, options = {}) {
   const base = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(tableName)}`;
   const url  = path ? `${base}/${path}` : base;
 
+  console.log(`[Airtable] ${options.method || "GET"} ${tableName}`, url);
+
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -32,6 +34,7 @@ async function airtableFetch(tableName, path, options = {}) {
   });
 
   const data = await res.json();
+  console.log(`[Airtable] response ${res.status}`, data);
 
   if (!res.ok) {
     const msg = data?.error?.message || data?.error?.type || `HTTP ${res.status}`;
