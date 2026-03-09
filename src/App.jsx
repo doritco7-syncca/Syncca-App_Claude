@@ -287,9 +287,9 @@ export default function App() {
       // Build transcript and sync to Conversation_Logs
       const allMsgs = [...updatedMessages, synccaMsg];
       const transcript = allMsgs
-        .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
-        .join("
-");
+      // שורות 290-292 המעודכנות:
+.map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
+.join("\n");
       const conceptWords = concepts.map(c => c.word);
       syncSession({
         logRecordId,
