@@ -7,7 +7,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
-import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog, syncSession, updateSavedConcepts } from "./AirtableService";
+import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog, syncSession, updateSavedConcepts, fetchLexicon } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
 
 // ─── BETA MODAL — show only on first 2 sessions ──────────────────
@@ -36,35 +36,14 @@ function parseBracketConcepts(text, conceptLexicon) {
 }
 
 // ─── CONCEPT LEXICON — Hebrew display + explanations ─────────────
-// Single source of truth — exact Hebrew terms + full explanations shown in tooltip UI
-// Any change here must also be reflected in LexiconPrompt.js (the AI's reference copy)
-const CONCEPT_LEXICON = [
-  { englishTerm: "Clean Request",            word: "בקשה נקייה",          explanation: "בקשה שמשאירה לפרטנר חופש בחירה אמיתי — ללא לחץ, ללא ציפייה מובלעת, ומתוך הכנה לתשובה שלילית." },
-  { englishTerm: "Sanction",                 word: "סנקציה",               explanation: "תגובה לא נעימה כלפי הפרטנר — ביקורת, פנים כועסות, שתיקה, ריחוק — שמפעילה את המערכת הלימבית ומונעת קשר אמיתי." },
-  { englishTerm: "Counter-Sanction",         word: "סנקציה נגדית",         explanation: "סנקציה אחת מפעילה את השנייה — הסלמה לימבית הדדית שמחריפה את הקונפליקט." },
-  { englishTerm: "Demand",                   word: "דרישה",                explanation: "ביטוי כוחני של צורך שמפעיל פחד מסנקציה אצל הפרטנר ומכבה את הקורטקס." },
-  { englishTerm: "Functional Extension",     word: "הארכה פונקציונלית",    explanation: "התייחסות לפרטנר כהמשך של עצמי — לא כאדם נפרד עם עולמו שלו. מאמין שדרכו היא הדרך הנכונה היחידה." },
-  { englishTerm: "Hierarchy",                word: "היררכיה",              explanation: "דרישות יוצרות מבנה כוח מרומז בזוגיות שווה — ומפעילות פיוס או מלחמה." },
-  { englishTerm: "Compliance",               word: "פיוס",                 explanation: "פעולה מתוך פחד, לא בחירה — ביצוע חלקי עם טינה שנצברת פנימה לאורך זמן." },
-  { englishTerm: "War Mode",                 word: "מלחמה",                explanation: "התנגדות פעילה ומאבקי כוח — אף אחד לא מוותר, אין מי שמבצע, ואי אפשר להתקדם." },
-  { englishTerm: "Compliance-War Cycle",     word: "מחזור פיוס-מלחמה",    explanation: "טינה שנצברת מפיוס מתפוצצת למלחמה — דפוס חוזר ונשנה שמחריף עם הזמן." },
-  { englishTerm: "Injury Time",              word: "זמן הפציעה",           explanation: "שתיקה וריחוק לאחר סנקציה — האהבה רועבת מחוסר חמימות, לא הפסקה ניטרלית." },
-  { englishTerm: "Biological Shift",         word: "מעבר ביולוגי",         explanation: "המוח פועל ב-3 מצבים — קורטקס, לימבי, זוחלי. הקורטקס יכול לקחת פיקוד בתנאים הנכונים." },
-  { englishTerm: "Reptilian Brain",          word: "מוח הזוחל",            explanation: "מערכת ההישרדות הקדמונית. הצפה של אדרנלין — להילחם, לברוח או לקפוא לחלוטין." },
-  { englishTerm: "Limbic System",            word: "מערכת לימבית",         explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום. כשהיא פעילה, קשה לחשוב בפתיחות ואמפתיה." },
-  { englishTerm: "Cortex",                   word: "קורטקס",               explanation: "מערכת החשיבה הרציונלית. כשאין פחד מסנקציות, הקורטקס יכול לשקול בקשות בצורה פתוחה ואוהבת." },
-  { englishTerm: "Separateness",             word: "נפרדות",               explanation: "הפרטנר הוא ישות נפרדת עם עולם פנימי, רצונות ולוח זמנים משלו — יכולת קורטיקלית חיובית וחיונית לאהבה." },
-  { englishTerm: "Separateness Recognition", word: "הכרה בנפרדות",         explanation: "הכרה פעילה בכך שהצורך שלי הוא הפרעה לזרימה הטבעית של הפרטנר — והוא לא חייב לי כן." },
-  { englishTerm: "Plan B",                   word: "תוכנית ב",             explanation: "לקיחת אחריות אישית אמיתית על הצורך שלי אם הפרטנר יגיד לא — ממקום של שלום פנימי, לא מתסכול." },
-  { englishTerm: "Zero-Sanction Policy",     word: "אפס סנקציות",          explanation: "מחויבות פנימית אמיתית לקבל 'לא' ללא שום תגובה מעניישת — לא רק מבחוץ, אלא גם רגשית פנימה." },
-  { englishTerm: "Request Test",             word: "מבחן הבקשה",           explanation: "בקשה נקייה נבחנת על פי מה שקורה אחרי 'לא'. אם הגיעה סנקציה — הייתה זו דרישה בתחפושת." },
-  { englishTerm: "Yes Logic",                word: "כן שבא מאהבה",         explanation: "כשאין פחד מסנקציות, המאזין נשאר בקורטקס ויכול לומר כן מתוך בחירה חופשית ואהבה אמיתית." },
-  { englishTerm: "No Logic",                 word: "לא שבא מהגנה עצמית",   explanation: "'לא' הוא הגנה לגיטימית על משאבים, ערכים וגבולות — לא דחיית אהבה." },
-  { englishTerm: "Holding Environment",      word: "מרחב מחזיק",           explanation: "מרחב רגשי בטוח לקושי ולפגיעות — ללא פחד מדחייה, שיפוט או הסלמה." },
-  { englishTerm: "Deep Dialogue",            word: "דיאלוג עמוק",          explanation: "המדבר משתף ללא האשמה; המאזין משקף באמפתיה לפני שהוא מגיב — מבנה שיחה מרפא." },
-  { englishTerm: "Healing Apology",          word: "התנצלות מרפאת",        explanation: "הכרה בנזק שנגרם, אימות רגשות הפרטנר, ומחויבות ממשית לשינוי התנהגותי." },
-  { englishTerm: "Reframing",                word: "מסגור מחדש",           explanation: "זיהוי הצורך החיובי מאחורי הכעס של הפרטנר — ומתן שם לו בכבוד כדי שירגיש נראה." },
-  { englishTerm: "Self-Reframing",           word: "מסגור עצמי מחדש",      explanation: "זיהוי שורש הכעס שלי — כאב, פחד או ערך שנפגע — וביטוי הפגיעות במקום הטחת כעס." },
+// CONCEPT_LEXICON is loaded from Airtable at startup (see useEffect below)
+// Fallback entries used only if Airtable fetch fails
+const FALLBACK_LEXICON = [
+  { englishTerm: "Limbic System",  word: "מערכת לימבית",      explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום." },
+  { englishTerm: "Cortex",         word: "קורטקס",             explanation: "מערכת החשיבה הרציונלית." },
+  { englishTerm: "Clean Request",  word: "בקשה נקייה",         explanation: "בקשה שמשאירה לפרטנר חופש בחירה אמיתי." },
+  { englishTerm: "Sanction",       word: "סנקציה",             explanation: "תגובה לא נעימה כלפי הפרטנר." },
+  { englishTerm: "Demand",         word: "דרישה",              explanation: "ביטוי כוחני של צורך." },
 ];
 
 // ─── TIMEOUT MODAL ───────────────────────────────────────────────
@@ -192,17 +171,31 @@ export default function App() {
   const [sessionStartTime,   setSessionStartTime]   = useState(null);
   const [savedConcepts,      setSavedConcepts]      = useState([]);
   const [logRecordId,        setLogRecordId]        = useState(null);
+  const logRecordIdRef = useRef(null);  // ref to avoid stale closure in handleSend
   const [isLoading,          setIsLoading]          = useState(false);
   // useRef avoids stale-closure bug — always holds current transcript value
   const fullTranscriptRef    = useRef("");
   const conceptsIntroducedRef = useRef([]);
 
+  const [conceptLexicon,   setConceptLexicon]   = useState(FALLBACK_LEXICON);
   const [showBetaModal,    setShowBetaModal]    = useState(false);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
   const firstName = userRecord?.First_Name || "";
 
   // Auto-go to chat if returning user
+  // Fetch live lexicon from Airtable on mount
+  useEffect(() => {
+    fetchLexicon()
+      .then(entries => {
+        if (entries?.length > 0) {
+          setConceptLexicon(entries);
+          console.log("[Lexicon] Loaded", entries.length, "concepts from Airtable");
+        }
+      })
+      .catch(e => console.warn("[Lexicon] Failed to load, using fallback:", e));
+  }, []);
+
   useEffect(() => {
     if (userEmail && recordId) {
       // Load user record
@@ -213,7 +206,7 @@ export default function App() {
       // Create a session log for this returning session
       createSessionLog(recordId)
         .then(logId => {
-          setLogRecordId(logId);
+          setLogRecordId(logId); logRecordIdRef.current = logId;
           setSessionStartTime(new Date());
         })
         .catch(() => {});
@@ -254,7 +247,7 @@ export default function App() {
 
     // Create Conversation_Logs record for this session
     const logId = await createSessionLog(rid).catch(() => null);
-    setLogRecordId(logId);
+    setLogRecordId(logId); logRecordIdRef.current = logId;
 
     // Fresh session with opening message
     setSessionStartTime(new Date());
@@ -294,11 +287,11 @@ export default function App() {
         : 0;
 
       // ✓ Uses the proper 4-layer SynccaService system prompt
-      const rawResponse = await sendToSyncca(apiMessages, elapsed);
+      const rawResponse = await sendToSyncca(apiMessages, elapsed, conceptLexicon);
       const { visibleText } = parseResponse(rawResponse);
 
       // Parse [[bracket]] concepts
-      const { cleanText, concepts } = parseBracketConcepts(visibleText, CONCEPT_LEXICON);
+      const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon);
 
       if (concepts.length > 0) {
         const newWords = concepts.map(c => c.word).filter(w => !conceptsIntroducedRef.current.includes(w));
@@ -320,12 +313,18 @@ export default function App() {
         : "[User]: " + text + "\n[Syncca]: " + cleanText;
       fullTranscriptRef.current = newTranscript;
 
-      // Sync full transcript + all accumulated concepts to Airtable
-      syncSession({
-        logRecordId,
-        fullTranscript:   newTranscript,
-        conceptsSurfaced: conceptsIntroducedRef.current,
-      }).catch(e => console.warn("syncSession failed:", e));
+      // Use ref for logRecordId — avoids stale closure
+      const currentLogId = logRecordIdRef.current;
+      console.log("[Transcript] Exchange synced. logRecordId:", currentLogId, "length:", newTranscript.length);
+      if (currentLogId) {
+        syncSession({
+          logRecordId:      currentLogId,
+          fullTranscript:   newTranscript,
+          conceptsSurfaced: conceptsIntroducedRef.current,
+        }).catch(e => console.warn("syncSession failed:", e));
+      } else {
+        console.warn("[Transcript] logRecordId is null — syncSession skipped");
+      }
 
     } catch (err) {
       console.error("Syncca API error:", err);
@@ -396,6 +395,7 @@ export default function App() {
           messages={messages}
           isLoading={isLoading}
           onSend={handleSend}
+          conceptLexicon={conceptLexicon}
           onSaveConcept={handleSaveConcept}
           onOpenPersonalCard={() => setScreen("personal")}
           onTimeout={() => setShowTimeoutModal(true)}
