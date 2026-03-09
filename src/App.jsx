@@ -7,7 +7,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
-import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog, syncSession } from "./AirtableService";
+import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog, syncSession, updateSavedConcepts } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
 
 // ─── BETA MODAL — show only on first 2 sessions ──────────────────
@@ -287,9 +287,9 @@ export default function App() {
       // Build transcript and sync to Conversation_Logs
       const allMsgs = [...updatedMessages, synccaMsg];
       const transcript = allMsgs
-      // שורות 290-292 המעודכנות:
-.map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
-.join("\n");
+        .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
+        .join("
+");
       const conceptWords = concepts.map(c => c.word);
       syncSession({
         logRecordId,
@@ -314,7 +314,23 @@ export default function App() {
   function handleSaveConcept(concept) {
     setSavedConcepts(prev => {
       if (prev.find(c => c.word === concept.word)) return prev;
-      return [...prev, concept];
+      const updated = [...prev, concept];
+
+      // Persist to Users.Saved_Concepts
+      if (recordId) {
+        updateSavedConcepts(recordId, updated.map(c => c.word))
+          .catch(e => console.warn("updateSavedConcepts failed:", e));
+      }
+
+      // Persist to Conversation_Logs.Concepts_Surfaced
+      if (logRecordId) {
+        syncSession({
+          logRecordId,
+          conceptsSurfaced: updated.map(c => c.word),
+        }).catch(e => console.warn("syncSession concepts failed:", e));
+      }
+
+      return updated;
     });
   }
 
