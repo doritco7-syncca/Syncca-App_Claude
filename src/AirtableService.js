@@ -95,11 +95,14 @@ export async function findUserByEmail(email) {
 }
 
 export async function createUser(email) {
+  // Generate a stable unique ID for the primary Username field
+  const uniqueId = "USER_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7).toUpperCase();
+
   const data = await airtableFetch(TABLES.users, "", {
     method: "POST",
     body: JSON.stringify({
       fields: {
-        Username:   email,   // Primary field — required by Airtable
+        Username:   uniqueId,  // Primary field — unique stable ID, never changes
         Email:      email,
         Sync_Count: 0,
         Created_At: new Date().toISOString(),
@@ -150,10 +153,7 @@ export async function updateUserProfile(recordId, fields) {
     }
   }
 
-  // Sync Username (primary field) when name is updated
-  if (safeFields.First_Name) safeFields.Username = safeFields.First_Name;
-  else if (safeFields.Full_Name) safeFields.Username = safeFields.Full_Name;
-
+  // Username (primary field) is a stable unique ID — never overwrite it
   if (Object.keys(safeFields).length === 0) return;
 
   return airtableFetch(TABLES.users, recordId, {
@@ -183,18 +183,24 @@ export async function updateSavedConcepts(recordId, conceptsArray) {
 
 // Create a new log record at session start — returns logRecordId
 export async function createSessionLog(userRecordId) {
+  // Generate unique Session_Id for the primary field
+  const sessionId = "SESS_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7).toUpperCase();
+
+  const fields = {
+    Session_Id:        sessionId,  // Primary field — unique per session
+    Created_At:        new Date().toISOString(),
+    Full_Transcript:   "",
+    Concepts_Surfaced: "",
+    Feedback:          "",
+    Language_Used:     "Hebrew",
+  };
+
+  // User_Link is a linked record field — must be an array of Airtable rec... IDs
+  if (userRecordId) fields.User_Link = [userRecordId];
+
   const data = await airtableFetch(TABLES.logs, "", {
     method: "POST",
-    body: JSON.stringify({
-      fields: {
-        User_Link:         userRecordId ? [userRecordId] : undefined,
-        Created_At:        new Date().toISOString(),
-        Full_Transcript:   "",
-        Concepts_Surfaced: "",
-        Feedback:          "",
-        Language_Used:     "Hebrew",
-      },
-    }),
+    body: JSON.stringify({ fields }),
   });
   return data.id;
 }
