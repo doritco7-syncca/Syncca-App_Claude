@@ -1,10 +1,14 @@
+
 // PersonalCard.jsx — Syncca · Heavy Stone Slab Edition
 // Props:
-//   record (object), airtableBaseId, airtableTableId, airtableToken, airtableRecordId
-//   savedConcepts ([{word, explanation}]), onClose () => void
+//   record (object), airtableRecordId (string)
+//   logRecordId (string) — current session log ID for feedback
+//   savedConcepts ([{word, explanation}])
+//   onClose () => void
+//   onLogout () => void
 
 import { useState, useCallback } from "react";
-import { updateUserProfile } from "../AirtableService";
+import { updateUserProfile, saveFeedback, FIELD_MAPS } from "../AirtableService";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -22,30 +26,48 @@ const STONE_SHADOW = `
   inset 0 1px 0px rgba(255,255,255,0.90)
 `;
 
+// UI labels in Hebrew — values are what gets stored in state
+// Translation to English happens in AirtableService before saving
 const FIELDS = [
-  { key: "First_Name",          label: "שם פרטי",       type: "text",   placeholder: "שמך" },
-  { key: "Full_Name",           label: "שם מלא",         type: "text",   placeholder: "שם מלא" },
-  { key: "Age_Range",           label: "טווח גיל",       type: "select", options: ["18-25","26-35","36-45","46-55","56-65","65+"] },
-  { key: "Marital_Status",      label: "מצב משפחתי",     type: "select", options: ["רווק/ה","זוגיות","נשוי/אה","גרוש/ה","אלמן/ה"] },
-  { key: "Gender",              label: "מגדר",           type: "select", options: ["אישה","גבר","נון-בינארי/ת","מעדיף/ה לא לציין"] },
-  { key: "Language_Preference", label: "שפה מועדפת",     type: "text",   placeholder: "עברית / English" },
+  { key: "First_Name",     label: "שם פרטי",    type: "text",   placeholder: "שמך" },
+  { key: "Full_Name",      label: "שם מלא",      type: "text",   placeholder: "שם מלא" },
+  { key: "Age_Range",      label: "טווח גיל",    type: "select",
+    options: ["20-29","30-39","40-49","50-59","60-69","70-79","80-100"] },
+  { key: "Marital_Status", label: "מצב משפחתי",  type: "select",
+    options: ["רווק/ה","זוגיות","נשוי/ה","גרוש/ה","אלמן/ה"] },
+  { key: "Gender",         label: "מגדר",        type: "select",
+    options: ["אישה","גבר","נון-בינארי/ת","מעדיף/ה לא לציין"] },
+  { key: "Language_Preference", label: "שפה מועדפת", type: "text", placeholder: "עברית / English" },
 ];
+
+// Reverse-map English Airtable values → Hebrew for display (returning users)
+function toHebrew(key, value) {
+  if (!value || !FIELD_MAPS[key]) return value;
+  const reverse = Object.fromEntries(
+    Object.entries(FIELD_MAPS[key]).map(([he, en]) => [en, he])
+  );
+  return reverse[value] || value;
+}
 
 export default function PersonalCard({
   record = {},
   airtableRecordId,
-  savedConcepts = [], onClose,
+  logRecordId,
+  savedConcepts = [],
+  onClose,
+  onLogout,
 }) {
   const [form, setForm] = useState({
     First_Name:          record.First_Name          || "",
     Full_Name:           record.Full_Name           || "",
-    Age_Range:           record.Age_Range           || "",
-    Marital_Status:      record.Marital_Status      || "",
-    Gender:              record.Gender              || "",
+    Age_Range:           toHebrew("Age_Range",      record.Age_Range      || ""),
+    Marital_Status:      toHebrew("Marital_Status", record.Marital_Status || ""),
+    Gender:              toHebrew("Gender",         record.Gender         || ""),
     Language_Preference: record.Language_Preference || "",
   });
-  const [saveState, setSaveState] = useState("idle");
-  const [errMsg, setErrMsg]       = useState("");
+  const [feedback,   setFeedback]   = useState("");
+  const [saveState,  setSaveState]  = useState("idle");
+  const [errMsg,     setErrMsg]     = useState("");
 
   function update(k, v) {
     setForm(f => ({ ...f, [k]: v }));
@@ -58,12 +80,17 @@ export default function PersonalCard({
       if (airtableRecordId) {
         await updateUserProfile(airtableRecordId, form);
       }
+      if (logRecordId && feedback.trim()) {
+        await saveFeedback(logRecordId, feedback.trim());
+      }
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2800);
     } catch (e) {
-      setSaveState("error"); setErrMsg(e.message || "שגיאה בשמירה");
+      console.error("PersonalCard save error:", e);
+      setSaveState("error");
+      setErrMsg(e.message || "שגיאה בשמירה");
     }
-  }, [form, airtableRecordId]);
+  }, [form, feedback, airtableRecordId, logRecordId]);
 
   const saveBg    = { idle: COLORS.primary, saving: "#f97316", saved: COLORS.success, error: "#dc2626" }[saveState];
   const saveLabel = { idle: "שמירה  💾", saving: "שומר...", saved: "✓  נשמר!", error: "שגיאה — נסי שוב" }[saveState];
@@ -101,6 +128,19 @@ export default function PersonalCard({
         .pc-field:focus { border-color: ${COLORS.primary}; }
         .pc-field::placeholder { color: ${COLORS.muted}; }
 
+        .pc-textarea {
+          width: 100%; min-height: 80px;
+          background: ${COLORS.stoneLight};
+          border: 1.5px solid transparent; border-radius: 16px;
+          padding: 12px 16px; font-family: 'Inter', sans-serif;
+          font-size: 0.87rem; color: ${COLORS.text};
+          outline: none; direction: rtl; text-align: right;
+          transition: border-color 0.18s; resize: vertical;
+          line-height: 1.55;
+        }
+        .pc-textarea:focus { border-color: ${COLORS.primary}; }
+        .pc-textarea::placeholder { color: ${COLORS.muted}; }
+
         .pc-label {
           display: block; margin-bottom: 5px;
           font-family: 'Inter', sans-serif; font-size: 0.66rem;
@@ -121,14 +161,15 @@ export default function PersonalCard({
         }
         .concept-pill:hover { border-color: ${COLORS.primary}; }
 
-        .close-btn {
+        .icon-btn {
           background: none; border: none; cursor: pointer;
-          color: ${COLORS.muted}; font-size: 1rem;
-          width: 30px; height: 30px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.15s;
+          color: ${COLORS.muted}; font-size: 0.92rem;
+          padding: 6px 10px; border-radius: 9999px;
+          font-family: 'Inter', sans-serif; font-weight: 500;
+          display: flex; align-items: center; gap: 5px;
+          transition: background 0.15s, color 0.15s;
         }
-        .close-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
+        .icon-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
 
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 2px; }
@@ -147,7 +188,7 @@ export default function PersonalCard({
         padding: "10px", fontFamily: "'Inter', sans-serif",
       }}>
         <div className="pc-slab" style={{
-          background: COLORS.stone,   // 100% opaque — hides chat completely
+          background: COLORS.stone,
           borderRadius: "32px",
           boxShadow: STONE_SHADOW,
           width: "100%", maxWidth: "420px",
@@ -159,51 +200,58 @@ export default function PersonalCard({
 
           {/* HEADER */}
           <div style={{
-            padding: "20px 22px 16px",
+            padding: "18px 20px 14px",
             borderBottom: `1px solid ${COLORS.border}`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             flexShrink: 0,
           }}>
-            <button className="close-btn" onClick={onClose} title="חזרה לשיחה">✕</button>
+            {/* Logout button — left side */}
+            <button className="icon-btn" onClick={onLogout} title="יציאה מהחשבון">
+              <span>↩</span><span>יציאה</span>
+            </button>
+
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "1.35rem", fontWeight: 700,
+              fontSize: "1.3rem", fontWeight: 700,
               color: COLORS.secondary, direction: "rtl",
             }}>הכרטיס האישי שלי</div>
-            <div style={{ width: 30 }} />
+
+            {/* Close — right side */}
+            <button className="icon-btn" onClick={onClose} title="חזרה לשיחה"
+              style={{ fontSize: "1rem" }}>✕</button>
           </div>
 
           {/* SCROLLABLE BODY */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px 22px 0" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "22px 20px 0" }}>
 
-            {/* Avatar + name */}
+            {/* Avatar + name + email */}
             <div style={{
               display: "flex", alignItems: "center", gap: "14px",
-              direction: "rtl", marginBottom: "28px",
+              direction: "rtl", marginBottom: "24px",
             }}>
               <div style={{
-                width: 54, height: 54, borderRadius: "50%", flexShrink: 0,
+                width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
                 background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontSize: "1.35rem", fontWeight: 700,
+                color: "white", fontSize: "1.3rem", fontWeight: 700,
                 fontFamily: "'Cormorant Garamond', serif",
               }}>{initials}</div>
               <div>
                 <div style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "1.15rem", fontWeight: 700, color: COLORS.text,
+                  fontSize: "1.1rem", fontWeight: 700, color: COLORS.text,
                 }}>{form.Full_Name || form.First_Name || "שם מלא"}</div>
                 <div style={{
                   fontFamily: "'Inter', sans-serif",
-                  fontSize: "0.78rem", color: COLORS.muted, direction: "rtl",
+                  fontSize: "0.76rem", color: COLORS.muted, direction: "ltr",
                 }}>{record.email || ""}</div>
               </div>
             </div>
 
-            {/* Fields — 2-col grid */}
+            {/* Profile fields — 2-col grid for first 4 */}
             <div style={{
               display: "grid", gridTemplateColumns: "1fr 1fr",
-              gap: "14px", marginBottom: "14px",
+              gap: "12px", marginBottom: "12px",
             }}>
               {FIELDS.slice(0, 4).map(f => (
                 <div key={f.key}>
@@ -222,9 +270,9 @@ export default function PersonalCard({
               ))}
             </div>
 
-            {/* Full-width remaining fields */}
+            {/* Full-width fields */}
             {FIELDS.slice(4).map(f => (
-              <div key={f.key} style={{ marginBottom: "14px" }}>
+              <div key={f.key} style={{ marginBottom: "12px" }}>
                 <label className="pc-label">{f.label}</label>
                 {f.type === "select" ? (
                   <select className="pc-field" value={form[f.key]}
@@ -240,18 +288,18 @@ export default function PersonalCard({
             ))}
 
             {/* Divider */}
-            <div style={{ height: "1px", background: COLORS.border, margin: "22px 0 18px" }} />
+            <div style={{ height: "1px", background: COLORS.border, margin: "20px 0 16px" }} />
 
             {/* Saved concepts */}
-            <div style={{ marginBottom: "28px" }}>
+            <div style={{ marginBottom: "20px" }}>
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "1.1rem", fontWeight: 700,
-                color: COLORS.secondary, direction: "rtl", marginBottom: "12px",
+                fontSize: "1.05rem", fontWeight: 700,
+                color: COLORS.secondary, direction: "rtl", marginBottom: "10px",
               }}>מושגים ששמרתי ✦</div>
               {savedConcepts.length === 0 ? (
                 <div style={{
-                  color: COLORS.muted, fontSize: "0.83rem",
+                  color: COLORS.muted, fontSize: "0.82rem",
                   fontFamily: "'Inter', sans-serif",
                   direction: "rtl", lineHeight: 1.6,
                 }}>
@@ -268,19 +316,30 @@ export default function PersonalCard({
               )}
             </div>
 
+            {/* Feedback textarea */}
+            <div style={{ marginBottom: "24px" }}>
+              <label className="pc-label">פידבק על הסינק</label>
+              <textarea
+                className="pc-textarea"
+                placeholder="מה עזר? מה היה מבלבל? מה כדאי לשנות?"
+                value={feedback}
+                onChange={e => setFeedback(e.target.value)}
+              />
+            </div>
+
           </div>
 
           {/* STICKY SAVE BUTTON */}
           <div style={{
-            padding: "14px 22px 22px",
+            padding: "12px 20px 20px",
             borderTop: `1px solid ${COLORS.border}`,
             background: COLORS.stone, flexShrink: 0,
           }}>
             {saveState === "error" && errMsg && (
               <div style={{
-                color: "#dc2626", fontSize: "0.76rem",
+                color: "#dc2626", fontSize: "0.75rem",
                 textAlign: "right", direction: "rtl",
-                marginBottom: "8px", paddingRight: "4px",
+                marginBottom: "8px",
               }}>{errMsg}</div>
             )}
             <button onClick={handleSave} disabled={saveState === "saving"}
@@ -289,15 +348,13 @@ export default function PersonalCard({
                 border: "none", borderRadius: "9999px",
                 fontFamily: "'Inter', sans-serif",
                 fontSize: "1rem", fontWeight: 600,
-                height: "56px", width: "100%",
+                height: "54px", width: "100%",
                 cursor: saveState === "saving" ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
                 boxShadow: saveShadow,
                 transition: "background 0.3s, box-shadow 0.3s",
               }}>
-              {saveState === "saving"
-                ? <span className="spinner" />
-                : saveLabel}
+              {saveState === "saving" ? <span className="spinner" /> : saveLabel}
             </button>
           </div>
 
