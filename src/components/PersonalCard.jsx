@@ -1,4 +1,3 @@
-
 // PersonalCard.jsx — Syncca · Heavy Stone Slab Edition
 // Props:
 //   record (object), airtableRecordId (string)
@@ -34,7 +33,7 @@ const FIELDS = [
   { key: "Age_Range",      label: "טווח גיל",    type: "select",
     options: ["20-29","30-39","40-49","50-59","60-69","70-79","80-100"] },
   { key: "Marital_Status", label: "מצב משפחתי",  type: "select",
-    options: ["רווק/ה","זוגיות","נשוי/ה","גרוש/ה","אלמן/ה"] },
+    options: ["רווק/ה","זוגיות","נשוי/ה","גרוש/ה","נפרד/ה","אלמן/ה"] },
   { key: "Gender",         label: "מגדר",        type: "select",
     options: ["אישה","גבר","נון-בינארי/ת","מעדיף/ה לא לציין"] },
   { key: "Language_Preference", label: "שפה מועדפת", type: "text", placeholder: "עברית / English" },
