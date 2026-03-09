@@ -7,7 +7,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
-import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog } from "./AirtableService";
+import { findOrCreateUser, findUserByEmail, incrementSyncCount, createSessionLog, syncSession } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
 
 // ─── BETA MODAL — show only on first 2 sessions ──────────────────
@@ -224,7 +224,7 @@ export default function App() {
     setUserRecord(prev => ({ ...(prev || fields), Sync_Count: newCount }));
 
     // Create Conversation_Logs record for this session
-    const logId = await createSessionLog(rid, email).catch(() => null);
+    const logId = await createSessionLog(rid).catch(() => null);
     setLogRecordId(logId);
 
     // Fresh session with opening message
@@ -276,12 +276,26 @@ export default function App() {
         ]);
       }
 
-      setMessages(prev => [...prev, {
+      const synccaMsg = {
         role: "syncca",
         text: cleanText,
         concepts,
         timestamp: new Date().toISOString(),
-      }]);
+      };
+      setMessages(prev => [...prev, synccaMsg]);
+
+      // Build transcript and sync to Conversation_Logs
+      const allMsgs = [...updatedMessages, synccaMsg];
+      const transcript = allMsgs
+        .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
+        .join("
+");
+      const conceptWords = concepts.map(c => c.word);
+      syncSession({
+        logRecordId,
+        fullTranscript: transcript,
+        conceptsSurfaced: conceptWords,
+      }).catch(e => console.warn("syncSession failed:", e));
 
     } catch (err) {
       console.error("Syncca API error:", err);

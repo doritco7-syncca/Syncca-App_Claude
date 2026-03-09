@@ -99,6 +99,7 @@ export async function createUser(email) {
     method: "POST",
     body: JSON.stringify({
       fields: {
+        Username:   email,   // Primary field — required by Airtable
         Email:      email,
         Sync_Count: 0,
         Created_At: new Date().toISOString(),
@@ -148,6 +149,10 @@ export async function updateUserProfile(recordId, fields) {
       safeFields[k] = v;              // text fields pass through as-is
     }
   }
+
+  // Sync Username (primary field) when name is updated
+  if (safeFields.First_Name) safeFields.Username = safeFields.First_Name;
+  else if (safeFields.Full_Name) safeFields.Username = safeFields.Full_Name;
 
   if (Object.keys(safeFields).length === 0) return;
 
