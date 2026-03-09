@@ -63,8 +63,15 @@ function MessageText({ text, concepts = [], onConceptClick }) {
   return <>{parts}</>;
 }
 
-function Tooltip({ concept, onClose }) {
+function Tooltip({ concept, onClose, onSave, savedConcepts = [] }) {
   if (!concept) return null;
+  const alreadySaved = savedConcepts.some(c => c.word === concept.word);
+
+  function handleSave(e) {
+    e.stopPropagation();
+    onSave?.(concept);
+  }
+
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 200,
@@ -74,23 +81,44 @@ function Tooltip({ concept, onClose }) {
       <div onClick={e => e.stopPropagation()} style={{
         background: "#FDFBF7", borderRadius: "20px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
-        padding: "24px 26px", maxWidth: "380px", width: "100%",
+        padding: "24px 26px 20px", maxWidth: "380px", width: "100%",
         direction: "rtl", animation: "tooltipUp 0.22s ease",
+        position: "relative",
       }}>
-        <div style={{
-          fontFamily: "'Cormorant Garamond', serif",
-          fontSize: "1.3rem", fontWeight: 700,
-          color: COLORS.secondary, marginBottom: "10px",
-        }}>{concept.word}</div>
-        <div style={{
-          fontFamily: "'Inter', sans-serif", fontSize: "0.9rem",
-          color: COLORS.text, lineHeight: 1.65,
-        }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
+        {/* Close button */}
         <button onClick={onClose} style={{
           position: "absolute", top: "14px", left: "14px",
           background: "none", border: "none", cursor: "pointer",
           color: COLORS.muted, fontSize: "1rem",
         }}>✕</button>
+
+        {/* Concept name */}
+        <div style={{
+          fontFamily: "'Cormorant Garamond', serif",
+          fontSize: "1.3rem", fontWeight: 700,
+          color: COLORS.secondary, marginBottom: "10px",
+        }}>{concept.word}</div>
+
+        {/* Explanation */}
+        <div style={{
+          fontFamily: "'Inter', sans-serif", fontSize: "0.9rem",
+          color: COLORS.text, lineHeight: 1.65, marginBottom: "18px",
+        }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
+
+        {/* Save button */}
+        <button onClick={handleSave} disabled={alreadySaved} style={{
+          width: "100%", height: "44px",
+          background: alreadySaved ? "#e5e7eb" : COLORS.primary,
+          color: alreadySaved ? COLORS.muted : "white",
+          border: "none", borderRadius: "9999px",
+          fontFamily: "'Inter', sans-serif", fontWeight: 600,
+          fontSize: "0.88rem", cursor: alreadySaved ? "default" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+          transition: "background 0.2s",
+          boxShadow: alreadySaved ? "none" : "0 3px 10px rgba(234,88,12,0.28)",
+        }}>
+          {alreadySaved ? "✓ נשמר בכרטיס האישי" : "✦ שמור מושג זה"}
+        </button>
       </div>
     </div>
   );
@@ -99,6 +127,8 @@ function Tooltip({ concept, onClose }) {
 export default function ChatScreen({
   userEmail = "", firstName = "",
   messages = [], onSend,
+  onSaveConcept,
+  savedConcepts = [],
   onOpenPersonalCard, onTimeout,
   sessionStartTime,
 }) {
@@ -373,7 +403,12 @@ export default function ChatScreen({
         </div>
       </div>
 
-      <Tooltip concept={activeConcept} onClose={() => setActiveConcept(null)} />
+      <Tooltip
+        concept={activeConcept}
+        onClose={() => setActiveConcept(null)}
+        onSave={(concept) => { onSaveConcept?.(concept); setActiveConcept(null); }}
+        savedConcepts={savedConcepts}
+      />
     </>
   );
 }
