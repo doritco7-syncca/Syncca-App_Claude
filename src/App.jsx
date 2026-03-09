@@ -288,8 +288,7 @@ export default function App() {
       const allMsgs = [...updatedMessages, synccaMsg];
       const transcript = allMsgs
         .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
-        .join("
-");
+        .join("\n");
       const conceptWords = concepts.map(c => c.word);
       syncSession({
         logRecordId,
