@@ -2,7 +2,7 @@
 // Connects: WelcomeScreen → LoginScreen → ChatScreen ↔ PersonalCard
 // AI brain lives in SynccaService.js — this file only manages routing + state.
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
@@ -36,28 +36,35 @@ function parseBracketConcepts(text, conceptLexicon) {
 }
 
 // ─── CONCEPT LEXICON — Hebrew display + explanations ─────────────
+// Single source of truth — exact Hebrew terms + full explanations shown in tooltip UI
+// Any change here must also be reflected in LexiconPrompt.js (the AI's reference copy)
 const CONCEPT_LEXICON = [
   { englishTerm: "Clean Request",            word: "בקשה נקייה",          explanation: "בקשה שמשאירה לפרטנר חופש בחירה אמיתי — ללא לחץ, ללא ציפייה מובלעת, ומתוך הכנה לתשובה שלילית." },
-  { englishTerm: "Sanction",                 word: "סנקציה",               explanation: "תגובה לא נעימה כלפי הפרטנר — ביקורת, פנים כועסות, שתיקה, ריחוק — שמפעילה את המערכת הלימבית." },
+  { englishTerm: "Sanction",                 word: "סנקציה",               explanation: "תגובה לא נעימה כלפי הפרטנר — ביקורת, פנים כועסות, שתיקה, ריחוק — שמפעילה את המערכת הלימבית ומונעת קשר אמיתי." },
+  { englishTerm: "Counter-Sanction",         word: "סנקציה נגדית",         explanation: "סנקציה אחת מפעילה את השנייה — הסלמה לימבית הדדית שמחריפה את הקונפליקט." },
   { englishTerm: "Demand",                   word: "דרישה",                explanation: "ביטוי כוחני של צורך שמפעיל פחד מסנקציה אצל הפרטנר ומכבה את הקורטקס." },
-  { englishTerm: "Separateness",             word: "נפרדות",               explanation: "הפרטנר הוא ישות נפרדת עם עולם פנימי, רצונות ולוח זמנים משלו — יכולת קורטיקלית חיובית." },
-  { englishTerm: "Separateness Recognition", word: "הכרה בנפרדות",         explanation: "הכרה פעילה בכך שהצורך שלי הוא הפרעה לזרימה הטבעית של הפרטנר — והוא לא חייב לי כן." },
-  { englishTerm: "Plan B",                   word: "תוכנית ב",             explanation: "לקיחת אחריות אישית אמיתית על הצורך שלי אם הפרטנר יגיד לא — ממקום של שלום פנימי." },
-  { englishTerm: "Zero-Sanction Policy",     word: "אפס סנקציות",          explanation: "מחויבות פנימית אמיתית לקבל 'לא' ללא שום תגובה מעניישת — לא רק מבחוץ, אלא גם רגשית." },
-  { englishTerm: "Limbic System",            word: "מערכת לימבית",         explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום. כשהיא פעילה, קשה לחשוב בפתיחות." },
-  { englishTerm: "Cortex",                   word: "קורטקס",               explanation: "מערכת החשיבה הרציונלית. כשאין פחד מסנקציות, הקורטקס יכול לשקול בקשות בצורה פתוחה." },
-  { englishTerm: "Compliance",               word: "פיוס",                 explanation: "פעולה מתוך פחד, לא בחירה — ביצוע חלקי עם טינה שנצברת." },
-  { englishTerm: "War Mode",                 word: "מלחמה",                explanation: "התנגדות פעילה ומאבקי כוח — אף אחד לא מוותר ואין מי שמבצע." },
-  { englishTerm: "Compliance-War Cycle",     word: "מחזור פיוס-מלחמה",    explanation: "טינה שנצברת מפיוס מתפוצצת למלחמה — דפוס חוזר ונשנה." },
-  { englishTerm: "Injury Time",              word: "זמן הפציעה",           explanation: "שתיקה וריחוק לאחר סנקציה — האהבה רועבת מחוסר חמימות." },
-  { englishTerm: "Functional Extension",     word: "הארכה פונקציונלית",    explanation: "התייחסות לפרטנר כהמשך של עצמי — לא כאדם נפרד עם עולמו שלו." },
+  { englishTerm: "Functional Extension",     word: "הארכה פונקציונלית",    explanation: "התייחסות לפרטנר כהמשך של עצמי — לא כאדם נפרד עם עולמו שלו. מאמין שדרכו היא הדרך הנכונה היחידה." },
   { englishTerm: "Hierarchy",                word: "היררכיה",              explanation: "דרישות יוצרות מבנה כוח מרומז בזוגיות שווה — ומפעילות פיוס או מלחמה." },
-  { englishTerm: "Biological Shift",         word: "מעבר ביולוגי",         explanation: "המוח פועל ב-3 מצבים — קורטקס, לימבי, זוחלי. הקורטקס יכול לקחת פיקוד." },
-  { englishTerm: "Reptilian Brain",          word: "מוח הזוחל",            explanation: "מערכת ההישרדות. הצפה של אדרנלין — להילחם/לברוח/לקפוא." },
-  { englishTerm: "Holding Environment",      word: "מרחב מחזיק",           explanation: "מרחב רגשי בטוח לקושי ולפגיעות — ללא פחד מדחייה או הסלמה." },
-  { englishTerm: "Deep Dialogue",            word: "דיאלוג עמוק",          explanation: "מדבר משתף ללא האשמה; מאזין משקף באמפתיה לפני שהוא מגיב." },
-  { englishTerm: "Healing Apology",          word: "התנצלות מרפאת",        explanation: "הכרה בנזק, אימות רגשות הפרטנר, מחויבות לשינוי מעשי." },
-  { englishTerm: "Reframing",                word: "מסגור מחדש",           explanation: "זיהוי הצורך החיובי מאחורי הכעס של הפרטנר — ומתן שם לו בכבוד." },
+  { englishTerm: "Compliance",               word: "פיוס",                 explanation: "פעולה מתוך פחד, לא בחירה — ביצוע חלקי עם טינה שנצברת פנימה לאורך זמן." },
+  { englishTerm: "War Mode",                 word: "מלחמה",                explanation: "התנגדות פעילה ומאבקי כוח — אף אחד לא מוותר, אין מי שמבצע, ואי אפשר להתקדם." },
+  { englishTerm: "Compliance-War Cycle",     word: "מחזור פיוס-מלחמה",    explanation: "טינה שנצברת מפיוס מתפוצצת למלחמה — דפוס חוזר ונשנה שמחריף עם הזמן." },
+  { englishTerm: "Injury Time",              word: "זמן הפציעה",           explanation: "שתיקה וריחוק לאחר סנקציה — האהבה רועבת מחוסר חמימות, לא הפסקה ניטרלית." },
+  { englishTerm: "Biological Shift",         word: "מעבר ביולוגי",         explanation: "המוח פועל ב-3 מצבים — קורטקס, לימבי, זוחלי. הקורטקס יכול לקחת פיקוד בתנאים הנכונים." },
+  { englishTerm: "Reptilian Brain",          word: "מוח הזוחל",            explanation: "מערכת ההישרדות הקדמונית. הצפה של אדרנלין — להילחם, לברוח או לקפוא לחלוטין." },
+  { englishTerm: "Limbic System",            word: "מערכת לימבית",         explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום. כשהיא פעילה, קשה לחשוב בפתיחות ואמפתיה." },
+  { englishTerm: "Cortex",                   word: "קורטקס",               explanation: "מערכת החשיבה הרציונלית. כשאין פחד מסנקציות, הקורטקס יכול לשקול בקשות בצורה פתוחה ואוהבת." },
+  { englishTerm: "Separateness",             word: "נפרדות",               explanation: "הפרטנר הוא ישות נפרדת עם עולם פנימי, רצונות ולוח זמנים משלו — יכולת קורטיקלית חיובית וחיונית לאהבה." },
+  { englishTerm: "Separateness Recognition", word: "הכרה בנפרדות",         explanation: "הכרה פעילה בכך שהצורך שלי הוא הפרעה לזרימה הטבעית של הפרטנר — והוא לא חייב לי כן." },
+  { englishTerm: "Plan B",                   word: "תוכנית ב",             explanation: "לקיחת אחריות אישית אמיתית על הצורך שלי אם הפרטנר יגיד לא — ממקום של שלום פנימי, לא מתסכול." },
+  { englishTerm: "Zero-Sanction Policy",     word: "אפס סנקציות",          explanation: "מחויבות פנימית אמיתית לקבל 'לא' ללא שום תגובה מעניישת — לא רק מבחוץ, אלא גם רגשית פנימה." },
+  { englishTerm: "Request Test",             word: "מבחן הבקשה",           explanation: "בקשה נקייה נבחנת על פי מה שקורה אחרי 'לא'. אם הגיעה סנקציה — הייתה זו דרישה בתחפושת." },
+  { englishTerm: "Yes Logic",                word: "כן שבא מאהבה",         explanation: "כשאין פחד מסנקציות, המאזין נשאר בקורטקס ויכול לומר כן מתוך בחירה חופשית ואהבה אמיתית." },
+  { englishTerm: "No Logic",                 word: "לא שבא מהגנה עצמית",   explanation: "'לא' הוא הגנה לגיטימית על משאבים, ערכים וגבולות — לא דחיית אהבה." },
+  { englishTerm: "Holding Environment",      word: "מרחב מחזיק",           explanation: "מרחב רגשי בטוח לקושי ולפגיעות — ללא פחד מדחייה, שיפוט או הסלמה." },
+  { englishTerm: "Deep Dialogue",            word: "דיאלוג עמוק",          explanation: "המדבר משתף ללא האשמה; המאזין משקף באמפתיה לפני שהוא מגיב — מבנה שיחה מרפא." },
+  { englishTerm: "Healing Apology",          word: "התנצלות מרפאת",        explanation: "הכרה בנזק שנגרם, אימות רגשות הפרטנר, ומחויבות ממשית לשינוי התנהגותי." },
+  { englishTerm: "Reframing",                word: "מסגור מחדש",           explanation: "זיהוי הצורך החיובי מאחורי הכעס של הפרטנר — ומתן שם לו בכבוד כדי שירגיש נראה." },
+  { englishTerm: "Self-Reframing",           word: "מסגור עצמי מחדש",      explanation: "זיהוי שורש הכעס שלי — כאב, פחד או ערך שנפגע — וביטוי הפגיעות במקום הטחת כעס." },
 ];
 
 // ─── TIMEOUT MODAL ───────────────────────────────────────────────
@@ -183,10 +190,12 @@ export default function App() {
 
   const [messages,           setMessages]           = useState([]);
   const [sessionStartTime,   setSessionStartTime]   = useState(null);
-  const [conceptsIntroduced, setConceptsIntroduced] = useState([]);
   const [savedConcepts,      setSavedConcepts]      = useState([]);
   const [logRecordId,        setLogRecordId]        = useState(null);
   const [isLoading,          setIsLoading]          = useState(false);
+  // useRef avoids stale-closure bug — always holds current transcript value
+  const fullTranscriptRef    = useRef("");
+  const conceptsIntroducedRef = useRef([]);
 
   const [showBetaModal,    setShowBetaModal]    = useState(false);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
@@ -196,9 +205,29 @@ export default function App() {
   // Auto-go to chat if returning user
   useEffect(() => {
     if (userEmail && recordId) {
+      // Load user record
       findUserByEmail(userEmail)
         .then(result => { if (result?.fields) setUserRecord(result.fields); })
         .catch(() => {});
+
+      // Create a session log for this returning session
+      createSessionLog(recordId)
+        .then(logId => {
+          setLogRecordId(logId);
+          setSessionStartTime(new Date());
+        })
+        .catch(() => {});
+
+      // Show opening message
+      fullTranscriptRef.current = "";
+      conceptsIntroducedRef.current = [];
+      setMessages([{
+        role: "syncca",
+        text: SYNCCA_OPENING_MESSAGE["he"],
+        concepts: [],
+        timestamp: new Date().toISOString(),
+      }]);
+
       setScreen("chat");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,13 +258,15 @@ export default function App() {
 
     // Fresh session with opening message
     setSessionStartTime(new Date());
+    fullTranscriptRef.current = "";
+    conceptsIntroducedRef.current = [];
     setMessages([{
       role: "syncca",
       text: SYNCCA_OPENING_MESSAGE["he"],
       concepts: [],
       timestamp: new Date().toISOString(),
     }]);
-    setConceptsIntroduced([]);
+    conceptsIntroducedRef.current = [];
 
     if (shouldShowBetaModal()) setShowBetaModal(true);
     setScreen("chat");
@@ -270,10 +301,8 @@ export default function App() {
       const { cleanText, concepts } = parseBracketConcepts(visibleText, CONCEPT_LEXICON);
 
       if (concepts.length > 0) {
-        setConceptsIntroduced(prev => [
-          ...prev,
-          ...concepts.map(c => c.word).filter(w => !prev.includes(w)),
-        ]);
+        const newWords = concepts.map(c => c.word).filter(w => !conceptsIntroducedRef.current.includes(w));
+        conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
       }
 
       const synccaMsg = {
@@ -284,16 +313,18 @@ export default function App() {
       };
       setMessages(prev => [...prev, synccaMsg]);
 
-      // Build transcript and sync to Conversation_Logs
-      const allMsgs = [...updatedMessages, synccaMsg];
-      const transcript = allMsgs
-        .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
-        .join("\n");
-      const conceptWords = concepts.map(c => c.word);
+      // Append this exchange — ref always holds current value, no stale closure
+      const prev = fullTranscriptRef.current;
+      const newTranscript = prev
+        ? prev + "\n[User]: " + text + "\n[Syncca]: " + cleanText
+        : "[User]: " + text + "\n[Syncca]: " + cleanText;
+      fullTranscriptRef.current = newTranscript;
+
+      // Sync full transcript + all accumulated concepts to Airtable
       syncSession({
         logRecordId,
-        fullTranscript: transcript,
-        conceptsSurfaced: conceptWords,
+        fullTranscript:   newTranscript,
+        conceptsSurfaced: conceptsIntroducedRef.current,
       }).catch(e => console.warn("syncSession failed:", e));
 
     } catch (err) {
@@ -307,7 +338,7 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, sessionStartTime]);
+  }, [messages, sessionStartTime, logRecordId]);
 
   // ── SAVE CONCEPT ──────────────────────────────────────────
   function handleSaveConcept(concept) {
