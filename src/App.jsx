@@ -1,7 +1,6 @@
 // App.jsx — Syncca · Main Application Router
+// Built from the production version with full Airtable logging added.
 // Screen flow: welcome → login → chat ↔ personal
-// All AI logic lives in SynccaService.js
-// All Airtable logic lives in AirtableService.js
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import WelcomeScreen from "./components/WelcomeScreen";
@@ -9,131 +8,107 @@ import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
 import {
-  findOrCreateUser,
-  findUserByEmail,
-  incrementSyncCount,
-  createSessionLog,
-  syncSession,
-  updateSavedConcepts,
-  fetchLexicon,
-  fetchPreviousConcepts,
+  findOrCreateUser, findUserByEmail, incrementSyncCount,
+  updateUserProfile, updateSavedConcepts,
+  createSessionLog, syncSession, saveFeedback,
+  fetchLexicon, fetchPreviousConcepts,
 } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
 
-// ─── BETA MODAL — show on first 2 sessions ────────────────────────
+// ─── Beta modal: show only on first 2 sessions ───────────────────
 function shouldShowBetaModal() {
-  const count = parseInt(localStorage.getItem("syncca_session_count") || "0", 10);
-  localStorage.setItem("syncca_session_count", String(count + 1));
-  return count + 1 <= 2;
+  const n = parseInt(localStorage.getItem("syncca_session_count") || "0", 10) + 1;
+  localStorage.setItem("syncca_session_count", String(n));
+  return n <= 2;
 }
 
-// ─── PARSE [[Bracket]] CONCEPTS from AI response ─────────────────
-// Looks up each bracketed term in the live lexicon fetched from Airtable.
-// Returns: cleanText (brackets replaced with Hebrew word) + concepts array.
+// ─── Dynamic opening message ─────────────────────────────────────
+// syncCount: value AFTER incrementing. First session = 1.
+function getOpeningMessage(syncCount, firstName) {
+  if (!syncCount || syncCount <= 1) return SYNCCA_OPENING_MESSAGE["he"];
+  const name = firstName ? ` ${firstName}` : "";
+  return `היי${name}, טוב לראות אותך שוב 🙏\nעל מה תרצה לעבוד היום?`;
+}
+
+// ─── Parse [[bracket]] concepts from AI response ─────────────────
+// Looks up each term in the live lexicon; returns cleanText + concepts[].
 function parseBracketConcepts(text, conceptLexicon) {
   const concepts = [];
   const cleanText = text.replace(/\[\[([^\]]+)\]\]/g, (_, term) => {
-    const entry = conceptLexicon.find(
-      c => c.englishTerm === term || c.word === term
-    );
-    if (entry) {
-      concepts.push({
-        word:        entry.word,
-        explanation: entry.explanation,
-        englishTerm: entry.englishTerm,
-      });
-      return entry.word; // show Hebrew word inline
-    }
-    // term not found in lexicon — show as-is, still record it
-    concepts.push({ word: term, explanation: "", englishTerm: term });
-    return term;
+    const entry = conceptLexicon.find(c => c.englishTerm === term || c.word === term);
+    concepts.push({
+      englishTerm: term,
+      word:        entry?.word        || term,
+      explanation: entry?.explanation || "",
+    });
+    return entry?.word || term; // show Hebrew in chat
   });
   return { cleanText, concepts };
 }
 
-// ─── FALLBACK LEXICON — used only if Airtable fetch fails ────────
+// ─── Fallback lexicon (used only if Airtable fetch fails) ────────
 const FALLBACK_LEXICON = [
-  { englishTerm: "Limbic System",  word: "מערכת לימבית", explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום." },
-  { englishTerm: "Cortex",         word: "קורטקס",        explanation: "מערכת החשיבה הרציונלית." },
-  { englishTerm: "Clean Request",  word: "בקשה נקייה",    explanation: "בקשה שמשאירה לפרטנר חופש בחירה אמיתי." },
-  { englishTerm: "Sanction",       word: "סנקציה",        explanation: "תגובה לא נעימה כלפי הפרטנר." },
-  { englishTerm: "Demand",         word: "דרישה",         explanation: "ביטוי כוחני של צורך." },
+  { englishTerm: "Limbic System", word: "מערכת לימבית",  explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום." },
+  { englishTerm: "Cortex",        word: "קורטקס",          explanation: "מערכת החשיבה הרציונלית." },
+  { englishTerm: "Sanction",      word: "סנקציה",          explanation: "תגובה לא נעימה כלפי הפרטנר כשצורך לא נענה." },
+  { englishTerm: "Demand",        word: "דרישה",           explanation: "ביטוי כוחני של צורך שמפעיל התנגדות." },
+  { englishTerm: "Clean Request", word: "בקשה נקייה",     explanation: "בקשה שמשאירה לפרטנר חופש בחירה אמיתי." },
 ];
 
-// ─── TIMEOUT MODAL ────────────────────────────────────────────────
+// ─── Timeout modal ────────────────────────────────────────────────
 function TimeoutModal({ onClose, logRecordId }) {
   const [feedback, setFeedback] = useState("");
   const [sent,     setSent]     = useState(false);
 
-  async function handleSend() {
+  async function handleSendFeedback() {
     if (logRecordId && feedback.trim()) {
-      try {
-        const { saveFeedback } = await import("./AirtableService");
-        await saveFeedback(logRecordId, feedback.trim());
-      } catch (e) { console.warn("saveFeedback failed:", e); }
+      saveFeedback(logRecordId, feedback.trim()).catch(e => console.warn("saveFeedback:", e));
     }
     setSent(true);
   }
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 300,
-      background: "rgba(0,0,0,0.25)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "16px",
-    }}>
-      <div style={{
-        background: "#EFF6FF", borderRadius: "24px",
-        border: "1.5px solid rgba(30,58,138,0.15)",
-        padding: "28px 24px", maxWidth: "380px", width: "100%",
-        direction: "rtl", boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
-      }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", fontWeight: 700, color: "#1e3a8a", marginBottom: "10px" }}>
-          זמן השיחה הסתיים
-        </div>
-        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.88rem", color: "#374151", lineHeight: 1.6, marginBottom: "18px" }}>
+    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(0,0,0,0.25)",
+                  display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
+      <div style={{ background:"#EFF6FF", borderRadius:"24px", border:"1.5px solid rgba(30,58,138,0.15)",
+                    padding:"28px 24px", maxWidth:"380px", width:"100%", direction:"rtl",
+                    boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", fontWeight:700,
+                      color:"#1e3a8a", marginBottom:"10px" }}>זמן השיחה הסתיים</div>
+        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.88rem", color:"#374151",
+                    lineHeight:1.6, marginBottom:"18px" }}>
           הזמן המיועד להתבוננות הסתיים. זהו רגע טוב לעצור ולחשוב.
         </p>
         {!sent ? (
           <>
-            <textarea
-              value={feedback}
-              onChange={e => setFeedback(e.target.value)}
+            <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
               placeholder="מה כדאי להוסיף, להוריד או לשנות ב-Syncca?"
-              style={{
-                width: "100%", height: "84px",
-                border: "1.5px solid rgba(30,58,138,0.2)",
-                borderRadius: "12px", padding: "12px",
-                fontFamily: "'Inter', sans-serif", fontSize: "0.88rem",
-                background: "white", resize: "none", outline: "none",
-                direction: "rtl", boxSizing: "border-box",
-              }}
-            />
-            <button onClick={handleSend} style={{
-              marginTop: "12px", width: "100%", height: "48px",
-              background: "#1e3a8a", color: "white",
-              border: "none", borderRadius: "9999px",
-              fontFamily: "'Inter', sans-serif", fontWeight: 600,
-              cursor: "pointer",
-            }}>שלח פידבק וסיים</button>
+              style={{ width:"100%", height:"84px", border:"1.5px solid rgba(30,58,138,0.2)",
+                       borderRadius:"12px", padding:"12px", fontFamily:"'Inter',sans-serif",
+                       fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
+                       direction:"rtl", boxSizing:"border-box" }} />
+            <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"48px",
+              background:"#1e3a8a", color:"white", border:"none", borderRadius:"9999px",
+              fontFamily:"'Inter',sans-serif", fontWeight:600, cursor:"pointer" }}>
+              שלח פידבק וסיים
+            </button>
           </>
         ) : (
-          <div style={{ textAlign: "center", color: "#16a34a", fontFamily: "'Inter', sans-serif", fontWeight: 600 }}>
+          <div style={{ textAlign:"center", color:"#16a34a", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
             ✓ תודה! נתראה בסינק הבא.
           </div>
         )}
-        <button onClick={onClose} style={{
-          marginTop: "10px", width: "100%", height: "44px",
-          background: "transparent", color: "#6b7280",
-          border: "1px solid #E5E0D8", borderRadius: "9999px",
-          fontFamily: "'Inter', sans-serif", cursor: "pointer",
-        }}>סגירה</button>
+        <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"44px",
+          background:"transparent", color:"#6b7280", border:"1px solid #E5E0D8",
+          borderRadius:"9999px", fontFamily:"'Inter',sans-serif", cursor:"pointer" }}>
+          סגירה
+        </button>
       </div>
     </div>
   );
 }
 
-// ─── BETA MODAL ────────────────────────────────────────────────────
+// ─── Beta modal ───────────────────────────────────────────────────
 function BetaModal({ onClose }) {
   const items = [
     "המערכת מבוססת על Claude ועל מתודולוגיה של תקשורת בין-אישית וזוגית שפותחה בעשרים השנים האחרונות.",
@@ -142,54 +117,31 @@ function BetaModal({ onClose }) {
     "הפידבק שלכם עוזר לנו לצמוח. בסיום השיחה נשמח לשמוע.",
   ];
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 300,
-      background: "rgba(0,0,0,0.22)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "16px",
-    }}>
-      <div style={{
-        background: "#FDFBF7", borderRadius: "24px",
-        padding: "28px 24px", maxWidth: "390px", width: "100%",
-        direction: "rtl", boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
-      }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", fontWeight: 700, color: "#1e3a8a", marginBottom: "16px", textAlign: "center" }}>
-          ברוכים ל-Syncca 👋
-        </div>
-        <ol style={{ paddingRight: "18px" }}>
+    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(0,0,0,0.22)",
+                  display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
+      <div style={{ background:"#FDFBF7", borderRadius:"24px", padding:"28px 24px",
+                    maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", fontWeight:700,
+                      color:"#1e3a8a", marginBottom:"16px", textAlign:"center" }}>ברוכים ל-Syncca 👋</div>
+        <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
-            <li key={i} style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.86rem", lineHeight: 1.65, marginBottom: "10px", color: "#1a1a1a" }}>
-              {item}
-            </li>
+            <li key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.86rem",
+                                 lineHeight:1.65, marginBottom:"10px", color:"#1a1a1a" }}>{item}</li>
           ))}
         </ol>
-        <button onClick={onClose} style={{
-          marginTop: "18px", width: "100%", height: "50px",
-          background: "#ea580c", color: "white",
-          border: "none", borderRadius: "9999px",
-          fontFamily: "'Inter', sans-serif", fontWeight: 600,
-          fontSize: "1rem", cursor: "pointer",
-        }}>הבנתי, בואנו ✦</button>
+        <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"50px",
+          background:"#ea580c", color:"white", border:"none", borderRadius:"9999px",
+          fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"1rem", cursor:"pointer" }}>
+          הבנתי, בואנו ✦
+        </button>
       </div>
     </div>
   );
 }
 
-// ─── DYNAMIC OPENING MESSAGE ─────────────────────────────────────
-// Returns the right opening text based on whether the user is new or returning.
-// syncCount: the count AFTER incrementing (so first session = 1, returning = 2+)
-function getOpeningMessage(syncCount, firstName) {
-  if (!syncCount || syncCount <= 1) {
-    // First session — full intro
-    return SYNCCA_OPENING_MESSAGE["he"];
-  }
-  // Returning user — warm, brief, personal
-  const name = firstName ? ` ${firstName}` : "";
-  return `היי${name}, טוב לראות אותך שוב 🙏
-על מה תרצה/י לעבוד היום?`;
-}
-
-// ─── MAIN APP ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// MAIN APP
+// ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,    setScreen]    = useState("welcome");
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem("syncca_email") || "");
@@ -199,86 +151,83 @@ export default function App() {
   const [messages,         setMessages]         = useState([]);
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [savedConcepts,    setSavedConcepts]    = useState([]);
-  const [logRecordId,      setLogRecordId]      = useState(null);
   const [isLoading,        setIsLoading]        = useState(false);
-
-  // Lexicon loaded from Airtable on mount
   const [conceptLexicon,   setConceptLexicon]   = useState(FALLBACK_LEXICON);
-
-  // Refs — avoid stale closures in useCallback
-  const logRecordIdRef         = useRef(null);
-  const fullTranscriptRef      = useRef("");
-  const conceptsIntroducedRef  = useRef([]);  // concepts surfaced THIS session
-  const previousConceptsRef    = useRef([]);  // concepts from ALL prior sessions
 
   const [showBetaModal,    setShowBetaModal]    = useState(false);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
+  // ── Refs — authoritative values, never stale across navigation ──
+  const logRecordIdRef         = useRef(null);
+  const fullTranscriptRef      = useRef("");
+  const conceptsIntroducedRef  = useRef([]); // Hebrew words surfaced this session
+  const previousConceptsRef    = useRef([]); // from all prior sessions
+  const savedConceptsRef       = useRef([]); // mirrors savedConcepts state
+
+  // Keep savedConceptsRef in sync with state
+  useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
+
   const firstName = userRecord?.First_Name || "";
 
-  // ── FETCH LEXICON ON MOUNT ─────────────────────────────────
+  // ── Fetch live lexicon on mount ──────────────────────────────
   useEffect(() => {
     fetchLexicon()
       .then(entries => {
         if (entries?.length > 0) {
           setConceptLexicon(entries);
-          console.log("[Lexicon] Loaded", entries.length, "concepts from Airtable");
+          console.log("[Lexicon] Loaded", entries.length, "concepts");
+          // Re-hydrate saved concepts — on login they were loaded as {word, explanation:""}
+          // Now fill in real explanations and correct Hebrew words from the loaded lexicon
+          setSavedConcepts(prev => prev.map(c => {
+            const match = entries.find(e =>
+              e.englishTerm === c.englishTerm || e.word === c.word
+            );
+            return match ? { ...c, word: match.word, explanation: match.explanation } : c;
+          }));
         }
       })
-      .catch(e => console.warn("[Lexicon] Fallback in use:", e));
+      .catch(e => console.warn("[Lexicon] Using fallback:", e));
   }, []);
 
-  // ── AUTO-NAVIGATE returning user ───────────────────────────
+  // ── Auto-navigate returning user (has email + recordId in localStorage) ──
   useEffect(() => {
     if (!userEmail || !recordId) return;
-
     (async () => {
       try {
-        // Load user profile
         const result = await findUserByEmail(userEmail);
         if (result?.fields) {
           setUserRecord(result.fields);
-          // Restore previously saved concepts into UI state
-          const existing = result.fields.Saved_Concepts
-            ? result.fields.Saved_Concepts.split(",").map(s => s.trim()).filter(Boolean)
-            : [];
-          if (existing.length > 0) {
-            // Re-hydrate as concept objects — word = the stored string, explanation loaded from lexicon later
-            setSavedConcepts(existing.map(w => ({ word: w, englishTerm: w, explanation: "" })));
-          }
+          // Restore saved concepts wallet from Airtable
+          const saved = (result.fields.Saved_Concepts || "")
+            .split(",").map(s => s.trim()).filter(Boolean)
+            .map(w => ({ word: w, englishTerm: w, explanation: "" }));
+          if (saved.length) setSavedConcepts(saved);
         }
 
-        // Load previous concepts for memory injection
-        const prevConcepts = await fetchPreviousConcepts(recordId);
-        previousConceptsRef.current = prevConcepts;
-        console.log("[Memory] Previous concepts:", prevConcepts);
+        // Load prior session concepts for memory injection
+        const prev = await fetchPreviousConcepts(recordId);
+        previousConceptsRef.current = prev;
+        console.log("[Memory] Previous concepts:", prev);
 
         // Create fresh session log
         const logId = await createSessionLog(recordId);
-        setLogRecordId(logId);
-        logRecordIdRef.current    = logId;
-        fullTranscriptRef.current = "";
+        logRecordIdRef.current        = logId;
+        fullTranscriptRef.current     = "";
         conceptsIntroducedRef.current = [];
 
         setSessionStartTime(new Date());
-        // Returning user — use warm brief greeting (auto-nav = always has existing account)
-        const syncCount = result?.fields?.Sync_Count || 2; // at least 2 if returning
-        const autoOpeningText = getOpeningMessage(syncCount, result?.fields?.First_Name || "");
+        const syncCount = result?.fields?.Sync_Count || 2;
         setMessages([{
-          role: "syncca",
-          text: autoOpeningText,
-          concepts: [],
-          timestamp: new Date().toISOString(),
+          role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+          text: getOpeningMessage(syncCount, result?.fields?.First_Name || ""),
         }]);
         setScreen("chat");
-      } catch (e) {
-        console.error("[AutoNav] Error:", e);
-      }
+      } catch (e) { console.error("[AutoNav]", e); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── LOGIN ──────────────────────────────────────────────────
+  // ── LOGIN ─────────────────────────────────────────────────────
   async function handleLogin(email) {
     const { recordId: rid, fields } = await findOrCreateUser(email);
     if (!rid) throw new Error("לא ניתן למצוא או ליצור משתמש");
@@ -289,37 +238,31 @@ export default function App() {
     localStorage.setItem("syncca_email",     email);
     localStorage.setItem("syncca_record_id", rid);
 
-    // Restore previously saved concepts into UI state
-    const existingSaved = fields.Saved_Concepts
-      ? fields.Saved_Concepts.split(",").map(s => s.trim()).filter(Boolean)
-      : [];
-    if (existingSaved.length > 0) {
-      setSavedConcepts(existingSaved.map(w => ({ word: w, englishTerm: w, explanation: "" })));
-    }
+    // Restore saved concepts wallet
+    const saved = (fields.Saved_Concepts || "")
+      .split(",").map(s => s.trim()).filter(Boolean)
+      .map(w => ({ word: w, englishTerm: w, explanation: "" }));
+    if (saved.length) setSavedConcepts(saved);
 
-    // Increment sync count — newCount tells us if this is a returning user
+    // Increment sync count — result tells us new vs returning
     const newSyncCount = await incrementSyncCount(rid, fields.Sync_Count || 0);
 
-    // Load previous concepts for memory injection into system prompt
-    const prevConcepts = await fetchPreviousConcepts(rid).catch(() => []);
-    previousConceptsRef.current = prevConcepts;
-    console.log("[Memory] Previous concepts loaded:", prevConcepts);
+    // Load prior concepts for memory
+    const prev = await fetchPreviousConcepts(rid).catch(() => []);
+    previousConceptsRef.current = prev;
+    console.log("[Memory] Previous concepts loaded:", prev);
 
-    // Create session log
+    // Create session log FIRST — we need logId before first message
     const logId = await createSessionLog(rid).catch(() => null);
-    setLogRecordId(logId);
-    logRecordIdRef.current       = logId;
-    fullTranscriptRef.current    = "";
+    logRecordIdRef.current        = logId;
+    fullTranscriptRef.current     = "";
     conceptsIntroducedRef.current = [];
+    console.log("[Login] logRecordId:", logId);
 
     setSessionStartTime(new Date());
-    // Dynamic opening: brief warm greeting for returning users, full intro for new
-    const openingText = getOpeningMessage(newSyncCount, fields.First_Name || "");
     setMessages([{
-      role: "syncca",
-      text: openingText,
-      concepts: [],
-      timestamp: new Date().toISOString(),
+      role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+      text: getOpeningMessage(newSyncCount, fields.First_Name || ""),
     }]);
 
     if (shouldShowBetaModal()) setShowBetaModal(true);
@@ -327,26 +270,27 @@ export default function App() {
   }
 
   // ── SEND MESSAGE ───────────────────────────────────────────
+  // ONE syncSession call per exchange — after full exchange completes.
+  // No double-call race condition. Errors are awaited and logged.
   const handleSend = useCallback(async (text) => {
     const currentLogId = logRecordIdRef.current;
-    const userMsg       = { role: "user", text, timestamp: new Date().toISOString() };
+    if (!currentLogId) {
+      console.error("[handleSend] logRecordId is null — session log was not created");
+    }
+
+    const userMsg         = { role: "user", text, timestamp: new Date().toISOString() };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setIsLoading(true);
 
-    // ── STEP 1: Log user message IMMEDIATELY — before calling AI ──
-    // This ensures the user's side of every exchange is always persisted,
-    // even if the AI call times out or throws.
-    const userOnlyTranscript = fullTranscriptRef.current
+    // Append user message to transcript ref immediately (no Airtable call yet)
+    const transcriptBeforeAI = fullTranscriptRef.current
       ? fullTranscriptRef.current + "\n[User]: " + text
       : "[User]: " + text;
-    if (currentLogId) {
-      syncSession({ logRecordId: currentLogId, fullTranscript: userOnlyTranscript })
-        .catch(e => console.warn("[syncSession-user] failed:", e));
-    }
+    fullTranscriptRef.current = transcriptBeforeAI;
 
     try {
-      // ── STEP 2: Build API history — exclude opening message ──
+      // ── Build API history — skip the opening message ──────────────
       const apiMessages = updatedMessages
         .filter((m, i) => !(m.role === "syncca" && i === 0))
         .map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
@@ -355,45 +299,58 @@ export default function App() {
         ? Math.floor((Date.now() - new Date(sessionStartTime).getTime()) / 60000)
         : 0;
 
-      // ── STEP 3: Call AI ──
+      // ── Call AI ───────────────────────────────────────────────────
       const rawResponse = await sendToSyncca(
         apiMessages, elapsed, conceptLexicon, previousConceptsRef.current
       );
       const { visibleText } = parseResponse(rawResponse);
 
-      // ── STEP 4: Parse [[bracket]] concepts from AI response ──
+      // ── Parse [[bracket]] concepts ────────────────────────────────
       const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon);
+      console.log("[handleSend] parsed concepts:", concepts.map(c => c.word));
 
-      // ── STEP 5: Accumulate concepts — store Hebrew word (what user sees) ──
+      // ── Accumulate concepts this session ──────────────────────────
       if (concepts.length > 0) {
         const newWords = concepts
-          .map(c => c.word || c.englishTerm)   // Hebrew first, fallback to English
+          .map(c => c.word || c.englishTerm)
           .filter(w => w && !conceptsIntroducedRef.current.includes(w));
-        conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
+        if (newWords.length > 0) {
+          conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
+          console.log("[handleSend] new concepts accumulated:", newWords);
+          console.log("[handleSend] total session concepts:", conceptsIntroducedRef.current);
+        }
       }
 
-      const synccaMsg = { role: "syncca", text: cleanText, concepts, timestamp: new Date().toISOString() };
-      setMessages(prev => [...prev, synccaMsg]);
+      // ── Update transcript with Syncca's response ──────────────────
+      const fullTranscript = transcriptBeforeAI + "\n[Syncca]: " + cleanText;
+      fullTranscriptRef.current = fullTranscript;
 
-      // ── STEP 6: Build full transcript and sync to Airtable ──
-      const newTranscript = userOnlyTranscript + "\n[Syncca]: " + cleanText;
-      fullTranscriptRef.current = newTranscript;
+      setMessages(prev => [...prev, {
+        role: "syncca", text: cleanText, concepts,
+        timestamp: new Date().toISOString(),
+      }]);
 
+      // ── ONE syncSession call with full data ───────────────────────
       if (currentLogId) {
-        syncSession({
-          logRecordId:      currentLogId,
-          fullTranscript:   newTranscript,
-          conceptsSurfaced: conceptsIntroducedRef.current,  // full accumulated list
-        })
-          .then(() => console.log("[syncSession] ✓ logId:", currentLogId, "concepts:", conceptsIntroducedRef.current))
-          .catch(e => console.warn("[syncSession] failed:", e));
-      } else {
-        console.error("[handleSend] logRecordId is null — syncSession skipped");
+        try {
+          await syncSession({
+            logRecordId:      currentLogId,
+            fullTranscript,
+            conceptsSurfaced: conceptsIntroducedRef.current,
+          });
+          console.log("[handleSend] ✓ syncSession complete. concepts:", conceptsIntroducedRef.current);
+        } catch (syncErr) {
+          console.error("[handleSend] syncSession failed:", syncErr);
+        }
       }
 
     } catch (err) {
-      console.error("[Syncca API error]", err);
-      // Even on AI error: final-save the user-only transcript we already wrote
+      console.error("[handleSend] AI error:", err);
+      // Save whatever transcript we have even if AI failed
+      if (currentLogId) {
+        syncSession({ logRecordId: currentLogId, fullTranscript: transcriptBeforeAI })
+          .catch(e => console.error("[handleSend] emergency sync failed:", e));
+      }
       setMessages(prev => [...prev, {
         role: "syncca", text: "מצטערת, הייתה תקלה טכנית. נסי שוב.",
         concepts: [], timestamp: new Date().toISOString(),
@@ -403,43 +360,40 @@ export default function App() {
     }
   }, [messages, sessionStartTime, conceptLexicon]);
 
-  // ── SAVE CONCEPT — cumulative wallet ──────────────────────
-  // Airtable call is OUTSIDE setState to avoid React StrictMode double-fire.
-  // savedConceptsRef mirrors savedConcepts state so we can read it synchronously.
-  const savedConceptsRef = useRef(savedConcepts);
-  useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
-
+  // ── SAVE CONCEPT (user clicks ✦ in tooltip) ──────────────────
+  // Airtable call is OUTSIDE setState to avoid StrictMode double-fire.
   function handleSaveConcept(concept) {
     const current = savedConceptsRef.current;
     if (current.find(c => c.word === concept.word)) return; // already saved
-
     const updated = [...current, concept];
-    setSavedConcepts(updated);                              // update UI immediately
+    setSavedConcepts(updated);
 
-    // Write to Airtable OUTSIDE setState — no double-fire risk
+    // Write to Users.Saved_Concepts — atomic GET+merge in AirtableService
     if (recordId) {
-      const words = updated.map(c => c.englishTerm || c.word);
+      const words = updated.map(c => c.englishTerm || c.word).filter(Boolean);
+      console.log("[handleSaveConcept] writing to Airtable:", words, "recordId:", recordId);
       updateSavedConcepts(recordId, words)
-        .then(() => console.log("[SavedConcepts] ✓ Written to Airtable:", words))
-        .catch(e => console.warn("[updateSavedConcepts] failed:", e));
+        .then(() => console.log("[handleSaveConcept] ✓ Airtable updated:", words))
+        .catch(e => console.error("[handleSaveConcept] ✗ failed:", e));
+    } else {
+      console.error("[handleSaveConcept] recordId is null — cannot save");
     }
   }
 
-  // ── LOGOUT ─────────────────────────────────────────────────
+  // ── LOGOUT ────────────────────────────────────────────────────
   function handleLogout() {
     localStorage.removeItem("syncca_email");
     localStorage.removeItem("syncca_record_id");
     setUserEmail(""); setRecordId(""); setUserRecord(null);
-    setMessages([]);
+    setMessages([]); setSavedConcepts([]);
     logRecordIdRef.current        = null;
     fullTranscriptRef.current     = "";
     conceptsIntroducedRef.current = [];
     previousConceptsRef.current   = [];
-    setLogRecordId(null);
     setScreen("welcome");
   }
 
-  // ── RENDER ─────────────────────────────────────────────────
+  // ── RENDER ────────────────────────────────────────────────────
   return (
     <>
       {screen === "welcome" && (
@@ -449,14 +403,9 @@ export default function App() {
           onLogout={handleLogout}
         />
       )}
-
       {screen === "login" && (
-        <LoginScreen
-          onLogin={handleLogin}
-          onBack={() => setScreen("welcome")}
-        />
+        <LoginScreen onLogin={handleLogin} onBack={() => setScreen("welcome")} />
       )}
-
       {screen === "chat" && (
         <ChatScreen
           userEmail={userEmail}
@@ -464,32 +413,28 @@ export default function App() {
           messages={messages}
           isLoading={isLoading}
           onSend={handleSend}
-          conceptLexicon={conceptLexicon}
-          savedConcepts={savedConcepts}
           onSaveConcept={handleSaveConcept}
+          savedConcepts={savedConcepts}
+          conceptLexicon={conceptLexicon}
           onOpenPersonalCard={() => setScreen("personal")}
           onTimeout={() => setShowTimeoutModal(true)}
           sessionStartTime={sessionStartTime}
         />
       )}
-
       {screen === "personal" && (
         <PersonalCard
           record={{ ...userRecord, email: userEmail }}
           airtableRecordId={recordId}
-          logRecordId={logRecordIdRef.current || logRecordId}
+          logRecordId={logRecordIdRef.current}
           savedConcepts={savedConcepts}
           onClose={() => setScreen("chat")}
           onLogout={handleLogout}
         />
       )}
-
-      {showBetaModal && (
-        <BetaModal onClose={() => setShowBetaModal(false)} />
-      )}
+      {showBetaModal    && <BetaModal onClose={() => setShowBetaModal(false)} />}
       {showTimeoutModal && (
         <TimeoutModal
-          logRecordId={logRecordId}
+          logRecordId={logRecordIdRef.current}
           onClose={() => { setShowTimeoutModal(false); setScreen("welcome"); }}
         />
       )}
