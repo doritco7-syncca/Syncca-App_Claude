@@ -152,23 +152,14 @@ export async function updateUserProfile(recordId, fields) {
   });
 }
 
-// CUMULATIVE — fetches existing concepts first, then appends new ones
-export async function updateSavedConcepts(recordId, newConceptWords) {
-  if (!recordId || !newConceptWords?.length) return;
-
-  // 1. Fetch current saved concepts
-  const userData = await airtableFetch(TABLES.users, recordId);
-  const existing = userData.fields?.Saved_Concepts
-    ? userData.fields.Saved_Concepts.split(",").map(s => s.trim()).filter(Boolean)
-    : [];
-
-  // 2. Merge — deduplicate
-  const merged = [...new Set([...existing, ...newConceptWords])];
-
-  // 3. Save merged list
+// CUMULATIVE — caller passes the full accumulated list; we just PATCH directly.
+// No GET needed — App.jsx state is the source of truth for the accumulated list.
+export async function updateSavedConcepts(recordId, allConceptWords) {
+  if (!recordId || !allConceptWords?.length) return;
+  const deduped = [...new Set(allConceptWords)];
   return airtableFetch(TABLES.users, recordId, {
     method: "PATCH",
-    body: JSON.stringify({ fields: { Saved_Concepts: merged.join(", ") } }),
+    body: JSON.stringify({ fields: { Saved_Concepts: deduped.join(", ") } }),
   });
 }
 
@@ -200,10 +191,11 @@ export async function createSessionLog(userRecordId) {
 // Reads all previous sessions for a user and returns unique concepts surfaced
 export async function fetchPreviousConcepts(userRecordId) {
   if (!userRecordId) return [];
-  const formula = `{User_Link}="${userRecordId}"`;
+  // FIND() works for linked record fields (arrays); equality check doesn't
+  const formula = `FIND("${userRecordId}", ARRAYJOIN({User_Link}))`;
   const data = await airtableFetch(
     TABLES.logs,
-    `?filterByFormula=${encodeURIComponent(formula)}&fields[]=Concepts_Surfaced&sort[0][field]=Created_At&sort[0][direction]=desc`
+    `?filterByFormula=${encodeURIComponent(formula)}&fields%5B%5D=Concepts_Surfaced&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc`
   );
   const allConcepts = new Set();
   for (const rec of data.records || []) {
@@ -217,8 +209,7 @@ export async function fetchPreviousConcepts(userRecordId) {
 export async function syncSession({
   logRecordId,
   fullTranscript,
-  synccaResponse,   // raw AI response text — we extract [[ ]] from here
-  conceptsSurfaced, // optional explicit list (overrides extraction)
+  conceptsSurfaced, // full accumulated list from App.jsx — always explicit
   languageUsed,
 }) {
   if (!logRecordId) return;
@@ -228,23 +219,11 @@ export async function syncSession({
   if (fullTranscript !== undefined) fields.Full_Transcript = fullTranscript;
   if (languageUsed   !== undefined) fields.Language_Used   = languageUsed;
 
-  // Extract concepts from [[brackets]] in Syncca's response
-  let finalConcepts = conceptsSurfaced;
-  if (!finalConcepts && synccaResponse) {
-    const matches = [...synccaResponse.matchAll(/\[\[([^\]]+)\]\]/g)];
-    finalConcepts = matches.map(m => m[1]);
-  }
-
-  if (finalConcepts !== undefined) {
-    // Fetch existing to accumulate
-    let existing = [];
-    try {
-      const rec = await airtableFetch(TABLES.logs, logRecordId);
-      const raw = rec.fields?.Concepts_Surfaced || "";
-      existing  = raw.split(",").map(s => s.trim()).filter(Boolean);
-    } catch {}
-    const merged = [...new Set([...existing, ...(finalConcepts || [])])];
-    fields.Concepts_Surfaced = merged.join(", ");
+  // conceptsSurfaced is the full accumulated list from App.jsx (conceptsIntroducedRef).
+  // No GET needed — App.jsx ref is the source of truth.
+  if (conceptsSurfaced !== undefined) {
+    const deduped = [...new Set(Array.isArray(conceptsSurfaced) ? conceptsSurfaced : [])];
+    fields.Concepts_Surfaced = deduped.join(", ");
   }
 
   if (Object.keys(fields).length === 0) return;

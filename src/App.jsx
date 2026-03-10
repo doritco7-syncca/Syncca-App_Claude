@@ -175,6 +175,20 @@ function BetaModal({ onClose }) {
   );
 }
 
+// ─── DYNAMIC OPENING MESSAGE ─────────────────────────────────────
+// Returns the right opening text based on whether the user is new or returning.
+// syncCount: the count AFTER incrementing (so first session = 1, returning = 2+)
+function getOpeningMessage(syncCount, firstName) {
+  if (!syncCount || syncCount <= 1) {
+    // First session — full intro
+    return SYNCCA_OPENING_MESSAGE["he"];
+  }
+  // Returning user — warm, brief, personal
+  const name = firstName ? ` ${firstName}` : "";
+  return `היי${name}, טוב לראות אותך שוב 🙏
+על מה תרצה/י לעבוד היום?`;
+}
+
 // ─── MAIN APP ──────────────────────────────────────────────────────
 export default function App() {
   const [screen,    setScreen]    = useState("welcome");
@@ -237,9 +251,12 @@ export default function App() {
         conceptsIntroducedRef.current = [];
 
         setSessionStartTime(new Date());
+        // Returning user — use warm brief greeting (auto-nav = always has existing account)
+        const syncCount = result?.fields?.Sync_Count || 2; // at least 2 if returning
+        const autoOpeningText = getOpeningMessage(syncCount, result?.fields?.First_Name || "");
         setMessages([{
           role: "syncca",
-          text: SYNCCA_OPENING_MESSAGE["he"],
+          text: autoOpeningText,
           concepts: [],
           timestamp: new Date().toISOString(),
         }]);
@@ -262,10 +279,10 @@ export default function App() {
     localStorage.setItem("syncca_email",     email);
     localStorage.setItem("syncca_record_id", rid);
 
-    // Increment sync count
-    await incrementSyncCount(rid, fields.Sync_Count || 0);
+    // Increment sync count — newCount tells us if this is a returning user
+    const newSyncCount = await incrementSyncCount(rid, fields.Sync_Count || 0);
 
-    // Load previous concepts for memory
+    // Load previous concepts for memory injection into system prompt
     const prevConcepts = await fetchPreviousConcepts(rid).catch(() => []);
     previousConceptsRef.current = prevConcepts;
     console.log("[Memory] Previous concepts loaded:", prevConcepts);
@@ -278,9 +295,11 @@ export default function App() {
     conceptsIntroducedRef.current = [];
 
     setSessionStartTime(new Date());
+    // Dynamic opening: brief warm greeting for returning users, full intro for new
+    const openingText = getOpeningMessage(newSyncCount, fields.First_Name || "");
     setMessages([{
       role: "syncca",
-      text: SYNCCA_OPENING_MESSAGE["he"],
+      text: openingText,
       concepts: [],
       timestamp: new Date().toISOString(),
     }]);
@@ -297,10 +316,10 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      // Build API message history — exclude the static opening message
-      const openingText = SYNCCA_OPENING_MESSAGE["he"];
+      // Build API message history — exclude the Syncca opening message (first message)
+      // Filter by being the first syncca message rather than text match (text is now dynamic)
       const apiMessages = updatedMessages
-        .filter(m => m.text !== openingText)
+        .filter((m, i) => !(m.role === "syncca" && i === 0))
         .map(m => ({
           role:    m.role === "user" ? "user" : "assistant",
           content: m.text,
@@ -346,14 +365,16 @@ export default function App() {
         : "[User]: " + text + "\n[Syncca]: " + cleanText;
       fullTranscriptRef.current = newTranscript;
 
-      // Sync to Airtable — pass raw response so syncSession extracts [[brackets]]
+      // Sync transcript + accumulated concepts to Airtable
       const currentLogId = logRecordIdRef.current;
       if (currentLogId) {
         syncSession({
-          logRecordId:    currentLogId,
-          fullTranscript: newTranscript,
-          synccaResponse: visibleText,   // regex extracts [[ ]] inside syncSession
-        }).catch(e => console.warn("[syncSession] failed:", e));
+          logRecordId:      currentLogId,
+          fullTranscript:   newTranscript,
+          conceptsSurfaced: conceptsIntroducedRef.current, // full accumulated list
+        })
+          .then(() => console.log("[syncSession] ✓ synced. concepts:", conceptsIntroducedRef.current))
+          .catch(e => console.warn("[syncSession] failed:", e));
       } else {
         console.warn("[Transcript] logRecordId null — syncSession skipped");
       }
@@ -372,14 +393,18 @@ export default function App() {
   }, [messages, sessionStartTime, conceptLexicon]);
 
   // ── SAVE CONCEPT — cumulative wallet ──────────────────────
+  // Airtable call is computed synchronously BEFORE setState to avoid closure issues.
   function handleSaveConcept(concept) {
+    // Check current state value via the functional updater pattern — read only, no double call
     setSavedConcepts(prev => {
-      if (prev.find(c => c.word === concept.word)) return prev;
+      if (prev.find(c => c.word === concept.word)) return prev; // already saved
       const updated = [...prev, concept];
 
-      // Append to Users.Saved_Concepts (cumulative across sessions)
+      // Write the full updated list to Airtable immediately
       if (recordId) {
-        updateSavedConcepts(recordId, updated.map(c => c.englishTerm || c.word))
+        const words = updated.map(c => c.englishTerm || c.word);
+        updateSavedConcepts(recordId, words)
+          .then(() => console.log("[SavedConcepts] ✓ Written to Airtable:", words))
           .catch(e => console.warn("[updateSavedConcepts] failed:", e));
       }
 
