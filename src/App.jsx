@@ -14,6 +14,10 @@ import {
   fetchLexicon, fetchPreviousConcepts,
 } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
+import SynccaDebug, { installDebugLogger } from "./SynccaDebug";
+
+// Install Airtable request logger — remove before production
+installDebugLogger();
 
 // ─── Beta modal: show only on first 2 sessions ───────────────────
 function shouldShowBetaModal() {
@@ -438,6 +442,8 @@ export default function App() {
           onClose={() => { setShowTimeoutModal(false); setScreen("welcome"); }}
         />
       )}
+      {/* DEBUG PANEL — remove before production */}
+      <SynccaDebug visible={true} />
     </>
   );
 }
