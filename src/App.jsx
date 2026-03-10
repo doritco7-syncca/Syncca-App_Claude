@@ -68,12 +68,29 @@ function parseBracketConcepts(text, conceptLexicon) {
 }
 
 // ─── Fallback lexicon (used only if Airtable fetch fails) ────────
+// Contains ALL core methodology terms. When live Airtable fetch works,
+// these are replaced by the richer Airtable descriptions.
 const FALLBACK_LEXICON = [
-  { englishTerm: "Limbic System", word: "מערכת לימבית",  explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום." },
-  { englishTerm: "Cortex",        word: "קורטקס",          explanation: "מערכת החשיבה הרציונלית." },
-  { englishTerm: "Sanction",      word: "סנקציה",          explanation: "תגובה לא נעימה כלפי הפרטנר כשצורך לא נענה." },
-  { englishTerm: "Demand",        word: "דרישה",           explanation: "ביטוי כוחני של צורך שמפעיל התנגדות." },
-  { englishTerm: "Clean Request", word: "בקשה נקייה",     explanation: "בקשה שמשאירה לפרטנר חופש בחירה אמיתי." },
+  { englishTerm: "Limbic System",        word: "מערכת לימבית",         explanation: "המערכת הרגשית-קדומה במוח שמופעלת בתגובה לאיום. כשהיא פעילה, אנחנו בהישרדות — קשה לחשוב בצורה פתוחה, להקשיב, או להרגיש אמפתיה." },
+  { englishTerm: "Cortex",               word: "קורטקס",               explanation: "מערכת החשיבה הרציונלית והאמפתית. כשהלימבי רגוע, הקורטקס יכול לשקול בקשות בצורה פתוחה ואוהבת." },
+  { englishTerm: "Biological Shift",     word: "הסטה ביולוגית",        explanation: "הרגע שבו המוח עובר משליטת הקורטקס לשליטת המערכת הלימבית — בדרך כלל בגלל תחושת איום, ביקורת, או סנקציה." },
+  { englishTerm: "Reptilian Brain",      word: "מוח זוחלי",            explanation: "השכבה הקדומה ביותר במוח — אחראית על הישרדות בסיסית: לחימה, בריחה, קיפאון." },
+  { englishTerm: "Injury Time",          word: "זמן פציעות",           explanation: "תקופה של ריחוק וקור אחרי סנקציה — כשהאהבה 'מורעבת' מחמת היעדר חמימות וקרבה." },
+  { englishTerm: "Sanction",             word: "סנקציה",               explanation: "כל תגובה לא נעימה כלפי הפרטנר כשצורך לא נענה: ביקורת, שתיקה, פנים כועסות, ריחוק, מילים פוגעות. הסנקציה מפעילה את המערכת הלימבית של הצד השני ומונעת קשר אמיתי." },
+  { englishTerm: "Demand",               word: "דרישה",                explanation: "ביטוי כוחני של צורך, עם ציפייה שהפרטנר ייענה לו — ולרוב עם סנקציה מובלעת אם לא ייענה. דרישה יוצרת התנגדות כי היא פוגעת באוטונומיה." },
+  { englishTerm: "Appeasement",          word: "ריצוי",                explanation: "תגובה לדרישה מתוך פחד מסנקציה — לא מבחירה. מוביל לביצוע עלוב, טינה מצטברת, ותחושת 'אני לא נראה/ת'." },
+  { englishTerm: "War Mode",             word: "מלחמה",                explanation: "דפוס שבו שני הפרטנרים מגנים על עצמם ונלחמים על שליטה — אף אחד לא מוותר, צרכים לא נענים." },
+  { englishTerm: "Hierarchy",            word: "היררכיה",              explanation: "כשאחד הפרטנרים מתנהג כאילו הוא 'הבוס' — דורש, מצפה, מסנקציה. בזוגיות שוויונית זה יוצר התנגדות מיידית." },
+  { englishTerm: "Extension Arm",        word: "שלוחת ביצוע",          explanation: "להתייחס לפרטנר כאילו הוא כלי לספק את הצרכים שלי — ולא כאדם נפרד עם עולם משלו." },
+  { englishTerm: "Separateness",         word: "נפרדות",               explanation: "ההכרה שהפרטנר הוא ישות נפרדת לחלוטין, עם עולמו הפנימי, צרכיו, ותזמונו שלו. הנפרדות היא תנאי לאהבה בריאה — לא מכשול לה." },
+  { englishTerm: "Holding",              word: "החזקה",                explanation: "להישאר נוכח ולהכיל את המרחב הרגשי של הפרטנר — בלי לתקן, לפתור, או לנתח. פשוט להיות שם." },
+  { englishTerm: "Interference",         word: "הפרעה",                explanation: "הכרה בכך שכשאני מגיש/ה בקשה, אני מפריע/ה לזרימה הטבעית של הפרטנר. ההכרה הזו היא הבסיס לבקשה נקייה." },
+  { englishTerm: "Plan B",               word: "תכנית ב",              explanation: "דרך עצמאית לספק את הצורך שלי אם הפרטנר יגיד לא — שמאפשרת לי לבקש בלי לחץ ובלי ציפייה." },
+  { englishTerm: "Clean Request",        word: "בקשה נקייה",           explanation: "ביטוי ישיר של צורך שמשאיר לפרטנר חופש בחירה אמיתי — ללא לחץ, ללא ציפייה מובלעת, ומתוך הכנה לתשובה שלילית. מורכבת משלושה תנאים: הכרה בהפרעה, תכנית ב, ואפס סנקציות." },
+  { englishTerm: "Zero-Sanction Policy", word: "אפס סנקציות",          explanation: "הסכמה פנימית — לא הבטחה לפרטנר — לא להגיב בסנקציה אם הוא/היא יגיד לא לבקשה. זה מה שיוצר את הביטחון שמאפשר 'כן' מרצון." },
+  { englishTerm: "Yes From Love",        word: "כן שבא מאהבה",        explanation: "כשאין פחד מסנקציה, ה'כן' של הפרטנר בא מרצון אמיתי ואהבה — לא מחובה, פחד, או רצון להשכיך מתח." },
+  { englishTerm: "No From Self-Protection", word: "לא שבא מהגנה עצמית", explanation: "לא שמגיע מתוך שמירה על הצרכים, הערכים, או הגבולות שלי — ולא מנקמה או סירוב עקרוני." },
+  { englishTerm: "Compliance-War Cycle", word: "מחזור ריצוי-מלחמה",   explanation: "הדפוס שבו ריצוי מצטבר לטינה שמתפוצצת למלחמה — ואז חוזרים לריצוי. מעגל שמתקשה לשבור ללא כלים חדשים." },
 ];
 
 // ─── Timeout modal ────────────────────────────────────────────────

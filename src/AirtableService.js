@@ -50,6 +50,12 @@ export async function fetchLexicon() {
     if (data.records) all = all.concat(data.records);
     offset = data.offset || null;
   } while (offset);
+  // Log the raw first record so we can verify Airtable field names match exactly
+  if (all.length > 0) {
+    console.log("[fetchLexicon] Field names in Airtable:", Object.keys(all[0].fields));
+    console.log("[fetchLexicon] First record:", JSON.stringify(all[0].fields));
+  }
+
   const result = all
     .map(r => ({
       englishTerm:   r.fields.English_Term   || "",
@@ -58,7 +64,12 @@ export async function fetchLexicon() {
       explanationEN: r.fields.Description_EN || "",
     }))
     .filter(c => c.englishTerm);
-  console.log(`[fetchLexicon] ✓ Loaded ${result.length} concepts`);
+
+  const withExpl = result.filter(c => c.explanation).length;
+  console.log(`[fetchLexicon] ✓ ${result.length} concepts loaded, ${withExpl} have explanations`);
+  if (withExpl === 0) {
+    console.warn("[fetchLexicon] ⚠ No explanations found — check Airtable column names are exactly: Description_HE, Description_EN");
+  }
   return result;
 }
 
