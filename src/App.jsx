@@ -366,17 +366,29 @@ export default function App() {
       fullTranscriptRef.current = newTranscript;
 
       // Sync transcript + accumulated concepts to Airtable
+      // logRecordIdRef is the authoritative source — never goes stale across navigation
       const currentLogId = logRecordIdRef.current;
+      console.log("[syncSession] Attempting. logRecordId:", currentLogId, "concepts:", conceptsIntroducedRef.current);
       if (currentLogId) {
         syncSession({
           logRecordId:      currentLogId,
           fullTranscript:   newTranscript,
-          conceptsSurfaced: conceptsIntroducedRef.current, // full accumulated list
+          conceptsSurfaced: conceptsIntroducedRef.current,
         })
           .then(() => console.log("[syncSession] ✓ synced. concepts:", conceptsIntroducedRef.current))
-          .catch(e => console.warn("[syncSession] failed:", e));
+          .catch(e => {
+            console.warn("[syncSession] failed, retrying once:", e);
+            // Retry once after 2 seconds — handles transient Airtable errors
+            setTimeout(() => {
+              syncSession({
+                logRecordId:      currentLogId,
+                fullTranscript:   newTranscript,
+                conceptsSurfaced: conceptsIntroducedRef.current,
+              }).catch(e2 => console.error("[syncSession] retry also failed:", e2));
+            }, 2000);
+          });
       } else {
-        console.warn("[Transcript] logRecordId null — syncSession skipped");
+        console.error("[Transcript] logRecordId null — syncSession SKIPPED. State:", { recordId, logRecordId });
       }
 
     } catch (err) {
@@ -464,7 +476,7 @@ export default function App() {
         <PersonalCard
           record={{ ...userRecord, email: userEmail }}
           airtableRecordId={recordId}
-          logRecordId={logRecordId}
+          logRecordId={logRecordIdRef.current || logRecordId}
           savedConcepts={savedConcepts}
           onClose={() => setScreen("chat")}
           onLogout={handleLogout}
