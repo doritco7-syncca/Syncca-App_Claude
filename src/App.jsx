@@ -36,16 +36,33 @@ function getOpeningMessage(syncCount, firstName) {
 
 // ─── Parse [[bracket]] concepts from AI response ─────────────────
 // Looks up each term in the live lexicon; returns cleanText + concepts[].
+// Strip Hebrew definite article ה from each word for fuzzy matching.
+// Handles cases like [[המערכת הלימבית]] where Syncca adds ה naturally.
+function stripHeDefiniteArticle(term) {
+  return term.split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
+}
+
 function parseBracketConcepts(text, conceptLexicon) {
   const concepts = [];
   const cleanText = text.replace(/\[\[([^\]]+)\]\]/g, (_, term) => {
-    const entry = conceptLexicon.find(c => c.englishTerm === term || c.word === term);
+    const stripped = stripHeDefiniteArticle(term.trim());
+
+    // Match priority: exact englishTerm → exact word → stripped word → partial word
+    const entry =
+      conceptLexicon.find(c => c.englishTerm === term) ||
+      conceptLexicon.find(c => c.word === term) ||
+      conceptLexicon.find(c => c.word === stripped) ||
+      conceptLexicon.find(c =>
+        term.includes(c.word) || stripped.includes(c.word) ||
+        c.word.includes(stripped)
+      );
+
     concepts.push({
-      englishTerm: term,
+      englishTerm: entry?.englishTerm || term,
       word:        entry?.word        || term,
       explanation: entry?.explanation || "",
     });
-    return entry?.word || term; // show Hebrew in chat
+    return entry?.word || term; // always show canonical Hebrew term in chat
   });
   return { cleanText, concepts };
 }
