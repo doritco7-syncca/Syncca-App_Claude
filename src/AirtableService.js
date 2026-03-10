@@ -152,14 +152,27 @@ export async function updateUserProfile(recordId, fields) {
   });
 }
 
-// CUMULATIVE — caller passes the full accumulated list; we just PATCH directly.
-// No GET needed — App.jsx state is the source of truth for the accumulated list.
-export async function updateSavedConcepts(recordId, allConceptWords) {
-  if (!recordId || !allConceptWords?.length) return;
-  const deduped = [...new Set(allConceptWords)];
+// ATOMIC — fetches existing Saved_Concepts from Airtable first, merges, then PATCHes.
+// This is safe even if client state is stale (e.g. new device, page refresh mid-session).
+export async function updateSavedConcepts(recordId, newConceptWords) {
+  if (!recordId || !newConceptWords?.length) return;
+
+  // Fetch current server value
+  let existing = [];
+  try {
+    const rec = await airtableFetch(TABLES.users, recordId);
+    const raw = rec.fields?.Saved_Concepts || "";
+    existing  = raw.split(",").map(s => s.trim()).filter(Boolean);
+  } catch (e) {
+    console.warn("[updateSavedConcepts] GET failed, proceeding with client list:", e);
+  }
+
+  // Merge and deduplicate
+  const merged = [...new Set([...existing, ...newConceptWords])];
+
   return airtableFetch(TABLES.users, recordId, {
     method: "PATCH",
-    body: JSON.stringify({ fields: { Saved_Concepts: deduped.join(", ") } }),
+    body: JSON.stringify({ fields: { Saved_Concepts: merged.join(", ") } }),
   });
 }
 

@@ -236,7 +236,17 @@ export default function App() {
       try {
         // Load user profile
         const result = await findUserByEmail(userEmail);
-        if (result?.fields) setUserRecord(result.fields);
+        if (result?.fields) {
+          setUserRecord(result.fields);
+          // Restore previously saved concepts into UI state
+          const existing = result.fields.Saved_Concepts
+            ? result.fields.Saved_Concepts.split(",").map(s => s.trim()).filter(Boolean)
+            : [];
+          if (existing.length > 0) {
+            // Re-hydrate as concept objects — word = the stored string, explanation loaded from lexicon later
+            setSavedConcepts(existing.map(w => ({ word: w, englishTerm: w, explanation: "" })));
+          }
+        }
 
         // Load previous concepts for memory injection
         const prevConcepts = await fetchPreviousConcepts(recordId);
@@ -279,6 +289,14 @@ export default function App() {
     localStorage.setItem("syncca_email",     email);
     localStorage.setItem("syncca_record_id", rid);
 
+    // Restore previously saved concepts into UI state
+    const existingSaved = fields.Saved_Concepts
+      ? fields.Saved_Concepts.split(",").map(s => s.trim()).filter(Boolean)
+      : [];
+    if (existingSaved.length > 0) {
+      setSavedConcepts(existingSaved.map(w => ({ word: w, englishTerm: w, explanation: "" })));
+    }
+
     // Increment sync count — newCount tells us if this is a returning user
     const newSyncCount = await incrementSyncCount(rid, fields.Sync_Count || 0);
 
@@ -310,94 +328,75 @@ export default function App() {
 
   // ── SEND MESSAGE ───────────────────────────────────────────
   const handleSend = useCallback(async (text) => {
-    const userMsg        = { role: "user", text, timestamp: new Date().toISOString() };
+    const currentLogId = logRecordIdRef.current;
+    const userMsg       = { role: "user", text, timestamp: new Date().toISOString() };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setIsLoading(true);
 
+    // ── STEP 1: Log user message IMMEDIATELY — before calling AI ──
+    // This ensures the user's side of every exchange is always persisted,
+    // even if the AI call times out or throws.
+    const userOnlyTranscript = fullTranscriptRef.current
+      ? fullTranscriptRef.current + "\n[User]: " + text
+      : "[User]: " + text;
+    if (currentLogId) {
+      syncSession({ logRecordId: currentLogId, fullTranscript: userOnlyTranscript })
+        .catch(e => console.warn("[syncSession-user] failed:", e));
+    }
+
     try {
-      // Build API message history — exclude the Syncca opening message (first message)
-      // Filter by being the first syncca message rather than text match (text is now dynamic)
+      // ── STEP 2: Build API history — exclude opening message ──
       const apiMessages = updatedMessages
         .filter((m, i) => !(m.role === "syncca" && i === 0))
-        .map(m => ({
-          role:    m.role === "user" ? "user" : "assistant",
-          content: m.text,
-        }));
+        .map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
 
       const elapsed = sessionStartTime
         ? Math.floor((Date.now() - new Date(sessionStartTime).getTime()) / 60000)
         : 0;
 
-      // Call AI — pass live lexicon AND previous concepts for memory
+      // ── STEP 3: Call AI ──
       const rawResponse = await sendToSyncca(
-        apiMessages,
-        elapsed,
-        conceptLexicon,
-        previousConceptsRef.current
+        apiMessages, elapsed, conceptLexicon, previousConceptsRef.current
       );
-
       const { visibleText } = parseResponse(rawResponse);
 
-      // Parse [[bracket]] concepts — looked up from live Airtable lexicon
+      // ── STEP 4: Parse [[bracket]] concepts from AI response ──
       const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon);
 
-      // Accumulate this session's concepts
+      // ── STEP 5: Accumulate concepts — store Hebrew word (what user sees) ──
       if (concepts.length > 0) {
         const newWords = concepts
-          .map(c => c.englishTerm)
-          .filter(w => !conceptsIntroducedRef.current.includes(w));
+          .map(c => c.word || c.englishTerm)   // Hebrew first, fallback to English
+          .filter(w => w && !conceptsIntroducedRef.current.includes(w));
         conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
       }
 
-      const synccaMsg = {
-        role: "syncca",
-        text: cleanText,
-        concepts,
-        timestamp: new Date().toISOString(),
-      };
+      const synccaMsg = { role: "syncca", text: cleanText, concepts, timestamp: new Date().toISOString() };
       setMessages(prev => [...prev, synccaMsg]);
 
-      // Append to running transcript (ref — no stale closure)
-      const prevTranscript    = fullTranscriptRef.current;
-      const newTranscript     = prevTranscript
-        ? prevTranscript + "\n[User]: " + text + "\n[Syncca]: " + cleanText
-        : "[User]: " + text + "\n[Syncca]: " + cleanText;
+      // ── STEP 6: Build full transcript and sync to Airtable ──
+      const newTranscript = userOnlyTranscript + "\n[Syncca]: " + cleanText;
       fullTranscriptRef.current = newTranscript;
 
-      // Sync transcript + accumulated concepts to Airtable
-      // logRecordIdRef is the authoritative source — never goes stale across navigation
-      const currentLogId = logRecordIdRef.current;
-      console.log("[syncSession] Attempting. logRecordId:", currentLogId, "concepts:", conceptsIntroducedRef.current);
       if (currentLogId) {
         syncSession({
           logRecordId:      currentLogId,
           fullTranscript:   newTranscript,
-          conceptsSurfaced: conceptsIntroducedRef.current,
+          conceptsSurfaced: conceptsIntroducedRef.current,  // full accumulated list
         })
-          .then(() => console.log("[syncSession] ✓ synced. concepts:", conceptsIntroducedRef.current))
-          .catch(e => {
-            console.warn("[syncSession] failed, retrying once:", e);
-            // Retry once after 2 seconds — handles transient Airtable errors
-            setTimeout(() => {
-              syncSession({
-                logRecordId:      currentLogId,
-                fullTranscript:   newTranscript,
-                conceptsSurfaced: conceptsIntroducedRef.current,
-              }).catch(e2 => console.error("[syncSession] retry also failed:", e2));
-            }, 2000);
-          });
+          .then(() => console.log("[syncSession] ✓ logId:", currentLogId, "concepts:", conceptsIntroducedRef.current))
+          .catch(e => console.warn("[syncSession] failed:", e));
       } else {
-        console.error("[Transcript] logRecordId null — syncSession SKIPPED. State:", { recordId, logRecordId });
+        console.error("[handleSend] logRecordId is null — syncSession skipped");
       }
 
     } catch (err) {
       console.error("[Syncca API error]", err);
+      // Even on AI error: final-save the user-only transcript we already wrote
       setMessages(prev => [...prev, {
-        role: "syncca",
-        text: "מצטערת, הייתה תקלה טכנית. נסי שוב.",
-        concepts: [],
-        timestamp: new Date().toISOString(),
+        role: "syncca", text: "מצטערת, הייתה תקלה טכנית. נסי שוב.",
+        concepts: [], timestamp: new Date().toISOString(),
       }]);
     } finally {
       setIsLoading(false);
@@ -405,23 +404,25 @@ export default function App() {
   }, [messages, sessionStartTime, conceptLexicon]);
 
   // ── SAVE CONCEPT — cumulative wallet ──────────────────────
-  // Airtable call is computed synchronously BEFORE setState to avoid closure issues.
+  // Airtable call is OUTSIDE setState to avoid React StrictMode double-fire.
+  // savedConceptsRef mirrors savedConcepts state so we can read it synchronously.
+  const savedConceptsRef = useRef(savedConcepts);
+  useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
+
   function handleSaveConcept(concept) {
-    // Check current state value via the functional updater pattern — read only, no double call
-    setSavedConcepts(prev => {
-      if (prev.find(c => c.word === concept.word)) return prev; // already saved
-      const updated = [...prev, concept];
+    const current = savedConceptsRef.current;
+    if (current.find(c => c.word === concept.word)) return; // already saved
 
-      // Write the full updated list to Airtable immediately
-      if (recordId) {
-        const words = updated.map(c => c.englishTerm || c.word);
-        updateSavedConcepts(recordId, words)
-          .then(() => console.log("[SavedConcepts] ✓ Written to Airtable:", words))
-          .catch(e => console.warn("[updateSavedConcepts] failed:", e));
-      }
+    const updated = [...current, concept];
+    setSavedConcepts(updated);                              // update UI immediately
 
-      return updated;
-    });
+    // Write to Airtable OUTSIDE setState — no double-fire risk
+    if (recordId) {
+      const words = updated.map(c => c.englishTerm || c.word);
+      updateSavedConcepts(recordId, words)
+        .then(() => console.log("[SavedConcepts] ✓ Written to Airtable:", words))
+        .catch(e => console.warn("[updateSavedConcepts] failed:", e));
+    }
   }
 
   // ── LOGOUT ─────────────────────────────────────────────────
