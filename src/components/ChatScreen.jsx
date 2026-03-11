@@ -111,8 +111,8 @@ function MessageText({ text, concepts = [], onConceptClick }) {
   );
 }
 
-// ─── End-of-session widget: Lexicon + Feedback ────────────────────
-function SessionEndWidget({ conceptLexicon = [], logRecordId }) {
+// ─── Bottom Widget: saved concepts + feedback ────────────────────
+function SessionEndWidget({ savedConcepts = [], logRecordId }) {
   const [activeConcept, setActiveConcept] = useState(null);
   const [feedback, setFeedback]           = useState("");
   const [sent, setSent]                   = useState(false);
@@ -133,51 +133,55 @@ function SessionEndWidget({ conceptLexicon = [], logRecordId }) {
     <div style={{
       borderTop: `1px solid ${COLORS.border}`,
       background: COLORS.stoneLight,
-      padding: "18px 16px 22px",
+      padding: "14px 16px 18px",
       flexShrink: 0, direction: "rtl",
     }}>
-      {/* Visual Lexicon */}
-      <div style={{
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: "1rem", fontWeight: 700,
-        color: COLORS.secondary, marginBottom: "10px",
-      }}>✦ המושגים שעלו בשיחה</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px" }}>
-        {conceptLexicon.map((c, i) => (
-          <button key={i} onClick={() => setActiveConcept(activeConcept?.word === c.word ? null : c)}
-            style={{
-              padding: "5px 13px", borderRadius: "9999px",
-              border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : COLORS.border}`,
-              background: activeConcept?.word === c.word ? "#FFF0E8" : "white",
-              color: activeConcept?.word === c.word ? COLORS.primary : COLORS.text,
-              fontFamily: "'Inter', sans-serif", fontSize: "0.82rem",
-              cursor: "pointer", transition: "all 0.15s",
-            }}>{c.word}</button>
-        ))}
-      </div>
-
-      {/* Concept explanation */}
-      {activeConcept && (
-        <div style={{
-          background: "white", borderRadius: "14px",
-          border: `1.5px solid ${COLORS.border}`,
-          padding: "14px 16px", marginBottom: "16px",
-          position: "relative",
-        }}>
+      {/* Saved concepts */}
+      {savedConcepts.length > 0 && (
+        <div style={{ marginBottom: "14px" }}>
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: "1.05rem", fontWeight: 700,
-            color: COLORS.secondary, marginBottom: "6px",
-          }}>{activeConcept.word}</div>
-          <div style={{
-            fontFamily: "'Inter', sans-serif", fontSize: "0.85rem",
-            color: COLORS.text, lineHeight: 1.65,
-          }}>{activeConcept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
-          <button onClick={() => setActiveConcept(null)} style={{
-            position: "absolute", top: "10px", left: "10px",
-            background: "none", border: "none", cursor: "pointer",
-            color: COLORS.muted, fontSize: "0.9rem",
-          }}>✕</button>
+            fontSize: "0.9rem", fontWeight: 700,
+            color: COLORS.secondary, marginBottom: "8px",
+          }}>✦ המושגים שלי</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+            {savedConcepts.map((c, i) => (
+              <button key={i}
+                onClick={() => setActiveConcept(activeConcept?.word === c.word ? null : c)}
+                style={{
+                  padding: "5px 13px", borderRadius: "9999px",
+                  border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(234,88,12,0.35)"}`,
+                  background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.3)",
+                  color: COLORS.primary,
+                  fontFamily: "'Inter', sans-serif", fontSize: "0.82rem", fontWeight: 600,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}>{c.word}</button>
+            ))}
+          </div>
+
+          {/* Concept explanation */}
+          {activeConcept && (
+            <div style={{
+              marginTop: "10px", background: "white", borderRadius: "12px",
+              border: `1.5px solid rgba(234,88,12,0.2)`,
+              padding: "12px 14px", position: "relative",
+            }}>
+              <div style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "1rem", fontWeight: 700,
+                color: COLORS.secondary, marginBottom: "5px",
+              }}>{activeConcept.word}</div>
+              <div style={{
+                fontFamily: "'Inter', sans-serif", fontSize: "0.83rem",
+                color: COLORS.text, lineHeight: 1.6,
+              }}>{activeConcept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
+              <button onClick={() => setActiveConcept(null)} style={{
+                position: "absolute", top: "8px", left: "8px",
+                background: "none", border: "none", cursor: "pointer",
+                color: COLORS.muted, fontSize: "0.85rem",
+              }}>✕</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -186,37 +190,37 @@ function SessionEndWidget({ conceptLexicon = [], logRecordId }) {
         <>
           <div style={{
             fontFamily: "'Inter', sans-serif",
-            fontSize: "0.8rem", fontWeight: 600,
-            color: COLORS.secondary, marginBottom: "8px",
+            fontSize: "0.78rem", fontWeight: 600,
+            color: COLORS.muted, marginBottom: "7px",
           }}>לפני שנפרדים, מה תרצי/ה לשתף?</div>
           <textarea
             value={feedback}
             onChange={e => setFeedback(e.target.value)}
             placeholder="מה עזר, מה חסר, מה הרגשת..."
-            rows={3}
+            rows={2}
             style={{
-              width: "100%", borderRadius: "12px",
+              width: "100%", borderRadius: "10px",
               border: `1.5px solid ${COLORS.border}`,
-              padding: "10px 12px", resize: "none",
-              fontFamily: "'Inter', sans-serif", fontSize: "0.88rem",
+              padding: "9px 12px", resize: "none",
+              fontFamily: "'Inter', sans-serif", fontSize: "0.85rem",
               background: "white", outline: "none",
               direction: "rtl", boxSizing: "border-box",
             }}
           />
-          <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-            <button onClick={handleSendFeedback} disabled={sending || !feedback.trim()} style={{
-              flex: 1, height: "44px", background: COLORS.secondary, color: "white",
-              border: "none", borderRadius: "9999px",
-              fontFamily: "'Inter', sans-serif", fontWeight: 600,
-              cursor: feedback.trim() ? "pointer" : "not-allowed", opacity: feedback.trim() ? 1 : 0.5,
-            }}>שלח פידבק ✓</button>
-          </div>
+          <button onClick={handleSendFeedback} disabled={sending || !feedback.trim()} style={{
+            width: "100%", height: "42px", marginTop: "8px",
+            background: COLORS.secondary, color: "white",
+            border: "none", borderRadius: "9999px",
+            fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "0.88rem",
+            cursor: feedback.trim() ? "pointer" : "not-allowed",
+            opacity: feedback.trim() ? 1 : 0.5,
+          }}>שלח פידבק ✓</button>
         </>
       ) : (
         <div style={{
           textAlign: "center", color: "#16a34a",
           fontFamily: "'Inter', sans-serif", fontWeight: 600,
-          fontSize: "0.9rem", padding: "8px 0",
+          fontSize: "0.88rem", padding: "6px 0",
         }}>✓ תודה! נתראה בסינק הבא.</div>
       )}
     </div>
@@ -451,9 +455,9 @@ export default function ChatScreen({
             <div ref={bottomRef} />
           </div>
 
-          {/* END-OF-SESSION WIDGET — always visible */}
+          {/* BOTTOM WIDGET — always visible: saved concepts + feedback */}
           <SessionEndWidget
-            conceptLexicon={conceptLexicon}
+            savedConcepts={savedConcepts}
             logRecordId={logRecordId}
           />
 
