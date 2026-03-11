@@ -276,7 +276,16 @@ HE: "אנחנו מתקרבים לסוף הזמן.
 `;
 
 const LAYER_4_OUTPUT = `
-CONCEPT FORMATTING
+FIRST CONCEPT INTRODUCTION — ONBOARDING THE USER
+The very first time you introduce a [[concept]] in a conversation (exchange 3+),
+add this sentence naturally after the concept — once only:
+
+Only say this ONCE per conversation, the first time a concept appears.
+Add it as a natural sentence after the concept, in the flow of the response:
+"כדי שנוכל להבין יותר לעומק מה קורה, אני אתחיל להשתמש פה ושם במושגים מקצועיים — ועכשיו יש לך גם אפשרות ללחוץ עליהם כך שהם יישמרו תמיד 🙂"
+Never repeat this instruction again in the same conversation.
+
+
 - Bracket syntax: [[Hebrew_Term]] — e.g. [[מערכת לימבית]], [[סנקציה]], [[נפרדות]]
 - The Hebrew_Term MUST be the exact term from the lexicon (see below).
 - Max 3 concepts per response.
