@@ -240,7 +240,7 @@ export default function ChatScreen({
   onSend, onSaveConcept, savedConcepts = [],
   conceptLexicon = [],
   onOpenPersonalCard, onLogout, onTimeout,
-  sessionStartTime, logRecordId, conceptLexicon = [],
+  sessionStartTime, logRecordId,
 }) {
   const [input, setInput]               = useState("");
   const [activeConcept, setActiveConcept] = useState(null);
