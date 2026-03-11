@@ -464,8 +464,10 @@ export default function App() {
           savedConcepts={savedConcepts}
           conceptLexicon={conceptLexicon}
           onOpenPersonalCard={() => setScreen("personal")}
+          onLogout={handleLogout}
           onTimeout={() => setShowTimeoutModal(true)}
           sessionStartTime={sessionStartTime}
+          logRecordId={logRecordIdRef.current}
         />
       )}
       {screen === "personal" && (
