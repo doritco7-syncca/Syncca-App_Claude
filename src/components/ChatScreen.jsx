@@ -24,33 +24,11 @@ const STONE_SHADOW = [
 
 // ─── Logo ────────────────────────────────────────────────────────
 function LogoSymbol({ size = 24 }) {
-  // Two crescents: outer orange (left-facing), inner blue (right-facing)
-  const s = size;
-  const cx = s / 2, cy = s / 2;
-  // Outer orange crescent
-  const R1 = s * 0.42, r1 = s * 0.28, dx1 = s * 0.10;
-  // Inner blue crescent (smaller, opposite direction)
-  const R2 = s * 0.26, r2 = s * 0.17, dx2 = -s * 0.06;
   return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
-      {/* Outer orange crescent */}
-      <path d={`
-        M ${cx} ${cy - R1}
-        A ${R1} ${R1} 0 1 1 ${cx} ${cy + R1}
-        A ${r1} ${r1} 0 1 0 ${cx} ${cy - R1}
-        Z
-      `} fill="#ea580c"
-        transform={`translate(${dx1}, 0)`}
-      />
-      {/* Inner blue crescent (mirrored) */}
-      <path d={`
-        M ${cx} ${cy - R2}
-        A ${R2} ${R2} 0 1 0 ${cx} ${cy + R2}
-        A ${r2} ${r2} 0 1 1 ${cx} ${cy - R2}
-        Z
-      `} fill="#1e3a8a"
-        transform={`translate(${dx2}, 0)`}
-      />
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none"
+      style={{ transform: "rotate(180deg)", display: "block" }}>
+      <path d="M25 20C15 30 10 45 10 60C10 82 28 100 50 100C72 100 90 82 90 60C90 45 85 30 75 20C82 30 85 42 85 55C85 75 70 90 50 90C30 90 15 75 15 55C15 42 18 30 25 20Z" fill="#ea580c"/>
+      <path d="M40 35C35 40 32 48 32 58C32 70 40 80 50 80C60 80 68 70 68 58C68 48 65 40 60 35C65 40 68 48 68 55C68 65 60 73 50 73C40 73 32 65 32 55C32 48 35 40 40 35Z" fill="#1e3a8a"/>
     </svg>
   );
 }
@@ -378,13 +356,17 @@ export default function ChatScreen({
             <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 60 }}>
               <button onClick={onLogout} title="יציאה" style={{
                 background: "none", border: "none", cursor: "pointer",
-                padding: "4px", lineHeight: 1,
-                fontSize: "1.1rem", color: "#ef4444",
+                padding: "4px", lineHeight: 1, display: "flex", alignItems: "center",
                 transition: "transform 0.15s",
               }}
               onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
               onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-              >←</button>
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
               <span style={{
                 fontFamily: "'Inter', sans-serif",
                 fontSize: "0.72rem", fontWeight: 600,
