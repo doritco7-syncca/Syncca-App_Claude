@@ -48,8 +48,19 @@ export default function PersonalCard({
   const [errMsg, setErrMsg]       = useState("");
   const [activeConcept, setActiveConcept] = useState(null); // for concept tooltip
 
+  function stripHe(term) {
+    return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
+  }
+
   function findEntry(c) {
-    return conceptLexicon.find(e => e.englishTerm === c.englishTerm || e.englishTerm === c.word || e.word === c.word);
+    const t = c.englishTerm || c.word || "";
+    const w = c.word || "";
+    return conceptLexicon.find(e =>
+      e.englishTerm === t || e.englishTerm === w ||
+      e.word === w || e.word === t ||
+      e.aliases?.some(a => a === w || a === t ||
+        stripHe(a) === stripHe(w) || stripHe(a) === stripHe(t))
+    );
   }
 
   function resolveWord(c) {

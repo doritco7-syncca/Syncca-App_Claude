@@ -110,6 +110,10 @@ function MessageText({ text, concepts = [], onConceptClick }) {
   );
 }
 
+function stripHeDefiniteArticle(term) {
+  return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
+}
+
 // ─── Bottom Widget: slim bar — saved concepts + feedback ─────────
 function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he" }) {
   const [activeConcept, setActiveConcept] = useState(null);
@@ -118,10 +122,15 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   const [sending, setSending]             = useState(false);
 
   function findEntry(concept) {
+    const t = concept.englishTerm || concept.word || "";
+    const w = concept.word || "";
     return conceptLexicon.find(c =>
-      c.englishTerm === concept.englishTerm ||
-      c.englishTerm === concept.word ||
-      c.word === concept.word
+      c.englishTerm === t ||
+      c.englishTerm === w ||
+      c.word === w ||
+      c.word === t ||
+      c.aliases?.some(a => a === w || a === t ||
+        stripHeDefiniteArticle(a) === stripHeDefiniteArticle(w))
     );
   }
 
