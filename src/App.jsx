@@ -187,6 +187,7 @@ export default function App() {
   const [recordId,  setRecordId]  = useState(() => localStorage.getItem("syncca_record_id") || "");
 
   const [messages,         setMessages]         = useState([]);
+  const [chatLang,         setChatLang]         = useState("he"); // "he" | "en"
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [savedConcepts,    setSavedConcepts]    = useState([]);
   const [isLoading,        setIsLoading]        = useState(false);
@@ -328,6 +329,13 @@ export default function App() {
     const userMsg         = { role: "user", text, timestamp: new Date().toISOString() };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+
+    // Detect language from first user message (Hebrew chars = he, else en)
+    if (messages.filter(m => m.role === "user").length === 0) {
+      const isHebrew = /[\u05D0-\u05EA]/.test(text);
+      setChatLang(isHebrew ? "he" : "en");
+    }
+
     setIsLoading(true);
 
     // Append user message to transcript ref immediately (no Airtable call yet)
@@ -468,6 +476,7 @@ export default function App() {
           onTimeout={() => setShowTimeoutModal(true)}
           sessionStartTime={sessionStartTime}
           logRecordId={logRecordIdRef.current}
+          chatLang={chatLang}
         />
       )}
       {screen === "personal" && (
@@ -476,6 +485,8 @@ export default function App() {
           airtableRecordId={recordId}
           logRecordId={logRecordIdRef.current}
           savedConcepts={savedConcepts}
+          conceptLexicon={conceptLexicon}
+          chatLang={chatLang}
           onClose={() => setScreen("chat")}
           onLogout={handleLogout}
         />
