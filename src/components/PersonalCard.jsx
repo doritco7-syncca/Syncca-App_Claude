@@ -106,21 +106,24 @@ export default function PersonalCard({
         .pc-slab { animation: stoneRise 0.45s cubic-bezier(0.22,1,0.36,1) both; }
 
         .pc-field {
-          width: 100%; height: 44px;
+          width: 100%; height: 36px;
           background: ${COLORS.stoneLight};
           border: 1.5px solid transparent; border-radius: 9999px;
-          padding: 0 16px; font-family: 'Inter', sans-serif;
-          font-size: 0.87rem; color: ${COLORS.text};
+          padding: 0 12px; font-family: 'Inter', sans-serif;
+          font-size: 0.8rem; color: ${COLORS.text};
           outline: none; direction: rtl; text-align: right;
-          transition: border-color 0.18s;
+          transition: border-color 0.18s, background 0.18s;
           appearance: none; -webkit-appearance: none;
         }
         .pc-field:focus { border-color: ${COLORS.primary}; }
         .pc-field::placeholder { color: ${COLORS.muted}; }
+        .pc-field:placeholder-shown,
+        .pc-field option:checked[value=""] ~ .pc-field,
+        select.pc-field:invalid { background: #f0fdf4; }
 
         .pc-label {
-          display: block; margin-bottom: 5px;
-          font-family: 'Inter', sans-serif; font-size: 0.66rem;
+          display: block; margin-bottom: 3px;
+          font-family: 'Inter', sans-serif; font-size: 0.6rem;
           font-weight: 600; color: ${COLORS.primary};
           letter-spacing: 0.08em; text-transform: uppercase;
           direction: rtl; text-align: right;
@@ -190,114 +193,114 @@ export default function PersonalCard({
             <div style={{ width: 30 }} />
           </div>
 
-          {/* SCROLLABLE BODY */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px 22px 0" }}>
+          {/* TOP PANEL — personal details, 2/3 */}
+          <div style={{ flex: 2, overflowY: "auto", padding: "14px 18px 14px", minHeight: 0 }}>
 
             {/* Avatar + name */}
             <div style={{
-              display: "flex", alignItems: "center", gap: "14px",
-              direction: "rtl", marginBottom: "28px",
+              display: "flex", alignItems: "center", gap: "12px",
+              direction: "rtl", marginBottom: "12px",
             }}>
               <div style={{
-                width: 54, height: 54, borderRadius: "50%", flexShrink: 0,
+                width: 46, height: 46, borderRadius: "50%", flexShrink: 0,
                 background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontSize: "1.35rem", fontWeight: 700,
+                color: "white", fontSize: "1.2rem", fontWeight: 700,
                 fontFamily: "'Cormorant Garamond', serif",
               }}>{initials}</div>
               <div>
                 <div style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "1.15rem", fontWeight: 700, color: COLORS.text,
+                  fontSize: "1.05rem", fontWeight: 700, color: COLORS.text,
                 }}>{form.Full_Name || form.First_Name || "שם מלא"}</div>
                 <div style={{
                   fontFamily: "'Inter', sans-serif",
-                  fontSize: "0.78rem", color: COLORS.muted, direction: "rtl",
+                  fontSize: "0.72rem", color: COLORS.muted, direction: "rtl",
                 }}>{record.email || ""}</div>
               </div>
             </div>
 
-            {/* Fields — 2-col grid for all fields */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr",
-              gap: "14px", marginBottom: "14px",
-            }}>
+            {/* Fields — 2-col grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               {FIELDS.map(f => (
                 <div key={f.key}>
                   <label className="pc-label">{f.label}</label>
                   {f.type === "select" ? (
                     <select className="pc-field" value={form[f.key]}
-                      onChange={e => update(f.key, e.target.value)}>
+                      onChange={e => update(f.key, e.target.value)}
+                      style={{ background: !form[f.key] ? "#f0fdf4" : undefined }}>
                       <option value="">בחרי...</option>
                       {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   ) : (
                     <input className="pc-field" placeholder={f.placeholder}
-                      value={form[f.key]} onChange={e => update(f.key, e.target.value)} />
+                      value={form[f.key]} onChange={e => update(f.key, e.target.value)}
+                      style={{ background: !form[f.key] ? "#f0fdf4" : undefined }} />
                   )}
                 </div>
               ))}
             </div>
+          </div>
 
-            {/* Divider */}
-            <div style={{ height: "1px", background: COLORS.border, margin: "22px 0 18px" }} />
+          {/* DIVIDER with label */}
+          <div style={{ flexShrink: 0, position: "relative", margin: "0 18px" }}>
+            <div style={{ height: "2px", background: COLORS.border }} />
+            <span style={{
+              position: "absolute", top: "-10px", left: "50%",
+              transform: "translateX(-50%)",
+              background: COLORS.stone, padding: "0 12px",
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "0.8rem", fontWeight: 700,
+              color: COLORS.secondary, whiteSpace: "nowrap",
+            }}>✦ המושגים שלי</span>
+          </div>
 
-            {/* Saved concepts */}
-            <div style={{ marginBottom: "28px" }}>
+          {/* BOTTOM PANEL — saved concepts, 1/3 */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "18px 18px 12px", minHeight: 0 }}>
+            {savedConcepts.length === 0 ? (
               <div style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "1.1rem", fontWeight: 700,
-                color: COLORS.secondary, direction: "rtl", marginBottom: "12px",
-              }}>מושגים ששמרתי ✦</div>
-              {savedConcepts.length === 0 ? (
-                <div style={{
-                  color: COLORS.muted, fontSize: "0.83rem",
-                  fontFamily: "'Inter', sans-serif",
-                  direction: "rtl", lineHeight: 1.6,
-                }}>
-                  לחיצה על מושג מודגש בשיחה תשמור אותו כאן.
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", direction: "rtl" }}>
-                  {savedConcepts.map((c, i) => (
-                    <div key={i} className="concept-pill"
-                      onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
-                      style={{ cursor: "pointer", userSelect: "none" }}>
-                      <span>✦</span><span>{resolveWord(c)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Concept explanation popup */}
-              {activeConcept && (
-                <div style={{
-                  marginTop: "14px", background: "#FDFBF7",
-                  border: "1.5px solid rgba(30,58,138,0.15)",
-                  borderRadius: "16px", padding: "16px 18px",
-                  direction: "rtl", position: "relative",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                }}>
-                  <div style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "1.1rem", fontWeight: 700,
-                    color: "#1e3a8a", marginBottom: "8px",
-                  }}>{resolveWord(activeConcept)}</div>
-                  <div style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "0.85rem", color: "#374151", lineHeight: 1.65,
-                  }}>
-                    {resolveExplanation(activeConcept)}
+                color: COLORS.muted, fontSize: "0.82rem",
+                fontFamily: "'Inter', sans-serif",
+                direction: "rtl", lineHeight: 1.6,
+              }}>
+                לחיצה על מושג מודגש בשיחה תשמור אותו כאן.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", direction: "rtl" }}>
+                {savedConcepts.map((c, i) => (
+                  <div key={i} className="concept-pill"
+                    onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
+                    style={{ cursor: "pointer", userSelect: "none" }}>
+                    <span>✦</span><span>{resolveWord(c)}</span>
                   </div>
-                  <button onClick={() => setActiveConcept(null)} style={{
-                    position: "absolute", top: "12px", left: "12px",
-                    background: "none", border: "none", cursor: "pointer",
-                    color: "#6b7280", fontSize: "1rem", lineHeight: 1,
-                  }}>✕</button>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
 
+            {activeConcept && (
+              <div style={{
+                marginTop: "10px", background: "#f0fdf4",
+                border: "1.5px solid #bbf7d0",
+                borderRadius: "14px", padding: "12px 16px",
+                direction: "rtl", position: "relative",
+                boxShadow: "0 2px 12px rgba(22,163,74,0.08)",
+              }}>
+                <div style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "1rem", fontWeight: 700,
+                  color: "#1e3a8a", marginBottom: "6px",
+                }}>{resolveWord(activeConcept)}</div>
+                <div style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "0.82rem", color: "#374151", lineHeight: 1.6,
+                }}>{resolveExplanation(activeConcept)}</div>
+                <button onClick={() => setActiveConcept(null)} style={{
+                  position: "absolute", top: "10px", left: "10px",
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#6b7280", fontSize: "0.9rem", lineHeight: 1,
+                }}>✕</button>
+              </div>
+            )}
           </div>
 
           {/* STICKY SAVE BUTTON */}
