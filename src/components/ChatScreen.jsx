@@ -1,13 +1,12 @@
-// ChatScreen.jsx — Syncca · Heavy Stone Slab Edition
-// Props:
-//   userEmail (string), firstName (string)
-//   messages  ([{ role:"user"|"syncca", text, concepts?:[{word,explanation}], timestamp? }])
-//   onSend (text) => void
-//   onOpenPersonalCard () => void
-//   onTimeout () => void
-//   sessionStartTime (Date|string)
+// ChatScreen.jsx — Syncca
+// Props: userEmail, firstName, messages, isLoading, onSend,
+//        onSaveConcept, savedConcepts, conceptLexicon,
+//        onOpenPersonalCard, onLogout, onTimeout, sessionStartTime
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { saveFeedback } from "../AirtableService";
+
+const SESSION_SECS = 30 * 60;
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -16,125 +15,226 @@ const COLORS = {
   text: "#1a1a1a", muted: "#6b7280", border: "#E5E0D8",
 };
 
-const STONE_SHADOW = `
-  0 2px 4px rgba(0,0,0,0.06),
-  0 6px 12px rgba(0,0,0,0.07),
-  0 18px 36px -6px rgba(0,0,0,0.11),
-  0 40px 80px -16px rgba(0,0,0,0.14),
-  inset 0 1px 0px rgba(255,255,255,0.90)
-`;
+const STONE_SHADOW = [
+  "0 2px 4px rgba(0,0,0,0.04)",
+  "0 8px 24px rgba(0,0,0,0.08)",
+  "0 24px 64px rgba(0,0,0,0.10)",
+  "inset 0 1px 0 rgba(255,255,255,0.9)",
+].join(", ");
 
-const SESSION_SECS = 30 * 60;
-
-const LogoSymbol = ({ size = 24 }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none"
-    style={{ transform: "rotate(180deg)", flexShrink: 0 }}>
-    <path d="M25 20C15 30 10 45 10 60C10 82 28 100 50 100C72 100 90 82 90 60C90 45 85 30 75 20C82 30 85 42 85 55C85 75 70 90 50 90C30 90 15 75 15 55C15 42 18 30 25 20Z" fill="#ea580c"/>
-    <path d="M40 35C35 40 32 48 32 58C32 70 40 80 50 80C60 80 68 70 68 58C68 48 65 40 60 35C65 40 68 48 68 55C68 65 60 73 50 73C40 73 32 65 32 55C32 48 35 40 40 35Z" fill="#1e3a8a"/>
-  </svg>
-);
-
-function ConceptWord({ word, onClick }) {
-  const [hov, setHov] = useState(false);
+// ─── Logo ────────────────────────────────────────────────────────
+function LogoSymbol({ size = 24 }) {
+  const r = size / 2, cx = r, cy = r, or = r * 0.88, ir = r * 0.55, off = r * 0.22;
   return (
-    <span onClick={onClick}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{
-        fontWeight: 600, cursor: "pointer", paddingBottom: "1px",
-        borderBottom: `2px ${hov ? "solid" : "dashed"} rgba(234,88,12,${hov ? 0.85 : 0.5})`,
-        transition: "border 0.15s",
-      }}>
-      {word}
-    </span>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
+      <circle cx={cx - off} cy={cy} r={or} stroke="#ea580c" strokeWidth={size * 0.09} fill="none" />
+      <circle cx={cx + off} cy={cy} r={ir} stroke="#1e3a8a" strokeWidth={size * 0.09} fill="none"
+        style={{ transform: `rotate(180deg)`, transformOrigin: `${cx}px ${cy}px` }} />
+    </svg>
   );
 }
 
-function MessageText({ text, concepts = [], onConceptClick }) {
-  if (!concepts.length) return <span>{text}</span>;
-  let parts = [text];
-  concepts.forEach(c => {
-    parts = parts.flatMap(p => {
-      if (typeof p !== "string") return [p];
-      const i = p.indexOf(c.word);
-      if (i === -1) return [p];
-      return [p.slice(0, i), <ConceptWord key={c.word} word={c.word} onClick={() => onConceptClick(c)} />, p.slice(i + c.word.length)];
-    });
-  });
-  return <>{parts}</>;
-}
-
-function Tooltip({ concept, onClose, onSave, savedConcepts = [] }) {
+// ─── Concept Tooltip (chat bubble click) ─────────────────────────
+function ConceptTooltip({ concept, onSave, onClose }) {
   if (!concept) return null;
-  const alreadySaved = savedConcepts.some(c => c.word === concept.word);
-
-  function handleSave(e) {
-    e.stopPropagation();
-    onSave?.(concept);
-  }
-
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 200,
+      background: "rgba(0,0,0,0.18)",
       display: "flex", alignItems: "flex-end", justifyContent: "center",
-      padding: "0 10px 28px", background: "rgba(0,0,0,0.20)",
+      padding: "0 10px 24px",
     }}>
       <div onClick={e => e.stopPropagation()} style={{
         background: "#FDFBF7", borderRadius: "20px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
-        padding: "24px 26px 20px", maxWidth: "380px", width: "100%",
+        padding: "24px 26px", maxWidth: "480px", width: "100%",
         direction: "rtl", animation: "tooltipUp 0.22s ease",
-        position: "relative",
       }}>
-        {/* Close button */}
-        <button onClick={onClose} style={{
-          position: "absolute", top: "14px", left: "14px",
-          background: "none", border: "none", cursor: "pointer",
-          color: COLORS.muted, fontSize: "1rem",
-        }}>✕</button>
-
-        {/* Concept name */}
         <div style={{
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: "1.3rem", fontWeight: 700,
           color: COLORS.secondary, marginBottom: "10px",
         }}>{concept.word}</div>
-
-        {/* Explanation */}
         <div style={{
           fontFamily: "'Inter', sans-serif", fontSize: "0.9rem",
-          color: COLORS.text, lineHeight: 1.65, marginBottom: "18px",
+          color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
         }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
-
-        {/* Save button */}
-        <button onClick={handleSave} disabled={alreadySaved} style={{
-          width: "100%", height: "44px",
-          background: alreadySaved ? "#e5e7eb" : COLORS.primary,
-          color: alreadySaved ? COLORS.muted : "white",
-          border: "none", borderRadius: "9999px",
-          fontFamily: "'Inter', sans-serif", fontWeight: 600,
-          fontSize: "0.88rem", cursor: alreadySaved ? "default" : "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-          transition: "background 0.2s",
-          boxShadow: alreadySaved ? "none" : "0 3px 10px rgba(234,88,12,0.28)",
-        }}>
-          {alreadySaved ? "✓ נשמר בכרטיס האישי" : "✦ שמור מושג זה"}
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={() => { onSave?.(concept); onClose(); }} style={{
+            flex: 1, height: "44px", background: COLORS.primary, color: "white",
+            border: "none", borderRadius: "9999px",
+            fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "0.88rem",
+            cursor: "pointer",
+          }}>✦ שמור מושג זה</button>
+          <button onClick={onClose} style={{
+            height: "44px", padding: "0 18px",
+            background: "transparent", color: COLORS.muted,
+            border: `1px solid ${COLORS.border}`, borderRadius: "9999px",
+            fontFamily: "'Inter', sans-serif", cursor: "pointer",
+          }}>סגור</button>
+        </div>
+        <button onClick={onClose} style={{
+          position: "absolute", top: "14px", left: "14px",
+          background: "none", border: "none", cursor: "pointer",
+          color: COLORS.muted, fontSize: "1rem",
+        }}>✕</button>
       </div>
     </div>
   );
 }
 
+// ─── Message text renderer — makes [[concepts]] tappable ─────────
+function MessageText({ text, concepts = [], onConceptClick }) {
+  if (!concepts.length) return <span style={{ whiteSpace: "pre-wrap" }}>{text}</span>;
+  const parts = [];
+  let remaining = text;
+  concepts.forEach(c => {
+    const idx = remaining.indexOf(c.word);
+    if (idx === -1) return;
+    if (idx > 0) parts.push({ type: "text", value: remaining.slice(0, idx) });
+    parts.push({ type: "concept", value: c.word, concept: c });
+    remaining = remaining.slice(idx + c.word.length);
+  });
+  if (remaining) parts.push({ type: "text", value: remaining });
+  return (
+    <span style={{ whiteSpace: "pre-wrap" }}>
+      {parts.map((p, i) =>
+        p.type === "text" ? <span key={i}>{p.value}</span> : (
+          <span key={i} onClick={() => onConceptClick?.(p.concept)} style={{
+            color: COLORS.primary, fontWeight: 700,
+            textDecoration: "underline dotted",
+            cursor: "pointer", borderRadius: "4px",
+          }}>{p.value}</span>
+        )
+      )}
+    </span>
+  );
+}
+
+// ─── End-of-session widget: Lexicon + Feedback ────────────────────
+function SessionEndWidget({ conceptLexicon = [], logRecordId }) {
+  const [activeConcept, setActiveConcept] = useState(null);
+  const [feedback, setFeedback]           = useState("");
+  const [sent, setSent]                   = useState(false);
+  const [sending, setSending]             = useState(false);
+
+  async function handleSendFeedback() {
+    if (!feedback.trim()) return;
+    setSending(true);
+    if (logRecordId) {
+      saveFeedback(logRecordId, feedback.trim())
+        .catch(e => console.warn("[saveFeedback]", e));
+    }
+    setSent(true);
+    setSending(false);
+  }
+
+  return (
+    <div style={{
+      borderTop: `1px solid ${COLORS.border}`,
+      background: COLORS.stoneLight,
+      padding: "18px 16px 22px",
+      flexShrink: 0, direction: "rtl",
+    }}>
+      {/* Visual Lexicon */}
+      <div style={{
+        fontFamily: "'Cormorant Garamond', serif",
+        fontSize: "1rem", fontWeight: 700,
+        color: COLORS.secondary, marginBottom: "10px",
+      }}>✦ המושגים שעלו בשיחה</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "18px" }}>
+        {conceptLexicon.map((c, i) => (
+          <button key={i} onClick={() => setActiveConcept(activeConcept?.word === c.word ? null : c)}
+            style={{
+              padding: "5px 13px", borderRadius: "9999px",
+              border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : COLORS.border}`,
+              background: activeConcept?.word === c.word ? "#FFF0E8" : "white",
+              color: activeConcept?.word === c.word ? COLORS.primary : COLORS.text,
+              fontFamily: "'Inter', sans-serif", fontSize: "0.82rem",
+              cursor: "pointer", transition: "all 0.15s",
+            }}>{c.word}</button>
+        ))}
+      </div>
+
+      {/* Concept explanation */}
+      {activeConcept && (
+        <div style={{
+          background: "white", borderRadius: "14px",
+          border: `1.5px solid ${COLORS.border}`,
+          padding: "14px 16px", marginBottom: "16px",
+          position: "relative",
+        }}>
+          <div style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: "1.05rem", fontWeight: 700,
+            color: COLORS.secondary, marginBottom: "6px",
+          }}>{activeConcept.word}</div>
+          <div style={{
+            fontFamily: "'Inter', sans-serif", fontSize: "0.85rem",
+            color: COLORS.text, lineHeight: 1.65,
+          }}>{activeConcept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
+          <button onClick={() => setActiveConcept(null)} style={{
+            position: "absolute", top: "10px", left: "10px",
+            background: "none", border: "none", cursor: "pointer",
+            color: COLORS.muted, fontSize: "0.9rem",
+          }}>✕</button>
+        </div>
+      )}
+
+      {/* Feedback */}
+      {!sent ? (
+        <>
+          <div style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "0.8rem", fontWeight: 600,
+            color: COLORS.secondary, marginBottom: "8px",
+          }}>לפני שנפרדים, מה תרצי/ה לשתף?</div>
+          <textarea
+            value={feedback}
+            onChange={e => setFeedback(e.target.value)}
+            placeholder="מה עזר, מה חסר, מה הרגשת..."
+            rows={3}
+            style={{
+              width: "100%", borderRadius: "12px",
+              border: `1.5px solid ${COLORS.border}`,
+              padding: "10px 12px", resize: "none",
+              fontFamily: "'Inter', sans-serif", fontSize: "0.88rem",
+              background: "white", outline: "none",
+              direction: "rtl", boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+            <button onClick={handleSendFeedback} disabled={sending || !feedback.trim()} style={{
+              flex: 1, height: "44px", background: COLORS.secondary, color: "white",
+              border: "none", borderRadius: "9999px",
+              fontFamily: "'Inter', sans-serif", fontWeight: 600,
+              cursor: feedback.trim() ? "pointer" : "not-allowed", opacity: feedback.trim() ? 1 : 0.5,
+            }}>שלח פידבק ✓</button>
+          </div>
+        </>
+      ) : (
+        <div style={{
+          textAlign: "center", color: "#16a34a",
+          fontFamily: "'Inter', sans-serif", fontWeight: 600,
+          fontSize: "0.9rem", padding: "8px 0",
+        }}>✓ תודה! נתראה בסינק הבא.</div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main ChatScreen ─────────────────────────────────────────────
 export default function ChatScreen({
   userEmail = "", firstName = "",
-  messages = [], onSend,
-  onSaveConcept,
-  savedConcepts = [],
-  onOpenPersonalCard, onTimeout,
-  sessionStartTime,
+  messages = [], isLoading = false,
+  onSend, onSaveConcept, savedConcepts = [],
+  conceptLexicon = [],
+  onOpenPersonalCard, onLogout, onTimeout,
+  sessionStartTime, logRecordId,
 }) {
-  const [input, setInput] = useState("");
+  const [input, setInput]               = useState("");
   const [activeConcept, setActiveConcept] = useState(null);
-  const [secondsLeft, setSecondsLeft] = useState(() => {
+  const [secondsLeft, setSecondsLeft]   = useState(() => {
     if (sessionStartTime) {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
       return Math.max(0, SESSION_SECS - elapsed);
@@ -166,66 +266,50 @@ export default function ChatScreen({
     setInput(""); onSend?.(t);
   }
 
-  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const secs = String(secondsLeft % 60).padStart(2, "0");
+  const mins  = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const secs  = String(secondsLeft % 60).padStart(2, "0");
   const isLow = secondsLeft < 300;
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
-
-        @keyframes stoneRise {
-          from { opacity: 0; transform: translateY(28px) scale(0.982); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes bubbleIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         @keyframes tooltipUp {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-
-        .chat-slab { animation: stoneRise 0.65s cubic-bezier(0.22,1,0.36,1) both; }
-        .chat-bubble-anim { animation: bubbleIn 0.28s ease both; }
-
+        @keyframes bubbleIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .chat-bubble-anim { animation: bubbleIn 0.22s ease; }
+        .send-btn {
+          width: 44px; height: 44px; border-radius: 9999px;
+          background: ${COLORS.primary}; color: white; border: none;
+          font-size: 1.05rem; cursor: pointer; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 3px 12px rgba(234,88,12,0.32);
+          transition: background 0.15s;
+        }
+        .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chat-input {
-          flex: 1; height: 46px;
-          background: ${COLORS.stoneLight};
-          border: 1.5px solid transparent; border-radius: 9999px;
-          padding: 0 18px; font-family: 'Inter', sans-serif;
-          font-size: 0.93rem; color: ${COLORS.text};
-          outline: none; direction: rtl; text-align: right;
-          transition: border-color 0.18s;
+          flex: 1; height: 44px; border-radius: 9999px;
+          border: 1.5px solid ${COLORS.border};
+          padding: 0 18px; font-size: 0.93rem;
+          font-family: 'Inter', sans-serif;
+          background: white; outline: none;
+          direction: rtl; text-align: right;
+          transition: border-color 0.15s;
         }
         .chat-input:focus { border-color: ${COLORS.primary}; }
-        .chat-input::placeholder { color: ${COLORS.muted}; }
-        .chat-input:disabled { opacity: 0.45; }
-
-        .send-btn {
-          width: 46px; height: 46px; flex-shrink: 0;
-          background: ${COLORS.primary}; border: none; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: #fff; font-size: 1rem;
-          box-shadow: 0 3px 10px rgba(234,88,12,0.35);
-          transition: background 0.15s, transform 0.1s;
-        }
-        .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; transform: scale(1.06); }
-        .send-btn:disabled { opacity: 0.35; cursor: default; }
-
         .icon-btn {
-          background: none; border: none; cursor: pointer;
-          color: ${COLORS.muted}; border-radius: 50%;
-          width: 32px; height: 32px;
+          width: 34px; height: 34px; border-radius: 9999px;
+          background: transparent; border: none;
+          cursor: pointer; color: ${COLORS.muted};
           display: flex; align-items: center; justify-content: center;
           font-size: 0.95rem; transition: background 0.15s, color 0.15s;
         }
         .icon-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
-
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 2px; }
       `}</style>
@@ -236,15 +320,12 @@ export default function ChatScreen({
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "10px", fontFamily: "'Inter', sans-serif",
       }}>
-        <div className="chat-slab" style={{
-          background: COLORS.stone,
-          borderRadius: "32px",
+        <div style={{
+          background: COLORS.stone, borderRadius: "32px",
           boxShadow: STONE_SHADOW,
           width: "100%", maxWidth: "480px",
-          height: "calc(100dvh - 20px)",
-          maxHeight: "880px",
-          display: "flex", flexDirection: "column",
-          overflow: "hidden",
+          height: "calc(100dvh - 20px)", maxHeight: "880px",
+          display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
 
           {/* HEADER */}
@@ -254,17 +335,17 @@ export default function ChatScreen({
             display: "flex", alignItems: "center", justifyContent: "space-between",
             flexShrink: 0, position: "relative",
           }}>
-            {/* Left: timer + icons */}
+            {/* Left: timer + logout */}
             <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
               <span style={{
                 fontFamily: "'Inter', sans-serif",
                 fontSize: "0.8rem", fontWeight: 600,
                 color: isLow ? COLORS.primary : COLORS.muted,
-                letterSpacing: "0.03em",
-                transition: "color 0.4s",
+                letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
-              <button className="icon-btn" title="הגדרות">⚙</button>
-              <button className="icon-btn" title="ייצא">↗</button>
+              <button className="icon-btn" title="יציאה"
+                onClick={onLogout}
+                style={{ fontSize: "1rem" }}>↩</button>
             </div>
 
             {/* Center logo */}
@@ -309,18 +390,6 @@ export default function ChatScreen({
             padding: "20px 16px 8px",
             display: "flex", flexDirection: "column", gap: "12px",
           }}>
-            {messages.length === 0 && (
-              <div style={{
-                textAlign: "center", color: COLORS.muted, marginTop: "40px",
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "1.1rem", direction: "rtl", lineHeight: 1.7,
-              }}>
-                שלום, אני כאן להקשיב.<br/>
-                <span style={{ fontSize: "0.88rem", fontFamily: "'Inter', sans-serif" }}>
-                  מה עולה לך היום?
-                </span>
-              </div>
-            )}
             {messages.map((msg, i) => (
               <div key={i} className="chat-bubble-anim" style={{
                 display: "flex", flexDirection: "column",
@@ -349,8 +418,12 @@ export default function ChatScreen({
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 }}>
-                  <MessageText text={msg.text} concepts={msg.concepts || []}
-                    onConceptClick={setActiveConcept} />
+                  {isLoading && i === messages.length - 1 && msg.role === "syncca" ? (
+                    <span style={{ color: COLORS.muted, fontStyle: "italic" }}>...</span>
+                  ) : (
+                    <MessageText text={msg.text} concepts={msg.concepts || []}
+                      onConceptClick={setActiveConcept} />
+                  )}
                 </div>
                 {msg.timestamp && (
                   <div style={{
@@ -362,52 +435,69 @@ export default function ChatScreen({
                 )}
               </div>
             ))}
+            {isLoading && (
+              <div style={{
+                display: "flex", justifyContent: "flex-start", paddingLeft: "4px",
+              }}>
+                <div style={{
+                  background: "#FDFBF7", border: `1.5px solid ${COLORS.primaryLight}`,
+                  borderRadius: "0 18px 18px 18px",
+                  padding: "13px 17px", color: COLORS.muted,
+                  fontStyle: "italic", fontSize: "0.88rem",
+                  fontFamily: "'Inter', sans-serif",
+                }}>...</div>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
 
+          {/* END-OF-SESSION WIDGET — always visible */}
+          <SessionEndWidget
+            conceptLexicon={conceptLexicon}
+            logRecordId={logRecordId}
+          />
+
           {/* INPUT BAR */}
-          <div style={{
-            padding: "12px 16px 20px",
-            borderTop: `1px solid ${COLORS.border}`,
-            flexShrink: 0,
-          }}>
             <div style={{
-              display: "flex", justifyContent: "space-between",
-              marginBottom: "8px", padding: "0 2px",
+              padding: "12px 16px 20px",
+              borderTop: `1px solid ${COLORS.border}`,
+              flexShrink: 0,
             }}>
               <div style={{
-                fontSize: "0.6rem", color: COLORS.muted,
-                fontFamily: "'Inter', sans-serif",
-                letterSpacing: "0.08em", textTransform: "uppercase",
-              }}>🔒 פרטי ומאובטח</div>
-              <div style={{
-                fontSize: "0.6rem", color: COLORS.muted,
-                fontFamily: "'Inter', sans-serif", direction: "rtl",
+                display: "flex", justifyContent: "space-between",
+                marginBottom: "8px", padding: "0 2px",
               }}>
-                {input.length > 0 ? `${input.length} תווים` : ""}
+                <div style={{
+                  fontSize: "0.6rem", color: COLORS.muted,
+                  fontFamily: "'Inter', sans-serif",
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                }}>🔒 פרטי ומאובטח</div>
+                <div style={{
+                  fontSize: "0.6rem", color: COLORS.muted,
+                  fontFamily: "'Inter', sans-serif", direction: "rtl",
+                }}>
+                  {input.length > 0 ? `${input.length} תווים` : ""}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <button className="send-btn"
+                  onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
+                <input className="chat-input"
+                  placeholder={timedOut ? "השיחה הסתיימה" : "כתבי כאן..."}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                  disabled={timedOut} />
               </div>
             </div>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <button className="send-btn"
-                onClick={handleSend} disabled={!input.trim() || timedOut}
-                title="שלחי">➤</button>
-              <input className="chat-input"
-                placeholder={timedOut ? "השיחה הסתיימה" : "כתבי כאן..."}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                disabled={timedOut} />
-            </div>
           </div>
-
-        </div>
       </div>
 
-      <Tooltip
+      {/* Concept tooltip overlay */}
+      <ConceptTooltip
         concept={activeConcept}
+        onSave={onSaveConcept}
         onClose={() => setActiveConcept(null)}
-        onSave={(concept) => { onSaveConcept?.(concept); setActiveConcept(null); }}
-        savedConcepts={savedConcepts}
       />
     </>
   );

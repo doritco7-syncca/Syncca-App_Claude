@@ -25,7 +25,7 @@ const STONE_SHADOW = `
 const FIELDS = [
   { key: "First_Name",          label: "שם פרטי",       type: "text",   placeholder: "שמך" },
   { key: "Full_Name",           label: "שם מלא",         type: "text",   placeholder: "שם מלא" },
-  { key: "Age_Range",           label: "טווח גיל",       type: "select", options: ["18-25","26-35","36-45","46-55","56-65","65+"] },
+  { key: "Age_Range",           label: "טווח גיל",       type: "select", options: ["20-29","30-39","40-49","50-59","60-69","70-79","80-100"] },
   { key: "Marital_Status",      label: "מצב משפחתי",     type: "select", options: ["רווק/ה","זוגיות","נשוי/אה","גרוש/ה","אלמן/ה"] },
   { key: "Gender",              label: "מגדר",           type: "select", options: ["אישה","גבר","נון-בינארי/ת","מעדיף/ה לא לציין"] },
   { key: "Language_Preference", label: "שפה מועדפת",     type: "text",   placeholder: "עברית / English" },
