@@ -66,9 +66,10 @@ export async function fetchLexicon() {
     .filter(c => c.englishTerm);
 
   const withExpl = result.filter(c => c.explanation).length;
-  console.log(`[fetchLexicon] ✓ ${result.length} concepts loaded, ${withExpl} have explanations`);
-  if (withExpl === 0) {
-    console.warn("[fetchLexicon] ⚠ No explanations found — check Airtable column names are exactly: Description_HE, Description_EN");
+  const missing  = result.filter(c => !c.explanation).map(c => c.englishTerm);
+  console.log(`[fetchLexicon] ✓ ${result.length} concepts, ${withExpl} with Description_HE, ${missing.length} missing`);
+  if (missing.length > 0) {
+    console.warn("[fetchLexicon] Missing Description_HE for these English_Terms:", missing);
   }
   return result;
 }

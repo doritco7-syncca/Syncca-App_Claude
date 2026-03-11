@@ -212,12 +212,21 @@ export default function App() {
     fetchLexicon()
       .then(entries => {
         if (entries?.length > 0) {
-          setConceptLexicon(entries);
-          console.log("[Lexicon] Loaded", entries.length, "concepts");
-          // Re-hydrate saved concepts — on login they were loaded as {word, explanation:""}
-          // Now fill in real explanations and correct Hebrew words from the loaded lexicon
+          // For any Airtable entry missing Description_HE, fill in from FALLBACK_LEXICON.
+          // This covers the 15 concepts that have no description in Airtable yet.
+          const merged = entries.map(entry => {
+            if (entry.explanation) return entry;
+            const fb = FALLBACK_LEXICON.find(
+              f => f.englishTerm === entry.englishTerm || f.word === entry.word
+            );
+            return fb?.explanation ? { ...entry, explanation: fb.explanation } : entry;
+          });
+          const withExpl = merged.filter(e => e.explanation).length;
+          console.log(`[Lexicon] ${merged.length} concepts, ${withExpl} with explanations (${merged.length - withExpl} still missing)`);
+          setConceptLexicon(merged);
+          // Re-hydrate saved concepts with real explanations now that lexicon is loaded
           setSavedConcepts(prev => prev.map(c => {
-            const match = entries.find(e =>
+            const match = merged.find(e =>
               e.englishTerm === c.englishTerm || e.word === c.word
             );
             return match ? { ...c, word: match.word, explanation: match.explanation } : c;
