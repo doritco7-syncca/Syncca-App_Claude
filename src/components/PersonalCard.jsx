@@ -217,12 +217,12 @@ export default function PersonalCard({
               </div>
             </div>
 
-            {/* Fields — 2-col grid */}
+            {/* Fields — 2-col grid for all fields */}
             <div style={{
               display: "grid", gridTemplateColumns: "1fr 1fr",
               gap: "14px", marginBottom: "14px",
             }}>
-              {FIELDS.slice(0, 4).map(f => (
+              {FIELDS.map(f => (
                 <div key={f.key}>
                   <label className="pc-label">{f.label}</label>
                   {f.type === "select" ? (
@@ -238,23 +238,6 @@ export default function PersonalCard({
                 </div>
               ))}
             </div>
-
-            {/* Full-width remaining fields */}
-            {FIELDS.slice(4).map(f => (
-              <div key={f.key} style={{ marginBottom: "14px" }}>
-                <label className="pc-label">{f.label}</label>
-                {f.type === "select" ? (
-                  <select className="pc-field" value={form[f.key]}
-                    onChange={e => update(f.key, e.target.value)}>
-                    <option value="">בחרי...</option>
-                    {f.options.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                ) : (
-                  <input className="pc-field" placeholder={f.placeholder}
-                    value={form[f.key]} onChange={e => update(f.key, e.target.value)} />
-                )}
-              </div>
-            ))}
 
             {/* Divider */}
             <div style={{ height: "1px", background: COLORS.border, margin: "22px 0 18px" }} />
