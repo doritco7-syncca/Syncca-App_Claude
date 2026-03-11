@@ -43,24 +43,33 @@ function stripHeDefiniteArticle(term) {
 function parseBracketConcepts(text, conceptLexicon) {
   const concepts = [];
   const cleanText = text.replace(/\[\[([^\]]+)\]\]/g, (_, term) => {
-    const stripped = stripHeDefiniteArticle(term.trim());
+    const t = term.trim();
+    const stripped = stripHeDefiniteArticle(t);
 
-    // Match priority: exact englishTerm → exact word → stripped word → partial word
+    // Match priority:
+    // 1. exact englishTerm
+    // 2. exact Hebrew word
+    // 3. stripped (remove ה) Hebrew word
+    // 4. alias match (exact or stripped)
+    // 5. partial word match
     const entry =
-      conceptLexicon.find(c => c.englishTerm === term) ||
-      conceptLexicon.find(c => c.word === term) ||
+      conceptLexicon.find(c => c.englishTerm === t) ||
+      conceptLexicon.find(c => c.word === t) ||
       conceptLexicon.find(c => c.word === stripped) ||
       conceptLexicon.find(c =>
-        term.includes(c.word) || stripped.includes(c.word) ||
-        c.word.includes(stripped)
+        c.aliases?.some(a => a === t || a === stripped ||
+          stripHeDefiniteArticle(a) === t || stripHeDefiniteArticle(a) === stripped)
+      ) ||
+      conceptLexicon.find(c =>
+        t.includes(c.word) || stripped.includes(c.word) || c.word.includes(stripped)
       );
 
     concepts.push({
-      englishTerm: entry?.englishTerm || term,
-      word:        entry?.word        || term,
+      englishTerm: entry?.englishTerm || t,
+      word:        entry?.word        || t,
       explanation: entry?.explanation || "",
     });
-    return entry?.word || term; // always show canonical Hebrew term in chat
+    return entry?.word || t; // always show canonical Hebrew term in chat
   });
   return { cleanText, concepts };
 }
