@@ -278,8 +278,8 @@ export default function PersonalCard({
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", direction: "rtl" }}>
                   {savedConcepts.map((c, i) => (
                     <div key={i} className="concept-pill"
-                      onClick={() => setActiveConcept(activeConcept?.word === c.word ? null : c)}
-                      style={{ cursor: "pointer" }}>
+                      onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
+                      style={{ cursor: "pointer", userSelect: "none" }}>
                       <span>✦</span><span>{resolveWord(c)}</span>
                     </div>
                   ))}
