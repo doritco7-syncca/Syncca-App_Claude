@@ -24,12 +24,33 @@ const STONE_SHADOW = [
 
 // ─── Logo ────────────────────────────────────────────────────────
 function LogoSymbol({ size = 24 }) {
-  const r = size / 2, cx = r, cy = r, or = r * 0.88, ir = r * 0.55, off = r * 0.22;
+  // Two crescents: outer orange (left-facing), inner blue (right-facing)
+  const s = size;
+  const cx = s / 2, cy = s / 2;
+  // Outer orange crescent
+  const R1 = s * 0.42, r1 = s * 0.28, dx1 = s * 0.10;
+  // Inner blue crescent (smaller, opposite direction)
+  const R2 = s * 0.26, r2 = s * 0.17, dx2 = -s * 0.06;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
-      <circle cx={cx - off} cy={cy} r={or} stroke="#ea580c" strokeWidth={size * 0.09} fill="none" />
-      <circle cx={cx + off} cy={cy} r={ir} stroke="#1e3a8a" strokeWidth={size * 0.09} fill="none"
-        style={{ transform: `rotate(180deg)`, transformOrigin: `${cx}px ${cy}px` }} />
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+      {/* Outer orange crescent */}
+      <path d={`
+        M ${cx} ${cy - R1}
+        A ${R1} ${R1} 0 1 1 ${cx} ${cy + R1}
+        A ${r1} ${r1} 0 1 0 ${cx} ${cy - R1}
+        Z
+      `} fill="#ea580c"
+        transform={`translate(${dx1}, 0)`}
+      />
+      {/* Inner blue crescent (mirrored) */}
+      <path d={`
+        M ${cx} ${cy - R2}
+        A ${R2} ${R2} 0 1 0 ${cx} ${cy + R2}
+        A ${r2} ${r2} 0 1 1 ${cx} ${cy - R2}
+        Z
+      `} fill="#1e3a8a"
+        transform={`translate(${dx2}, 0)`}
+      />
     </svg>
   );
 }
@@ -348,63 +369,60 @@ export default function ChatScreen({
 
           {/* HEADER */}
           <div style={{
-            padding: "12px 20px 10px",
+            padding: "10px 14px 8px",
             borderBottom: `1px solid ${COLORS.border}`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            flexShrink: 0, position: "relative",
+            flexShrink: 0,
           }}>
-            {/* Left: timer + logout */}
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {/* Left: red arrow logout + timer */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 60 }}>
+              <button onClick={onLogout} title="יציאה" style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: "4px", lineHeight: 1,
+                fontSize: "1.1rem", color: "#ef4444",
+                transition: "transform 0.15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              >←</button>
               <span style={{
                 fontFamily: "'Inter', sans-serif",
-                fontSize: "0.75rem", fontWeight: 600,
+                fontSize: "0.72rem", fontWeight: 600,
                 color: isLow ? COLORS.primary : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
-              <button onClick={onLogout} style={{
-                height: "28px", padding: "0 10px",
-                background: "transparent",
-                border: `1.5px solid ${COLORS.border}`,
-                borderRadius: "9999px", cursor: "pointer",
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "0.72rem", fontWeight: 600,
-                color: COLORS.muted,
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.target.style.borderColor = "#ef4444"; e.target.style.color = "#ef4444"; }}
-              onMouseLeave={e => { e.target.style.borderColor = COLORS.border; e.target.style.color = COLORS.muted; }}
-              >התנתקות</button>
             </div>
 
-            {/* Center: logo + "בסינק עם X" */}
+            {/* Center: logo + name */}
             <div style={{
-              position: "absolute", left: "50%", transform: "translateX(-50%)",
               display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
+              flex: 1,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <LogoSymbol size={20} />
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <LogoSymbol size={18} />
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "1.1rem", fontWeight: 700, color: COLORS.primary,
+                  fontSize: "1rem", fontWeight: 700, color: COLORS.primary,
                 }}>Syncca</span>
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "0.75rem", color: COLORS.secondary, fontWeight: 600,
+                  fontSize: "0.7rem", color: COLORS.secondary, fontWeight: 600,
                 }}>| Conscious Love</span>
               </div>
               {displayName && (
                 <div style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "0.82rem", fontWeight: 700,
+                  fontSize: "0.78rem", fontWeight: 700,
                   color: "#16a34a", direction: "rtl",
-                  letterSpacing: "0.01em",
                 }}>{`בסינק עם ${displayName}`}</div>
               )}
             </div>
 
             {/* Right: personal card */}
-            <button className="icon-btn" onClick={onOpenPersonalCard}
-              title="כרטיס אישי" style={{ fontSize: "1.05rem" }}>👤</button>
+            <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end" }}>
+              <button className="icon-btn" onClick={onOpenPersonalCard}
+                title="כרטיס אישי" style={{ fontSize: "1.05rem" }}>👤</button>
+            </div>
           </div>
 
           {/* MESSAGES */}
