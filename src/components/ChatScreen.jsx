@@ -118,7 +118,15 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   const [sent, setSent]                   = useState(false);
   const [sending, setSending]             = useState(false);
 
-  // Re-lookup explanation from live lexicon — concept saved on message
+  // Get the Hebrew display word — fall back to lexicon lookup if saved as English
+  function resolveWord(concept) {
+    if (concept.word && concept.word !== concept.englishTerm) return concept.word;
+    const entry = conceptLexicon.find(c =>
+      c.englishTerm === concept.englishTerm ||
+      c.englishTerm === concept.word
+    );
+    return entry?.word || concept.word || concept.englishTerm;
+  }
   // may have had empty explanation if lexicon wasn't loaded yet at that moment.
   function resolveExplanation(concept) {
     if (concept.explanation) return concept.explanation;
@@ -166,7 +174,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 color: COLORS.primary,
                 fontFamily: "'Inter', sans-serif", fontSize: "0.78rem", fontWeight: 600,
                 cursor: "pointer", transition: "all 0.15s",
-              }}>{c.word || c.englishTerm}</button>
+              }}>{resolveWord(c)}</button>
             ))}
           </div>
 
@@ -181,7 +189,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: "0.95rem", fontWeight: 700,
                 color: COLORS.secondary, marginBottom: "3px",
-              }}>{activeConcept.word || activeConcept.englishTerm}</div>
+              }}>{resolveWord(activeConcept)}</div>
               <div style={{
                 fontFamily: "'Inter', sans-serif", fontSize: "0.79rem",
                 color: COLORS.text, lineHeight: 1.55,
@@ -461,16 +469,9 @@ export default function ChatScreen({
             <div ref={bottomRef} />
           </div>
 
-          {/* BOTTOM WIDGET — always visible: saved concepts + feedback */}
-          <SessionEndWidget
-            savedConcepts={savedConcepts}
-            conceptLexicon={conceptLexicon}
-            logRecordId={logRecordId}
-          />
-
           {/* INPUT BAR */}
             <div style={{
-              padding: "12px 16px 20px",
+              padding: "12px 16px 16px",
               borderTop: `1px solid ${COLORS.border}`,
               flexShrink: 0,
             }}>
@@ -501,6 +502,13 @@ export default function ChatScreen({
                   disabled={timedOut} />
               </div>
             </div>
+
+          {/* BOTTOM WIDGET — saved concepts + feedback, always at very bottom */}
+          <SessionEndWidget
+            savedConcepts={savedConcepts}
+            conceptLexicon={conceptLexicon}
+            logRecordId={logRecordId}
+          />
           </div>
       </div>
 
