@@ -112,30 +112,30 @@ function MessageText({ text, concepts = [], onConceptClick }) {
 }
 
 // ─── Bottom Widget: slim bar — saved concepts + feedback ─────────
-function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId }) {
+function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he" }) {
   const [activeConcept, setActiveConcept] = useState(null);
   const [feedback, setFeedback]           = useState("");
   const [sent, setSent]                   = useState(false);
   const [sending, setSending]             = useState(false);
 
-  // Get the Hebrew display word — fall back to lexicon lookup if saved as English
-  function resolveWord(concept) {
-    if (concept.word && concept.word !== concept.englishTerm) return concept.word;
-    const entry = conceptLexicon.find(c =>
+  function findEntry(concept) {
+    return conceptLexicon.find(c =>
       c.englishTerm === concept.englishTerm ||
-      c.englishTerm === concept.word
+      c.englishTerm === concept.word ||
+      c.word === concept.word
     );
+  }
+
+  function resolveWord(concept) {
+    const entry = findEntry(concept);
+    if (chatLang === "en") return entry?.englishTerm || concept.englishTerm || concept.word;
     return entry?.word || concept.word || concept.englishTerm;
   }
-  // may have had empty explanation if lexicon wasn't loaded yet at that moment.
+
   function resolveExplanation(concept) {
-    if (concept.explanation) return concept.explanation;
-    const entry = conceptLexicon.find(c =>
-      c.englishTerm === concept.englishTerm ||
-      c.word === concept.word ||
-      c.englishTerm === concept.word
-    );
-    return entry?.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
+    const entry = findEntry(concept);
+    if (chatLang === "en") return entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
+    return entry?.explanation || concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
   }
 
   function toggleConcept(c) {
@@ -248,7 +248,7 @@ export default function ChatScreen({
   onSend, onSaveConcept, savedConcepts = [],
   conceptLexicon = [],
   onOpenPersonalCard, onLogout, onTimeout,
-  sessionStartTime, logRecordId,
+  sessionStartTime, logRecordId, chatLang = "he",
 }) {
   const [input, setInput]               = useState("");
   const [activeConcept, setActiveConcept] = useState(null);
@@ -348,59 +348,64 @@ export default function ChatScreen({
 
           {/* HEADER */}
           <div style={{
-            padding: "18px 20px 14px",
+            padding: "12px 20px 10px",
             borderBottom: `1px solid ${COLORS.border}`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             flexShrink: 0, position: "relative",
           }}>
             {/* Left: timer + logout */}
-            <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{
                 fontFamily: "'Inter', sans-serif",
-                fontSize: "0.8rem", fontWeight: 600,
+                fontSize: "0.75rem", fontWeight: 600,
                 color: isLow ? COLORS.primary : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
-              <button className="icon-btn" title="יציאה"
-                onClick={onLogout}
-                style={{ fontSize: "1rem" }}>↩</button>
+              <button onClick={onLogout} style={{
+                height: "28px", padding: "0 10px",
+                background: "transparent",
+                border: `1.5px solid ${COLORS.border}`,
+                borderRadius: "9999px", cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "0.72rem", fontWeight: 600,
+                color: COLORS.muted,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { e.target.style.borderColor = "#ef4444"; e.target.style.color = "#ef4444"; }}
+              onMouseLeave={e => { e.target.style.borderColor = COLORS.border; e.target.style.color = COLORS.muted; }}
+              >התנתקות</button>
             </div>
 
-            {/* Center logo */}
+            {/* Center: logo + "בסינק עם X" */}
             <div style={{
               position: "absolute", left: "50%", transform: "translateX(-50%)",
-              display: "flex", alignItems: "center", gap: "7px",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
             }}>
-              <LogoSymbol size={22} />
-              <span style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "1.15rem", fontWeight: 700, color: COLORS.primary,
-              }}>Syncca</span>
-              <span style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "0.8rem", color: COLORS.secondary, fontWeight: 600,
-              }}>| Conscious Love</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                <LogoSymbol size={20} />
+                <span style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "1.1rem", fontWeight: 700, color: COLORS.primary,
+                }}>Syncca</span>
+                <span style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "0.75rem", color: COLORS.secondary, fontWeight: 600,
+                }}>| Conscious Love</span>
+              </div>
+              {displayName && (
+                <div style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "0.82rem", fontWeight: 700,
+                  color: "#16a34a", direction: "rtl",
+                  letterSpacing: "0.01em",
+                }}>{`בסינק עם ${displayName}`}</div>
+              )}
             </div>
 
             {/* Right: personal card */}
             <button className="icon-btn" onClick={onOpenPersonalCard}
               title="כרטיס אישי" style={{ fontSize: "1.05rem" }}>👤</button>
           </div>
-
-          {/* GREETING */}
-          {displayName && (
-            <div style={{
-              padding: "9px 20px",
-              background: COLORS.stoneLight,
-              borderBottom: `1px solid ${COLORS.border}`,
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "0.98rem", fontWeight: 600,
-              color: COLORS.secondary, textAlign: "center",
-              direction: "rtl", flexShrink: 0,
-            }}>
-              {`בסינק עם ${displayName}`}
-            </div>
-          )}
 
           {/* MESSAGES */}
           <div style={{
@@ -508,6 +513,7 @@ export default function ChatScreen({
             savedConcepts={savedConcepts}
             conceptLexicon={conceptLexicon}
             logRecordId={logRecordId}
+            chatLang={chatLang}
           />
           </div>
       </div>

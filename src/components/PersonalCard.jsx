@@ -34,7 +34,7 @@ const FIELDS = [
 export default function PersonalCard({
   record = {},
   airtableRecordId,
-  savedConcepts = [], onClose,
+  savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose,
 }) {
   const [form, setForm] = useState({
     First_Name:          record.First_Name          || "",
@@ -47,6 +47,22 @@ export default function PersonalCard({
   const [saveState, setSaveState] = useState("idle");
   const [errMsg, setErrMsg]       = useState("");
   const [activeConcept, setActiveConcept] = useState(null); // for concept tooltip
+
+  function findEntry(c) {
+    return conceptLexicon.find(e => e.englishTerm === c.englishTerm || e.englishTerm === c.word || e.word === c.word);
+  }
+
+  function resolveWord(c) {
+    const entry = findEntry(c);
+    if (chatLang === "en") return entry?.englishTerm || c.englishTerm || c.word;
+    return entry?.word || c.word || c.englishTerm;
+  }
+
+  function resolveExplanation(c) {
+    const entry = findEntry(c);
+    if (chatLang === "en") return entry?.explanationEN || c.explanationEN || entry?.explanation || "";
+    return entry?.explanation || c.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
+  }
 
   function update(k, v) {
     setForm(f => ({ ...f, [k]: v }));
@@ -264,7 +280,7 @@ export default function PersonalCard({
                     <div key={i} className="concept-pill"
                       onClick={() => setActiveConcept(activeConcept?.word === c.word ? null : c)}
                       style={{ cursor: "pointer" }}>
-                      <span>✦</span><span>{c.word}</span>
+                      <span>✦</span><span>{resolveWord(c)}</span>
                     </div>
                   ))}
                 </div>
@@ -283,12 +299,12 @@ export default function PersonalCard({
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "1.1rem", fontWeight: 700,
                     color: "#1e3a8a", marginBottom: "8px",
-                  }}>{activeConcept.word}</div>
+                  }}>{resolveWord(activeConcept)}</div>
                   <div style={{
                     fontFamily: "'Inter', sans-serif",
                     fontSize: "0.85rem", color: "#374151", lineHeight: 1.65,
                   }}>
-                    {activeConcept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}
+                    {resolveExplanation(activeConcept)}
                   </div>
                   <button onClick={() => setActiveConcept(null)} style={{
                     position: "absolute", top: "12px", left: "12px",
