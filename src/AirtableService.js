@@ -193,6 +193,30 @@ export async function fetchPreviousConcepts(userRecordId) {
   }
 }
 
+// Fetches last N session summaries for memory injection.
+// Returns array of { date, concepts, duration, feedback } — most recent first.
+export async function fetchSessionHistory(userRecordId, limit = 5) {
+  if (!userRecordId) return [];
+  try {
+    const f = `FIND("${userRecordId}", ARRAYJOIN({User_Link}))`;
+    const fields = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used"];
+    const qs = fields.map(f => `fields%5B%5D=${encodeURIComponent(f)}`).join("&");
+    const data = await airtableFetch(
+      `Conversation_Logs?filterByFormula=${encodeURIComponent(f)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${qs}`
+    );
+    return (data.records || []).map(rec => ({
+      date:      rec.fields?.Created_At     || "",
+      concepts:  (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean),
+      duration:  rec.fields?.Session_Duration_Minutes || null,
+      feedback:  rec.fields?.Feedback       || "",
+      language:  rec.fields?.Language_Used  || "Hebrew",
+    }));
+  } catch (e) {
+    console.warn("[fetchSessionHistory] failed:", e);
+    return [];
+  }
+}
+
 // syncSession — called ONCE per exchange after AI responds.
 // ONLY writes Concepts_Surfaced when array is non-empty — never sends empty string.
 export async function syncSession({ logRecordId, fullTranscript, conceptsSurfaced, languageUsed }) {
