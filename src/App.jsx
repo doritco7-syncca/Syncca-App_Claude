@@ -11,7 +11,7 @@ import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
   updateUserProfile, updateSavedConcepts,
   createSessionLog, syncSession, saveFeedback,
-  fetchLexicon, fetchPreviousConcepts,
+  fetchLexicon, fetchPreviousConcepts, fetchSessionHistory,
 } from "./AirtableService";
 import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
 
@@ -208,6 +208,7 @@ export default function App() {
   const fullTranscriptRef      = useRef("");
   const conceptsIntroducedRef  = useRef([]); // Hebrew words surfaced this session
   const previousConceptsRef    = useRef([]); // from all prior sessions
+  const sessionHistoryRef      = useRef([]); // last 5 sessions with dates/concepts/feedback
   const savedConceptsRef       = useRef([]); // mirrors savedConcepts state
 
   // Keep savedConceptsRef in sync with state
@@ -259,10 +260,13 @@ export default function App() {
           if (saved.length) setSavedConcepts(saved);
         }
 
-        // Load prior session concepts for memory injection
+        // Load prior session concepts + history for memory injection
         const prev = await fetchPreviousConcepts(recordId);
         previousConceptsRef.current = prev;
+        const history = await fetchSessionHistory(recordId, 5);
+        sessionHistoryRef.current = history;
         console.log("[Memory] Previous concepts:", prev);
+        console.log("[Memory] Session history:", history.length, "sessions");
 
         // Create fresh session log
         const logId = await createSessionLog(recordId);
@@ -302,10 +306,13 @@ export default function App() {
     // Increment sync count — result tells us new vs returning
     const newSyncCount = await incrementSyncCount(rid, fields.Sync_Count || 0);
 
-    // Load prior concepts for memory
+    // Load prior concepts + history for memory
     const prev = await fetchPreviousConcepts(rid).catch(() => []);
     previousConceptsRef.current = prev;
+    const history = await fetchSessionHistory(rid, 5).catch(() => []);
+    sessionHistoryRef.current = history;
     console.log("[Memory] Previous concepts loaded:", prev);
+    console.log("[Memory] Session history loaded:", history.length, "sessions");
 
     // Create session log FIRST — we need logId before first message
     const logId = await createSessionLog(rid).catch(() => null);
@@ -363,7 +370,7 @@ export default function App() {
 
       // ── Call AI ───────────────────────────────────────────────────
       const rawResponse = await sendToSyncca(
-        apiMessages, elapsed, conceptLexicon, previousConceptsRef.current
+        apiMessages, elapsed, conceptLexicon, previousConceptsRef.current, userRecord || {}, sessionHistoryRef.current
       );
       const { visibleText } = parseResponse(rawResponse);
 
@@ -452,6 +459,7 @@ export default function App() {
     fullTranscriptRef.current     = "";
     conceptsIntroducedRef.current = [];
     previousConceptsRef.current   = [];
+    sessionHistoryRef.current     = [];
     setScreen("welcome");
   }
 
