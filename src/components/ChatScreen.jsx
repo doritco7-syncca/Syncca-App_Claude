@@ -115,7 +115,7 @@ function stripHeDefiniteArticle(term) {
 }
 
 // ─── Bottom Widget: slim bar — saved concepts + feedback ─────────
-function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he" }) {
+function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he", onDeleteConcept }) {
   const [activeConcept, setActiveConcept] = useState(null);
   const [feedback, setFeedback]           = useState("");
   const [sent, setSent]                   = useState(false);
@@ -175,14 +175,25 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               color: COLORS.secondary, flexShrink: 0, marginLeft: "2px",
             }}>✦ שלי:</span>
             {savedConcepts.map((c, i) => (
-              <button key={i} onClick={() => toggleConcept(c)} style={{
-                padding: "3px 11px", borderRadius: "9999px",
-                border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(234,88,12,0.4)"}`,
-                background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
-                color: COLORS.primary,
-                fontFamily: "'Inter', sans-serif", fontSize: "0.78rem", fontWeight: 600,
-                cursor: "pointer", transition: "all 0.15s",
-              }}>{resolveWord(c)}</button>
+              <div key={i} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                <button onClick={() => toggleConcept(c)} style={{
+                  padding: "3px 26px 3px 11px", borderRadius: "9999px",
+                  border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(234,88,12,0.4)"}`,
+                  background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
+                  color: COLORS.primary,
+                  fontFamily: "'Inter', sans-serif", fontSize: "0.78rem", fontWeight: 600,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}>{resolveWord(c)}</button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (activeConcept?.word === c.word) toggleConcept(c); onDeleteConcept?.(c); }}
+                  title="הסר מושג"
+                  style={{
+                    position: "absolute", left: "6px",
+                    background: "none", border: "none", cursor: "pointer",
+                    color: "rgba(234,88,12,0.5)", fontSize: "0.65rem", lineHeight: 1,
+                    padding: "2px", display: "flex", alignItems: "center",
+                  }}>✕</button>
+              </div>
             ))}
           </div>
 
@@ -253,7 +264,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
 export default function ChatScreen({
   userEmail = "", firstName = "",
   messages = [], isLoading = false,
-  onSend, onSaveConcept, savedConcepts = [],
+  onSend, onSaveConcept, onDeleteConcept, savedConcepts = [],
   conceptLexicon = [],
   onOpenPersonalCard, onLogout, onTimeout,
   sessionStartTime, logRecordId, chatLang = "he",
@@ -523,6 +534,7 @@ export default function ChatScreen({
             conceptLexicon={conceptLexicon}
             logRecordId={logRecordId}
             chatLang={chatLang}
+            onDeleteConcept={onDeleteConcept}
           />
           </div>
       </div>

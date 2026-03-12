@@ -34,7 +34,7 @@ const FIELDS = [
 export default function PersonalCard({
   record = {},
   airtableRecordId,
-  savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose, onRecordUpdate,
+  savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose, onRecordUpdate, onDeleteConcept,
 }) {
   // Reverse-map: Airtable stores English values, UI shows Hebrew
   function fromAirtable(key, val) {
@@ -303,10 +303,21 @@ export default function PersonalCard({
             ) : (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", direction: "rtl" }}>
                 {savedConcepts.map((c, i) => (
-                  <div key={i} className="concept-pill"
-                    onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
-                    style={{ cursor: "pointer", userSelect: "none" }}>
-                    <span>✦</span><span>{resolveWord(c)}</span>
+                  <div key={i} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                    <div className="concept-pill"
+                      onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
+                      style={{ cursor: "pointer", userSelect: "none", paddingLeft: "22px" }}>
+                      <span>✦</span><span>{resolveWord(c)}</span>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); if (activeConcept?._idx === i) setActiveConcept(null); onDeleteConcept?.(c); }}
+                      title="הסר מושג"
+                      style={{
+                        position: "absolute", left: "6px",
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "rgba(234,88,12,0.45)", fontSize: "0.6rem", lineHeight: 1,
+                        padding: "2px", display: "flex", alignItems: "center",
+                      }}>✕</button>
                   </div>
                 ))}
               </div>
