@@ -26,10 +26,12 @@ function shouldShowBetaModal() {
 
 // ─── Dynamic opening message ─────────────────────────────────────
 // syncCount: value AFTER incrementing. First session = 1.
-function getOpeningMessage(syncCount, firstName) {
+function getOpeningMessage(syncCount, firstName, gender) {
   if (!syncCount || syncCount <= 1) return SYNCCA_OPENING_MESSAGE["he"];
-  const name = firstName ? ` ${firstName}` : "";
-  return `היי${name}, טוב לראות אותך שוב 🙏\nעל מה תרצה לעבוד היום?`;
+  const name   = firstName ? ` ${firstName}` : "";
+  const isFem  = gender === "Female" || gender === "אישה";
+  const action = isFem ? "תרצי" : "תרצה";
+  return `היי${name}, טוב לראות אותך שוב 🙏\nעל מה ${action} לעבוד היום?`;
 }
 
 // ─── Parse [[bracket]] concepts from AI response ─────────────────
@@ -278,7 +280,7 @@ export default function App() {
         const syncCount = result?.fields?.Sync_Count || 2;
         setMessages([{
           role: "syncca", concepts: [], timestamp: new Date().toISOString(),
-          text: getOpeningMessage(syncCount, result?.fields?.First_Name || ""),
+          text: getOpeningMessage(syncCount, result?.fields?.First_Name || "", result?.fields?.Gender || ""),
         }]);
         setScreen("chat");
       } catch (e) { console.error("[AutoNav]", e); }
@@ -324,7 +326,7 @@ export default function App() {
     setSessionStartTime(new Date());
     setMessages([{
       role: "syncca", concepts: [], timestamp: new Date().toISOString(),
-      text: getOpeningMessage(newSyncCount, fields.First_Name || ""),
+      text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
     }]);
 
     if (shouldShowBetaModal()) setShowBetaModal(true);
@@ -504,6 +506,7 @@ export default function App() {
           chatLang={chatLang}
           onClose={() => setScreen("chat")}
           onLogout={handleLogout}
+          onRecordUpdate={(updated) => setUserRecord(prev => ({ ...prev, ...updated }))}
         />
       )}
       {showBetaModal    && <BetaModal onClose={() => setShowBetaModal(false)} />}
