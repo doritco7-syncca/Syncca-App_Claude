@@ -4,7 +4,7 @@
 //   savedConcepts ([{word, explanation}]), onClose () => void
 
 import { useState, useCallback, useRef } from "react";
-import { updateUserProfile } from "../AirtableService";
+import { updateUserProfile, FIELD_MAPS } from "../AirtableService";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -26,7 +26,7 @@ const FIELDS = [
   { key: "First_Name",          label: "שם פרטי",       type: "text",   placeholder: "שמך" },
   { key: "Full_Name",           label: "שם מלא",         type: "text",   placeholder: "שם מלא" },
   { key: "Age_Range",           label: "טווח גיל",       type: "select", options: ["20-29","30-39","40-49","50-59","60-69","70-79","80-100"] },
-  { key: "Marital_Status",      label: "מצב משפחתי",     type: "select", options: ["רווק/ה","זוגיות","נשוי/אה","גרוש/ה","אלמן/ה"] },
+  { key: "Marital_Status",      label: "מצב משפחתי",     type: "select", options: ["רווק/ה","זוגיות","נשוי/ה","גרוש/ה","אלמן/ה"] },
   { key: "Gender",              label: "מגדר",           type: "select", options: ["אישה","גבר","נון-בינארי/ת","מעדיף/ה לא לציין"] },
   { key: "Language_Preference", label: "שפה מועדפת",     type: "text",   placeholder: "עברית / English" },
 ];
@@ -34,14 +34,25 @@ const FIELDS = [
 export default function PersonalCard({
   record = {},
   airtableRecordId,
-  savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose,
+  savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose, onRecordUpdate,
 }) {
+  // Reverse-map: Airtable stores English values, UI shows Hebrew
+  function fromAirtable(key, val) {
+    if (!val) return "";
+    const map = FIELD_MAPS[key];
+    if (!map) return val;
+    // If val is already Hebrew (direct match) — use it
+    if (Object.keys(map).includes(val)) return val;
+    // If val is English — find the Hebrew key
+    return Object.keys(map).find(k => map[k] === val) || val;
+  }
+
   const [form, setForm] = useState({
     First_Name:          record.First_Name          || "",
     Full_Name:           record.Full_Name           || "",
-    Age_Range:           record.Age_Range           || "",
-    Marital_Status:      record.Marital_Status      || "",
-    Gender:              record.Gender              || "",
+    Age_Range:           fromAirtable("Age_Range",      record.Age_Range),
+    Marital_Status:      fromAirtable("Marital_Status", record.Marital_Status),
+    Gender:              fromAirtable("Gender",         record.Gender),
     Language_Preference: record.Language_Preference || "",
   });
   const [saveState, setSaveState] = useState("idle");
@@ -87,6 +98,19 @@ export default function PersonalCard({
         await updateUserProfile(airtableRecordId, form);
       }
       setSaveState("saved");
+      // Notify parent so userRecord stays in sync — prevents dropdown reset on reopen
+      if (onRecordUpdate) {
+        // Translate form back to Airtable values for the parent record
+        const updatedRecord = { ...record, ...form };
+        // Select fields are stored as Airtable English values in the parent
+        const selectKeys = ["Marital_Status", "Gender", "Age_Range"];
+        selectKeys.forEach(k => {
+          if (form[k] && FIELD_MAPS[k]?.[form[k]]) {
+            updatedRecord[k] = FIELD_MAPS[k][form[k]];
+          }
+        });
+        onRecordUpdate(updatedRecord);
+      }
       setTimeout(() => setSaveState("idle"), 2800);
     } catch (e) {
       setSaveState("error"); setErrMsg(e.message || "שגיאה בשמירה");
