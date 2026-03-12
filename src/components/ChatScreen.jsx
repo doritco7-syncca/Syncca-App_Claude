@@ -175,9 +175,11 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               color: COLORS.secondary, flexShrink: 0, marginLeft: "2px",
             }}>✦ שלי:</span>
             {savedConcepts.map((c, i) => (
-              <div key={i} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+              <div key={i} style={{
+                display: "inline-flex", alignItems: "center", gap: "2px",
+              }}>
                 <button onClick={() => toggleConcept(c)} style={{
-                  padding: "3px 26px 3px 11px", borderRadius: "9999px",
+                  padding: "3px 11px", borderRadius: "9999px",
                   border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(234,88,12,0.4)"}`,
                   background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
                   color: COLORS.primary,
@@ -185,13 +187,13 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                   cursor: "pointer", transition: "all 0.15s",
                 }}>{resolveWord(c)}</button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); if (activeConcept?.word === c.word) toggleConcept(c); onDeleteConcept?.(c); }}
+                  onClick={(e) => { e.stopPropagation(); if (activeConcept?.word === c.word) setActiveConcept(null); onDeleteConcept?.(c); }}
                   title="הסר מושג"
                   style={{
-                    position: "absolute", left: "6px",
                     background: "none", border: "none", cursor: "pointer",
-                    color: "rgba(234,88,12,0.5)", fontSize: "0.65rem", lineHeight: 1,
-                    padding: "2px", display: "flex", alignItems: "center",
+                    color: "rgba(180,80,0,0.5)", fontSize: "0.65rem",
+                    padding: "0 1px", lineHeight: 1,
+                    display: "flex", alignItems: "center",
                   }}>✕</button>
               </div>
             ))}
