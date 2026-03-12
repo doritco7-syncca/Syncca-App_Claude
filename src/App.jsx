@@ -9,7 +9,7 @@ import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
 import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
-  updateUserProfile, updateSavedConcepts,
+  updateUserProfile, updateSavedConcepts, overwriteSavedConcepts,
   createSessionLog, syncSession, saveFeedback,
   fetchLexicon, fetchPreviousConcepts, fetchSessionHistory,
 } from "./AirtableService";
@@ -451,6 +451,16 @@ export default function App() {
     }
   }
 
+  function handleDeleteConcept(concept) {
+    const updated = savedConceptsRef.current.filter(c => c.word !== concept.word);
+    setSavedConcepts(updated);
+    if (recordId) {
+      const words = updated.map(c => c.englishTerm || c.word).filter(Boolean);
+      overwriteSavedConcepts(recordId, words)
+        .catch(e => console.error("[handleDeleteConcept] ✗ failed:", e));
+    }
+  }
+
   // ── LOGOUT ────────────────────────────────────────────────────
   function handleLogout() {
     localStorage.removeItem("syncca_email");
@@ -486,6 +496,7 @@ export default function App() {
           isLoading={isLoading}
           onSend={handleSend}
           onSaveConcept={handleSaveConcept}
+          onDeleteConcept={handleDeleteConcept}
           savedConcepts={savedConcepts}
           conceptLexicon={conceptLexicon}
           onOpenPersonalCard={() => setScreen("personal")}
@@ -507,6 +518,7 @@ export default function App() {
           onClose={() => setScreen("chat")}
           onLogout={handleLogout}
           onRecordUpdate={(updated) => setUserRecord(prev => ({ ...prev, ...updated }))}
+          onDeleteConcept={handleDeleteConcept}
         />
       )}
       {showBetaModal    && <BetaModal onClose={() => setShowBetaModal(false)} />}

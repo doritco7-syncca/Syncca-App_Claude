@@ -150,6 +150,16 @@ export async function updateSavedConcepts(recordId, allConceptWords) {
   });
 }
 
+// Overwrite (used for delete): writes exactly the list given, no merge.
+export async function overwriteSavedConcepts(recordId, allConceptWords) {
+  if (!recordId) return;
+  const value = (allConceptWords || []).join(", ");
+  return airtableFetch(`Users/${recordId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ fields: { Saved_Concepts: value } }),
+  });
+}
+
 // ═══════════ CONVERSATION_LOGS ══════════════════════════════════════
 export async function createSessionLog(userRecordId) {
   const sid    = "SESS_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7).toUpperCase();
