@@ -1,7 +1,7 @@
 // ChatScreen.jsx — Syncca
 // Props: userEmail, firstName, messages, isLoading, onSend,
 //        onSaveConcept, savedConcepts, conceptLexicon,
-//        onOpenPersonalCard, onLogout, onTimeout, sessionStartTime
+//        onOpenPersonalCard, onOpenHistory, onLogout, onTimeout, sessionStartTime
 
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
@@ -268,7 +268,7 @@ export default function ChatScreen({
   messages = [], isLoading = false,
   onSend, onSaveConcept, onDeleteConcept, savedConcepts = [],
   conceptLexicon = [],
-  onOpenPersonalCard, onLogout, onTimeout,
+  onOpenPersonalCard, onOpenHistory, onLogout, onTimeout,
   sessionStartTime, logRecordId, chatLang = "he",
 }) {
   const [input, setInput]               = useState("");
@@ -422,8 +422,10 @@ export default function ChatScreen({
               )}
             </div>
 
-            {/* Right: personal card */}
-            <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end" }}>
+            {/* Right: history + personal card */}
+            <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end", gap: "4px" }}>
+              <button className="icon-btn" onClick={onOpenHistory}
+                title="היסטוריית שיחות" style={{ fontSize: "1rem" }}>📋</button>
               <button className="icon-btn" onClick={onOpenPersonalCard}
                 title="כרטיס אישי" style={{ fontSize: "1.05rem" }}>👤</button>
             </div>
