@@ -693,7 +693,7 @@ ${transcript.slice(-3000)}`;
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 150,
+        max_tokens: 300,
         messages: [{ role: "user", content: prompt }],
       }),
     });
