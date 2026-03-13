@@ -280,11 +280,27 @@ export async function finalizeSession({ logRecordId, fullTranscript, conceptsSur
 // Fetch last N sessions with full data for History screen
 export async function fetchFullHistory(userRecordId, limit = 10) {
   if (!userRecordId) return [];
+
+  // ── DIAGNOSTIC: fetch one record to see real field names ──────
+  try {
+    const sample = await airtableFetch(`Conversation_Logs?maxRecords=1`);
+    const rec = sample.records?.[0];
+    if (rec) {
+      console.log("[fetchFullHistory] DIAGNOSTIC — field names in Conversation_Logs:", Object.keys(rec.fields));
+      console.log("[fetchFullHistory] DIAGNOSTIC — sample record fields:", rec.fields);
+    } else {
+      console.log("[fetchFullHistory] DIAGNOSTIC — Conversation_Logs is empty");
+    }
+  } catch (diagErr) {
+    console.warn("[fetchFullHistory] DIAGNOSTIC fetch failed:", diagErr);
+  }
+  // ─────────────────────────────────────────────────────────────
+
   const formula = `FIND("${userRecordId}", ARRAYJOIN({User_Link}))`;
   const fieldList = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used", "Session_Insight"];
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
-  const data = await airtableFetch(url); // let error surface — HistoryScreen handles it
+  const data = await airtableFetch(url);
   console.log("[fetchFullHistory] raw records:", data.records?.length, data.records?.[0]);
   return (data.records || []).map(rec => ({
     id:        rec.id,
