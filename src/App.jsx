@@ -266,7 +266,8 @@ export default function App() {
         // Load prior session concepts + history for memory injection
         const prev = await fetchPreviousConcepts(recordId);
         previousConceptsRef.current = prev;
-        const history = await fetchFullHistory(recordId, 10);
+        const username = result?.fields?.Username || recordId;
+        const history = await fetchFullHistory(username, 10);
         sessionHistoryRef.current = history;
         console.log("[Memory] Previous concepts:", prev);
         console.log("[Memory] Session history:", history.length, "sessions");
@@ -312,7 +313,7 @@ export default function App() {
     // Load prior concepts + history for memory
     const prev = await fetchPreviousConcepts(rid).catch(() => []);
     previousConceptsRef.current = prev;
-    const history = await fetchFullHistory(rid, 10).catch(() => []);
+    const history = await fetchFullHistory(fields.Username || rid, 10).catch(() => []);
     sessionHistoryRef.current = history;
     console.log("[Memory] Previous concepts loaded:", prev);
     console.log("[Memory] Session history loaded:", history.length, "sessions");
@@ -546,7 +547,7 @@ export default function App() {
       )}
       {screen === "history" && (
         <HistoryScreen
-          userRecordId={recordId}
+          username={userRecord?.Username || recordId}
           firstName={userRecord?.First_Name || ""}
           onClose={() => setScreen("chat")}
         />
