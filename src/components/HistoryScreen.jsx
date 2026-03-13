@@ -46,13 +46,14 @@ function formatTime(iso) {
 export default function HistoryScreen({ userRecordId, firstName, onClose }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState("");
   const [expanded, setExpanded] = useState(null); // index of expanded card
 
   useEffect(() => {
-    if (!userRecordId) { setLoading(false); return; }
+    if (!userRecordId) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
     fetchFullHistory(userRecordId, 10)
       .then(data => { setSessions(data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
   }, [userRecordId]);
 
   const name = firstName ? `, ${firstName}` : "";
@@ -121,7 +122,15 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
             }}>טוענת שיחות...</div>
           )}
 
-          {!loading && sessions.length === 0 && (
+          {!loading && error && (
+            <div style={{
+              textAlign: "center", marginTop: "60px", padding: "0 24px",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.82rem", color: "#dc2626",
+            }}>{error}</div>
+          )}
+
+          {!loading && !error && sessions.length === 0 && (
             <div style={{
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Cormorant Garamond', serif",
@@ -129,7 +138,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
             }}>עדיין אין שיחות שמורות{name}.</div>
           )}
 
-          {!loading && sessions.map((s, i) => {
+          {!loading && !error && sessions.map((s, i) => {
             const isOpen = expanded === i;
             const hasConcepts = s.concepts?.length > 0;
             const hasInsight  = !!s.insight;
