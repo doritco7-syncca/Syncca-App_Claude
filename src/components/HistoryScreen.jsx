@@ -43,18 +43,18 @@ function formatTime(iso) {
   return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoryScreen({ userRecordId, firstName, onClose }) {
+export default function HistoryScreen({ username, firstName, onClose }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [expanded, setExpanded] = useState(null); // index of expanded card
 
   useEffect(() => {
-    if (!userRecordId) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
-    fetchFullHistory(userRecordId, 10)
+    if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
+    fetchFullHistory(username, 10)
       .then(data => { setSessions(data); setLoading(false); })
       .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
-  }, [userRecordId]);
+  }, [username]);
 
   const name = firstName ? `, ${firstName}` : "";
 
