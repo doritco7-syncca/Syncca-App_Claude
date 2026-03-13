@@ -7,13 +7,14 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
+import HistoryScreen from "./components/HistoryScreen";
 import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
   updateUserProfile, updateSavedConcepts, overwriteSavedConcepts,
-  createSessionLog, syncSession, saveFeedback,
-  fetchLexicon, fetchPreviousConcepts, fetchSessionHistory,
+  createSessionLog, syncSession, saveFeedback, finalizeSession,
+  fetchLexicon, fetchPreviousConcepts, fetchFullHistory,
 } from "./AirtableService";
-import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE } from "./SynccaService";
+import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE, generateSessionInsight } from "./SynccaService";
 
 // Install Airtable request logger — remove before production
 
@@ -265,7 +266,7 @@ export default function App() {
         // Load prior session concepts + history for memory injection
         const prev = await fetchPreviousConcepts(recordId);
         previousConceptsRef.current = prev;
-        const history = await fetchSessionHistory(recordId, 5);
+        const history = await fetchFullHistory(recordId, 10);
         sessionHistoryRef.current = history;
         console.log("[Memory] Previous concepts:", prev);
         console.log("[Memory] Session history:", history.length, "sessions");
@@ -311,7 +312,7 @@ export default function App() {
     // Load prior concepts + history for memory
     const prev = await fetchPreviousConcepts(rid).catch(() => []);
     previousConceptsRef.current = prev;
-    const history = await fetchSessionHistory(rid, 5).catch(() => []);
+    const history = await fetchFullHistory(rid, 10).catch(() => []);
     sessionHistoryRef.current = history;
     console.log("[Memory] Previous concepts loaded:", prev);
     console.log("[Memory] Session history loaded:", history.length, "sessions");
@@ -461,8 +462,29 @@ export default function App() {
     }
   }
 
+  // ── FINALIZE SESSION (generate insight + save) ────────────────
+  async function handleFinalizeSession() {
+    const logId     = logRecordIdRef.current;
+    const transcript = fullTranscriptRef.current;
+    const concepts   = conceptsIntroducedRef.current;
+    if (!logId || !transcript) return;
+    try {
+      const insight = await generateSessionInsight(transcript, concepts);
+      await finalizeSession({
+        logRecordId:      logId,
+        fullTranscript:   transcript,
+        conceptsSurfaced: concepts,
+        sessionStartTime: sessionStartTime || null,
+        sessionInsight:   insight,
+      });
+    } catch (e) {
+      console.warn("[handleFinalizeSession] failed:", e);
+    }
+  }
+
   // ── LOGOUT ────────────────────────────────────────────────────
   function handleLogout() {
+    handleFinalizeSession(); // fire-and-forget
     localStorage.removeItem("syncca_email");
     localStorage.removeItem("syncca_record_id");
     setUserEmail(""); setRecordId(""); setUserRecord(null);
@@ -500,8 +522,9 @@ export default function App() {
           savedConcepts={savedConcepts}
           conceptLexicon={conceptLexicon}
           onOpenPersonalCard={() => setScreen("personal")}
+          onOpenHistory={() => setScreen("history")}
           onLogout={handleLogout}
-          onTimeout={() => setShowTimeoutModal(true)}
+          onTimeout={() => { handleFinalizeSession(); setShowTimeoutModal(true); }}
           sessionStartTime={sessionStartTime}
           logRecordId={logRecordIdRef.current}
           chatLang={chatLang}
@@ -519,6 +542,13 @@ export default function App() {
           onLogout={handleLogout}
           onRecordUpdate={(updated) => setUserRecord(prev => ({ ...prev, ...updated }))}
           onDeleteConcept={handleDeleteConcept}
+        />
+      )}
+      {screen === "history" && (
+        <HistoryScreen
+          userRecordId={recordId}
+          firstName={userRecord?.First_Name || ""}
+          onClose={() => setScreen("chat")}
         />
       )}
       {showBetaModal    && <BetaModal onClose={() => setShowBetaModal(false)} />}
