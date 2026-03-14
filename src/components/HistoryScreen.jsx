@@ -58,18 +58,17 @@ export default function HistoryScreen({ username, firstName, onClose }) {
     } catch { return []; }
   });
 
-  const visibleSessions = sessions.filter(s => !hidden.includes(s.id));
-
   function hideSession(id, e) {
     e.stopPropagation();
     const updated = [...hidden, id];
     setHidden(updated);
     if (storageKey) localStorage.setItem(storageKey, JSON.stringify(updated));
   }
+
+  useEffect(() => {
     if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
-    fetchFullHistory(username, 30) // fetch more to account for empty ones
+    fetchFullHistory(username, 30)
       .then(data => {
-        // Filter: only sessions with actual content
         const withContent = data.filter(s =>
           s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
         );
@@ -80,11 +79,6 @@ export default function HistoryScreen({ username, firstName, onClose }) {
   }, [username]);
 
   const visibleSessions = sessions.filter(s => !hidden.includes(s.id));
-
-  function hideSession(id, e) {
-    e.stopPropagation();
-    setHidden(prev => [...prev, id]);
-  }
 
   const name = firstName ? `, ${firstName}` : "";
 
