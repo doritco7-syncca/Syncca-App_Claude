@@ -47,15 +47,44 @@ export default function HistoryScreen({ username, firstName, onClose }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
-  const [expanded, setExpanded]       = useState(null);
-  const [transcriptOpen, setTranscriptOpen] = useState(null); // index
+  const [expanded, setExpanded]             = useState(null);
+  const [transcriptOpen, setTranscriptOpen] = useState(null);
+  const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
 
-  useEffect(() => {
+  const [hidden, setHidden] = useState(() => {
+    if (!storageKey) return [];
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || "[]");
+    } catch { return []; }
+  });
+
+  const visibleSessions = sessions.filter(s => !hidden.includes(s.id));
+
+  function hideSession(id, e) {
+    e.stopPropagation();
+    const updated = [...hidden, id];
+    setHidden(updated);
+    if (storageKey) localStorage.setItem(storageKey, JSON.stringify(updated));
+  }
     if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
-    fetchFullHistory(username, 10)
-      .then(data => { setSessions(data); setLoading(false); })
+    fetchFullHistory(username, 30) // fetch more to account for empty ones
+      .then(data => {
+        // Filter: only sessions with actual content
+        const withContent = data.filter(s =>
+          s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
+        );
+        setSessions(withContent);
+        setLoading(false);
+      })
       .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
   }, [username]);
+
+  const visibleSessions = sessions.filter(s => !hidden.includes(s.id));
+
+  function hideSession(id, e) {
+    e.stopPropagation();
+    setHidden(prev => [...prev, id]);
+  }
 
   const name = firstName ? `, ${firstName}` : "";
 
@@ -131,7 +160,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
             }}>{error}</div>
           )}
 
-          {!loading && !error && sessions.length === 0 && (
+          {!loading && !error && visibleSessions.length === 0 && (
             <div style={{
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Cormorant Garamond', serif",
@@ -139,7 +168,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
             }}>עדיין אין שיחות שמורות{name}.</div>
           )}
 
-          {!loading && !error && sessions.map((s, i) => {
+          {!loading && !error && visibleSessions.map((s, i) => {
             const isOpen = expanded === i;
             const hasConcepts  = s.concepts?.length > 0;
             const hasInsight   = !!s.insight;
@@ -161,56 +190,89 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                 <div
                   onClick={() => setExpanded(isOpen ? null : i)}
                   style={{
-                    padding: "14px 16px",
+                    padding: "14px 16px 10px",
                     cursor: "pointer",
-                    display: "flex", alignItems: "center",
-                    justifyContent: "space-between", gap: "12px",
                   }}>
-                  {/* Session number + date */}
+
+                  {/* Top row: number + date + delete + chevron */}
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    {/* Session circle */}
                     <div style={{
-                      width: 32, height: 32, borderRadius: "50%",
+                      width: 34, height: 34, borderRadius: "50%",
                       background: i === 0 ? COLORS.primary : COLORS.frame,
                       color: i === 0 ? "white" : COLORS.secondary,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: "0.9rem", fontWeight: 700, flexShrink: 0,
-                    }}>{sessions.length - i}</div>
-                    <div>
+                      fontSize: "1rem", fontWeight: 400, flexShrink: 0,
+                    }}>{visibleSessions.length - i}</div>
+
+                    {/* Date + time */}
+                    <div style={{ flex: 1 }}>
                       <div style={{
                         fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "0.95rem", fontWeight: 700,
+                        fontSize: "1.05rem", fontWeight: 400,
                         color: COLORS.secondary,
                       }}>{formatDate(s.date)}</div>
                       <div style={{
                         fontFamily: "'Inter', sans-serif",
-                        fontSize: "0.72rem", color: COLORS.muted,
+                        fontSize: "0.76rem", color: COLORS.muted,
                         marginTop: "1px",
                       }}>
                         {formatTime(s.date)}
                         {s.duration ? ` · ${s.duration} דקות` : ""}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Concept count + chevron */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    {hasConcepts && (
-                      <div style={{
-                        background: "rgba(234,88,12,0.1)",
-                        color: COLORS.primary,
-                        borderRadius: 9999,
-                        padding: "2px 9px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: "0.7rem", fontWeight: 600,
-                      }}>{s.concepts.length} מושגים</div>
-                    )}
+                    {/* Delete button */}
+                    <button
+                      onClick={e => hideSession(s.id, e)}
+                      title="הסתר שיחה"
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: COLORS.muted, fontSize: "0.85rem",
+                        padding: "4px 6px", borderRadius: 8,
+                        lineHeight: 1,
+                      }}>🗑</button>
+
+                    {/* Chevron */}
                     <span style={{
                       color: COLORS.muted, fontSize: "0.75rem",
                       transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
                       transition: "transform 0.2s", display: "inline-block",
                     }}>▼</span>
                   </div>
+
+                  {/* Preview row: insight snippet + concept count */}
+                  {(hasInsight || hasConcepts) && (
+                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
+                      {hasInsight && !isOpen && (
+                        <div style={{
+                          background: "#f0fdf4",
+                          border: "1px solid #bbf7d0",
+                          borderRadius: 10,
+                          padding: "4px 10px",
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "0.76rem", color: "#166534",
+                          maxWidth: "100%",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {s.insight.length > 80 ? s.insight.slice(0, 80) + "…" : s.insight}
+                        </div>
+                      )}
+                      {hasConcepts && (
+                        <div style={{
+                          background: "rgba(234,88,12,0.1)",
+                          color: COLORS.primary,
+                          borderRadius: 9999,
+                          padding: "3px 10px",
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "0.74rem", fontWeight: 400,
+                        }}>{s.concepts.length} מושגים</div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Expanded content */}
@@ -226,13 +288,13 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                       <div>
                         <div style={{
                           fontFamily: "'Cormorant Garamond', serif",
-                          fontSize: "0.78rem", fontWeight: 700,
-                          color: COLORS.secondary, marginBottom: "5px",
-                          textTransform: "uppercase", letterSpacing: "0.04em",
+                          fontSize: "0.85rem", fontWeight: 400,
+                          color: COLORS.secondary, marginBottom: "6px",
+                          letterSpacing: "0.02em",
                         }}>✦ תמצית</div>
                         <div style={{
                           fontFamily: "'Inter', sans-serif",
-                          fontSize: "0.82rem", color: COLORS.text,
+                          fontSize: "0.86rem", color: COLORS.text,
                           lineHeight: 1.6,
                           background: "#f0fdf4",
                           border: "1px solid #bbf7d0",
@@ -270,13 +332,13 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                       <div>
                         <div style={{
                           fontFamily: "'Cormorant Garamond', serif",
-                          fontSize: "0.78rem", fontWeight: 700,
-                          color: COLORS.secondary, marginBottom: "5px",
-                          textTransform: "uppercase", letterSpacing: "0.04em",
+                          fontSize: "0.85rem", fontWeight: 400,
+                          color: COLORS.secondary, marginBottom: "6px",
+                          letterSpacing: "0.02em",
                         }}>✦ פידבק</div>
                         <div style={{
                           fontFamily: "'Inter', sans-serif",
-                          fontSize: "0.82rem",
+                          fontSize: "0.86rem",
                           lineHeight: 1.5,
                           fontStyle: "italic",
                           color: COLORS.muted,
