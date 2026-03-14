@@ -47,7 +47,8 @@ export default function HistoryScreen({ username, firstName, onClose }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
-  const [expanded, setExpanded] = useState(null); // index of expanded card
+  const [expanded, setExpanded]       = useState(null);
+  const [transcriptOpen, setTranscriptOpen] = useState(null); // index
 
   useEffect(() => {
     if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
@@ -140,9 +141,10 @@ export default function HistoryScreen({ username, firstName, onClose }) {
 
           {!loading && !error && sessions.map((s, i) => {
             const isOpen = expanded === i;
-            const hasConcepts = s.concepts?.length > 0;
-            const hasInsight  = !!s.insight;
-            const hasFeedback = !!s.feedback;
+            const hasConcepts  = s.concepts?.length > 0;
+            const hasInsight   = !!s.insight;
+            const hasFeedback  = !!s.feedback;
+            const hasTranscript = !!s.transcript;
 
             return (
               <div key={s.id || i} style={{
@@ -274,7 +276,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                         }}>✦ פידבק</div>
                         <div style={{
                           fontFamily: "'Inter', sans-serif",
-                          fontSize: "0.82rem", color: COLORS.text,
+                          fontSize: "0.82rem",
                           lineHeight: 1.5,
                           fontStyle: "italic",
                           color: COLORS.muted,
@@ -282,7 +284,64 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                       </div>
                     )}
 
-                    {!hasInsight && !hasConcepts && !hasFeedback && (
+                    {/* Transcript toggle */}
+                    {hasTranscript && (
+                      <div>
+                        <button
+                          onClick={() => setTranscriptOpen(transcriptOpen === i ? null : i)}
+                          style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            padding: "6px 0", display: "flex", alignItems: "center", gap: "6px",
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: "0.78rem", fontWeight: 700,
+                            color: COLORS.secondary,
+                            textTransform: "uppercase", letterSpacing: "0.04em",
+                          }}>
+                          <span style={{
+                            transform: transcriptOpen === i ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s", display: "inline-block", fontSize: "0.65rem",
+                          }}>▼</span>
+                          ✦ השיחה המלאה
+                        </button>
+                        {transcriptOpen === i && (
+                          <div style={{
+                            background: COLORS.frame,
+                            borderRadius: 12,
+                            padding: "12px 14px",
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            direction: "rtl",
+                          }}>
+                            {s.transcript.split("\n").filter(Boolean).map((line, li) => {
+                              const isUser    = line.startsWith("[User]:");
+                              const isSyncca  = line.startsWith("[Syncca]:");
+                              const text      = line.replace(/^\[(User|Syncca)\]:\s*/, "");
+                              return (
+                                <div key={li} style={{
+                                  marginBottom: "8px",
+                                  textAlign: isUser ? "right" : "left",
+                                }}>
+                                  <span style={{
+                                    display: "inline-block",
+                                    padding: "6px 11px",
+                                    borderRadius: 14,
+                                    background: isUser ? "#FED7AA" : "white",
+                                    color: COLORS.text,
+                                    fontFamily: "'Inter', sans-serif",
+                                    fontSize: "0.78rem",
+                                    lineHeight: 1.5,
+                                    maxWidth: "85%",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                                  }}>{text}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!hasInsight && !hasConcepts && !hasFeedback && !hasTranscript && (
                       <div style={{
                         fontFamily: "'Inter', sans-serif",
                         fontSize: "0.8rem", color: COLORS.muted,
