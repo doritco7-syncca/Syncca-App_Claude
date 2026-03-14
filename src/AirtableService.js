@@ -283,7 +283,7 @@ export async function fetchFullHistory(username, limit = 10) {
 
   // User_Link stores the Username (primary field of Users table), not the record ID
   const formula = `FIND("${username}", ARRAYJOIN({User_Link}))`;
-  const fieldList = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used", "Session_Insight"];
+  const fieldList = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used", "Session_Insight", "Full_Transcript"];
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
   const data = await airtableFetch(url);
@@ -295,6 +295,7 @@ export async function fetchFullHistory(username, limit = 10) {
     duration:  rec.fields?.Session_Duration_Minutes || null,
     feedback:  rec.fields?.Feedback || "",
     language:  rec.fields?.Language_Used || "Hebrew",
-    insight:   rec.fields?.Session_Insight || "",
+    insight:    rec.fields?.Session_Insight || "",
+    transcript: rec.fields?.Full_Transcript || "",
   }));
 }
