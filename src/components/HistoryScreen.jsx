@@ -128,7 +128,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
               </div>
               {firstName && (
                 <div style={{
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "0.78rem", color: COLORS.success,
                   fontWeight: 600, marginTop: "2px",
                 }}>{firstName}</div>
@@ -152,7 +152,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
           {!loading && error && (
             <div style={{
               textAlign: "center", marginTop: "60px", padding: "0 24px",
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "0.82rem", color: "#dc2626",
             }}>{error}</div>
           )}
@@ -223,7 +223,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                         color: COLORS.secondary,
                       }}>{formatDate(s.date)}</div>
                       <div style={{
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: "'Alef', sans-serif",
                         fontSize: "0.76rem", color: COLORS.muted,
                         marginTop: "1px",
                       }}>
@@ -249,7 +249,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                           border: "1px solid #bbf7d0",
                           borderRadius: 10,
                           padding: "4px 10px",
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.76rem", color: "#166534",
                           maxWidth: "100%",
                           overflow: "hidden",
@@ -265,7 +265,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                           color: COLORS.primary,
                           borderRadius: 9999,
                           padding: "3px 10px",
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.74rem", fontWeight: 400,
                         }}>{s.concepts.length} מושגים</div>
                       )}
@@ -291,7 +291,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                           letterSpacing: "0.02em",
                         }}>✦ תמצית</div>
                         <div style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.86rem", color: COLORS.text,
                           lineHeight: 1.6,
                           background: "#f0fdf4",
@@ -317,7 +317,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                               background: "rgba(254,215,170,0.45)",
                               border: "1.5px solid rgba(234,88,12,0.3)",
                               color: COLORS.primary,
-                              fontFamily: "'Inter', sans-serif",
+                              fontFamily: "'Alef', sans-serif",
                               fontSize: "0.76rem", fontWeight: 600,
                             }}>{c}</span>
                           ))}
@@ -335,7 +335,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                           letterSpacing: "0.02em",
                         }}>✦ פידבק</div>
                         <div style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.86rem",
                           lineHeight: 1.5,
                           fontStyle: "italic",
@@ -387,7 +387,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                                     borderRadius: 14,
                                     background: isUser ? "#FED7AA" : "white",
                                     color: COLORS.text,
-                                    fontFamily: "'Inter', sans-serif",
+                                    fontFamily: "'Alef', sans-serif",
                                     fontSize: "0.78rem",
                                     lineHeight: 1.5,
                                     maxWidth: "85%",
@@ -403,7 +403,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
 
                     {!hasInsight && !hasConcepts && !hasFeedback && !hasTranscript && (
                       <div style={{
-                        fontFamily: "'Inter', sans-serif",
+                        fontFamily: "'Alef', sans-serif",
                         fontSize: "0.8rem", color: COLORS.muted,
                         textAlign: "center", padding: "8px 0",
                       }}>אין פרטים נוספים לשיחה זו.</div>

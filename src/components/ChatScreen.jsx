@@ -55,21 +55,21 @@ function ConceptTooltip({ concept, onSave, onClose }) {
           color: COLORS.secondary, marginBottom: "10px",
         }}>{concept.word}</div>
         <div style={{
-          fontFamily: "'Inter', sans-serif", fontSize: "0.9rem",
+          fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
           color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
         }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => { onSave?.(concept); onClose(); }} style={{
             flex: 1, height: "44px", background: COLORS.primary, color: "white",
             border: "none", borderRadius: "9999px",
-            fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "0.88rem",
+            fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.88rem",
             cursor: "pointer",
           }}>✦ שמור מושג זה</button>
           <button onClick={onClose} style={{
             height: "44px", padding: "0 18px",
             background: "transparent", color: COLORS.muted,
             border: `1px solid ${COLORS.border}`, borderRadius: "9999px",
-            fontFamily: "'Inter', sans-serif", cursor: "pointer",
+            fontFamily: "'Alef', sans-serif", cursor: "pointer",
           }}>סגור</button>
         </div>
         <button onClick={onClose} style={{
@@ -183,7 +183,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                   border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(234,88,12,0.4)"}`,
                   background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
                   color: COLORS.primary,
-                  fontFamily: "'Inter', sans-serif", fontSize: "0.78rem", fontWeight: 600,
+                  fontFamily: "'Alef', sans-serif", fontSize: "0.78rem", fontWeight: 600,
                   cursor: "pointer", transition: "all 0.15s",
                 }}>{resolveWord(c)}</button>
                 <button
@@ -212,7 +212,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 color: COLORS.secondary, marginBottom: "3px",
               }}>{resolveWord(activeConcept)}</div>
               <div style={{
-                fontFamily: "'Inter', sans-serif", fontSize: "0.79rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.79rem",
                 color: COLORS.text, lineHeight: 1.55,
               }}>{resolveExplanation(activeConcept)}</div>
               <button onClick={() => setActiveConcept(null)} style={{
@@ -238,7 +238,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 flex: 1, height: "34px", borderRadius: "9999px",
                 border: `1.5px solid ${COLORS.border}`,
                 padding: "0 13px",
-                fontFamily: "'Inter', sans-serif", fontSize: "0.82rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
                 background: "white", outline: "none", direction: "rtl",
               }}
             />
@@ -246,7 +246,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               height: "34px", padding: "0 13px", flexShrink: 0,
               background: COLORS.secondary, color: "white",
               border: "none", borderRadius: "9999px",
-              fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "0.78rem",
+              fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.78rem",
               cursor: feedback.trim() ? "pointer" : "not-allowed",
               opacity: feedback.trim() ? 1 : 0.5,
             }}>שלח ✓</button>
@@ -254,7 +254,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
         ) : (
           <div style={{
             flex: 1, textAlign: "center", color: "#16a34a",
-            fontFamily: "'Inter', sans-serif", fontSize: "0.82rem", fontWeight: 600,
+            fontFamily: "'Alef', sans-serif", fontSize: "0.82rem", fontWeight: 600,
           }}>✓ תודה! נתראה בסינק הבא.</div>
         )}
       </div>
@@ -335,7 +335,7 @@ export default function ChatScreen({
           flex: 1; height: 44px; border-radius: 9999px;
           border: 1.5px solid ${COLORS.border};
           padding: 0 18px; font-size: 0.93rem;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Alef', sans-serif;
           background: white; outline: none;
           direction: rtl; text-align: right;
           transition: border-color 0.15s;
@@ -357,7 +357,7 @@ export default function ChatScreen({
         minHeight: "100dvh", height: "100dvh",
         background: COLORS.frame,
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "10px", fontFamily: "'Inter', sans-serif",
+        padding: "10px", fontFamily: "'Alef', sans-serif",
       }}>
         <div style={{
           background: COLORS.stone, borderRadius: "32px",
@@ -390,7 +390,7 @@ export default function ChatScreen({
                 </svg>
               </button>
               <span style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Alef', sans-serif",
                 fontSize: "0.72rem", fontWeight: 600,
                 color: isLow ? COLORS.primary : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
@@ -453,7 +453,7 @@ export default function ChatScreen({
                   background: COLORS.primaryLight,
                   borderRadius: "18px 0 18px 18px",
                   padding: "13px 17px",
-                  fontFamily: "'Inter', sans-serif", fontSize: "0.93rem",
+                  fontFamily: "'Alef', sans-serif", fontSize: "0.93rem",
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 } : {
@@ -461,7 +461,7 @@ export default function ChatScreen({
                   border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px",
-                  fontFamily: "'Inter', sans-serif", fontSize: "0.93rem",
+                  fontFamily: "'Alef', sans-serif", fontSize: "0.93rem",
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 }}>
@@ -491,7 +491,7 @@ export default function ChatScreen({
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px", color: COLORS.muted,
                   fontStyle: "italic", fontSize: "0.88rem",
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Alef', sans-serif",
                 }}>...</div>
               </div>
             )}
@@ -510,12 +510,12 @@ export default function ChatScreen({
               }}>
                 <div style={{
                   fontSize: "0.6rem", color: COLORS.muted,
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Alef', sans-serif",
                   letterSpacing: "0.08em", textTransform: "uppercase",
                 }}>🔒 פרטי ומאובטח</div>
                 <div style={{
                   fontSize: "0.6rem", color: COLORS.muted,
-                  fontFamily: "'Inter', sans-serif", direction: "rtl",
+                  fontFamily: "'Alef', sans-serif", direction: "rtl",
                 }}>
                   {input.length > 0 ? `${input.length} תווים` : ""}
                 </div>

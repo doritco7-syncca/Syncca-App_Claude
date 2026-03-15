@@ -32,7 +32,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Alef:wght@400;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
 
@@ -59,7 +59,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
         minHeight: "100dvh", height: "100dvh",
         background: COLORS.frame,
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "10px", fontFamily: "'Inter', sans-serif",
+        padding: "10px", fontFamily: "'Alef', sans-serif",
       }}>
         <div className="welcome-slab" style={{
           background: COLORS.stone,
@@ -112,7 +112,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             }} />
 
             <div className="wr" style={{
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "clamp(0.87rem,3vw,0.96rem)",
               color: COLORS.text, textAlign: "center",
               lineHeight: 1.78, direction: "rtl",
@@ -136,7 +136,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 style={{
                   background: hovered ? COLORS.secondaryH : COLORS.secondary,
                   color: "#fff", border: "none", borderRadius: "9999px",
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "1rem", fontWeight: 600,
                   height: "56px", width: "100%", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
@@ -153,7 +153,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
 
             {userEmail && (
               <div className="wr" style={{
-                fontFamily: "'Inter', sans-serif", fontSize: "0.8rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.8rem",
                 color: COLORS.muted, direction: "rtl", textAlign: "center",
               }}>
                 <span>התנתקות מ-</span>
@@ -163,7 +163,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                   <button onClick={onLogout} style={{
                     background: "none", border: "none", cursor: "pointer",
                     color: COLORS.muted, fontSize: "0.78rem",
-                    textDecoration: "underline", fontFamily: "'Inter', sans-serif",
+                    textDecoration: "underline", fontFamily: "'Alef', sans-serif",
                   }}>יציאה</button>
                 </>}
               </div>
@@ -171,7 +171,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
 
             <div className="wr" style={{
               display: "flex", alignItems: "center", gap: "8px",
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "0.6rem", fontWeight: 500,
               letterSpacing: "0.13em", textTransform: "uppercase",
               color: COLORS.primary,

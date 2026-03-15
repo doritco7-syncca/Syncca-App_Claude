@@ -128,7 +128,7 @@ export default function PersonalCard({
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Alef:wght@400;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
 
@@ -144,7 +144,7 @@ export default function PersonalCard({
           width: 100%; height: 36px;
           background: ${COLORS.stoneLight};
           border: 1.5px solid transparent; border-radius: 9999px;
-          padding: 0 12px; font-family: 'Inter', sans-serif;
+          padding: 0 12px; font-family: 'Alef', sans-serif;
           font-size: 0.8rem; color: ${COLORS.text};
           outline: none; direction: rtl; text-align: right;
           transition: border-color 0.18s, background 0.18s;
@@ -158,7 +158,7 @@ export default function PersonalCard({
 
         .pc-label {
           display: block; margin-bottom: 3px;
-          font-family: 'Inter', sans-serif; font-size: 0.6rem;
+          font-family: 'Alef', sans-serif; font-size: 0.6rem;
           font-weight: 600; color: ${COLORS.primary};
           letter-spacing: 0.08em; text-transform: uppercase;
           direction: rtl; text-align: right;
@@ -169,7 +169,7 @@ export default function PersonalCard({
           background: ${COLORS.stoneLight};
           border: 1.5px solid ${COLORS.border};
           border-radius: 9999px; padding: 5px 13px;
-          font-family: 'Inter', sans-serif; font-size: 0.77rem;
+          font-family: 'Alef', sans-serif; font-size: 0.77rem;
           color: ${COLORS.secondary}; font-weight: 500;
           direction: rtl; cursor: default;
           transition: border-color 0.15s;
@@ -199,7 +199,7 @@ export default function PersonalCard({
         minHeight: "100dvh", height: "100dvh",
         background: COLORS.frame,
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "10px", fontFamily: "'Inter', sans-serif",
+        padding: "10px", fontFamily: "'Alef', sans-serif",
       }}>
         <div className="pc-slab" style={{
           background: COLORS.stone,   // 100% opaque — hides chat completely
@@ -249,7 +249,7 @@ export default function PersonalCard({
                   fontSize: "1.05rem", fontWeight: 700, color: COLORS.text,
                 }}>{form.Full_Name || form.First_Name || "שם מלא"}</div>
                 <div style={{
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "0.72rem", color: COLORS.muted, direction: "rtl",
                 }}>{record.email || ""}</div>
               </div>
@@ -295,7 +295,7 @@ export default function PersonalCard({
             {savedConcepts.length === 0 ? (
               <div style={{
                 color: COLORS.muted, fontSize: "0.82rem",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Alef', sans-serif",
                 direction: "rtl", lineHeight: 1.6,
               }}>
                 לחיצה על מושג מודגש בשיחה תשמור אותו כאן.
@@ -337,7 +337,7 @@ export default function PersonalCard({
                   color: "#1e3a8a", marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "0.82rem", color: "#374151", lineHeight: 1.6,
                 }}>{resolveExplanation(activeConcept)}</div>
                 <button onClick={() => setActiveConcept(null)} style={{
@@ -366,7 +366,7 @@ export default function PersonalCard({
               style={{
                 background: saveBg, color: "#fff",
                 border: "none", borderRadius: "9999px",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 600,
                 height: "56px", width: "100%",
                 cursor: saveState === "saving" ? "default" : "pointer",
