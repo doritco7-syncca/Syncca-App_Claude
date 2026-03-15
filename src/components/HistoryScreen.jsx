@@ -121,7 +121,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                 <LogoSymbol size={18} />
                 <span style={{
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "1.05rem", fontWeight: 700,
                   color: COLORS.secondary, letterSpacing: "0.01em",
                 }}>היסטוריית השיחות שלי</span>
@@ -144,7 +144,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
           {loading && (
             <div style={{
               textAlign: "center", marginTop: "60px",
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "1.1rem", color: COLORS.muted,
             }}>טוענת שיחות...</div>
           )}
@@ -160,7 +160,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
           {!loading && !error && sessions.length === 0 && (
             <div style={{
               textAlign: "center", marginTop: "60px",
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "1.1rem", color: COLORS.muted,
             }}>עדיין אין שיחות שמורות{name}.</div>
           )}
@@ -211,14 +211,14 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                       background: i === 0 ? COLORS.primary : COLORS.frame,
                       color: i === 0 ? "white" : COLORS.secondary,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "'Cormorant Garamond', serif",
+                      fontFamily: "'Alef', sans-serif",
                       fontSize: "1rem", fontWeight: 400, flexShrink: 0,
                     }}>{sessions.length - i}</div>
 
                     {/* Date + time */}
                     <div style={{ flex: 1 }}>
                       <div style={{
-                        fontFamily: "'Cormorant Garamond', serif",
+                        fontFamily: "'Alef', sans-serif",
                         fontSize: "1.05rem", fontWeight: 400,
                         color: COLORS.secondary,
                       }}>{formatDate(s.date)}</div>
@@ -285,7 +285,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                     {hasInsight && (
                       <div>
                         <div style={{
-                          fontFamily: "'Cormorant Garamond', serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.85rem", fontWeight: 400,
                           color: COLORS.secondary, marginBottom: "6px",
                           letterSpacing: "0.02em",
@@ -305,7 +305,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                     {hasConcepts && (
                       <div>
                         <div style={{
-                          fontFamily: "'Cormorant Garamond', serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.78rem", fontWeight: 700,
                           color: COLORS.secondary, marginBottom: "6px",
                           textTransform: "uppercase", letterSpacing: "0.04em",
@@ -329,7 +329,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                     {hasFeedback && (
                       <div>
                         <div style={{
-                          fontFamily: "'Cormorant Garamond', serif",
+                          fontFamily: "'Alef', sans-serif",
                           fontSize: "0.85rem", fontWeight: 400,
                           color: COLORS.secondary, marginBottom: "6px",
                           letterSpacing: "0.02em",
@@ -352,7 +352,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                           style={{
                             background: "none", border: "none", cursor: "pointer",
                             padding: "6px 0", display: "flex", alignItems: "center", gap: "6px",
-                            fontFamily: "'Cormorant Garamond', serif",
+                            fontFamily: "'Alef', sans-serif",
                             fontSize: "0.78rem", fontWeight: 700,
                             color: COLORS.secondary,
                             textTransform: "uppercase", letterSpacing: "0.04em",

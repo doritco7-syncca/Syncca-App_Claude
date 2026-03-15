@@ -221,7 +221,7 @@ export default function PersonalCard({
           }}>
             <button className="close-btn" onClick={onClose} title="חזרה לשיחה">✕</button>
             <div style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "1.35rem", fontWeight: 700,
               color: COLORS.secondary, direction: "rtl",
             }}>הכרטיס האישי שלי</div>
@@ -241,11 +241,11 @@ export default function PersonalCard({
                 background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "white", fontSize: "1.2rem", fontWeight: 700,
-                fontFamily: "'Cormorant Garamond', serif",
+                fontFamily: "'Alef', sans-serif",
               }}>{initials}</div>
               <div>
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "1.05rem", fontWeight: 700, color: COLORS.text,
                 }}>{form.Full_Name || form.First_Name || "שם מלא"}</div>
                 <div style={{
@@ -284,7 +284,7 @@ export default function PersonalCard({
               position: "absolute", top: "-10px", left: "50%",
               transform: "translateX(-50%)",
               background: COLORS.stone, padding: "0 12px",
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Alef', sans-serif",
               fontSize: "0.8rem", fontWeight: 700,
               color: COLORS.secondary, whiteSpace: "nowrap",
             }}>✦ המושגים שלי</span>
@@ -332,7 +332,7 @@ export default function PersonalCard({
                 boxShadow: "0 2px 12px rgba(22,163,74,0.08)",
               }}>
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif",
+                  fontFamily: "'Alef', sans-serif",
                   fontSize: "1rem", fontWeight: 700,
                   color: "#1e3a8a", marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
