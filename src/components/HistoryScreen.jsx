@@ -51,18 +51,22 @@ export default function HistoryScreen({ username, firstName, onClose }) {
   const [transcriptOpen, setTranscriptOpen] = useState(null);
   const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
 
-  const [hidden, setHidden] = useState(() => {
-    if (!storageKey) return [];
-    try {
-      return JSON.parse(localStorage.getItem(storageKey) || "[]");
-    } catch { return []; }
-  });
+  // Load previously deleted session IDs from localStorage
+  const deletedIds = (() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); }
+    catch { return []; }
+  })();
 
-  function hideSession(id, e) {
+  function deleteSession(id, e) {
     e.stopPropagation();
-    const updated = [...hidden, id];
-    setHidden(updated);
-    if (storageKey) localStorage.setItem(storageKey, JSON.stringify(updated));
+    e.preventDefault();
+    // Remove from UI immediately
+    setSessions(prev => prev.filter(s => s.id !== id));
+    // Persist deletion in localStorage
+    if (storageKey) {
+      const updated = [...deletedIds, id];
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    }
   }
 
   useEffect(() => {
@@ -72,13 +76,12 @@ export default function HistoryScreen({ username, firstName, onClose }) {
         const withContent = data.filter(s =>
           s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
         );
-        setSessions(withContent);
+        setSessions(withContent.filter(s => !deletedIds.includes(s.id)));
         setLoading(false);
       })
       .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
   }, [username]);
 
-  const visibleSessions = sessions.filter(s => !hidden.includes(s.id));
 
   const name = firstName ? `, ${firstName}` : "";
 
@@ -154,7 +157,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
             }}>{error}</div>
           )}
 
-          {!loading && !error && visibleSessions.length === 0 && (
+          {!loading && !error && sessions.length === 0 && (
             <div style={{
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Cormorant Garamond', serif",
@@ -162,7 +165,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
             }}>עדיין אין שיחות שמורות{name}.</div>
           )}
 
-          {!loading && !error && visibleSessions.map((s, i) => {
+          {!loading && !error && sessions.map((s, i) => {
             const isOpen = expanded === i;
             const hasConcepts  = s.concepts?.length > 0;
             const hasInsight   = !!s.insight;
@@ -178,7 +181,19 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                 overflow: "hidden",
                 transition: "border-color 0.2s",
                 boxShadow: "0 2px 8px rgba(30,58,138,0.05)",
+                position: "relative",
               }}>
+                {/* Delete button — outside clickable area */}
+                <button
+                  onClick={e => deleteSession(s.id, e)}
+                  title="מחק שיחה"
+                  style={{
+                    position: "absolute", top: 10, left: 10,
+                    background: "none", border: "none", cursor: "pointer",
+                    color: COLORS.muted, fontSize: "0.85rem",
+                    padding: "4px 6px", borderRadius: 8,
+                    lineHeight: 1, zIndex: 10,
+                  }}>🗑</button>
 
                 {/* Card header — always visible */}
                 <div
@@ -198,7 +213,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontFamily: "'Cormorant Garamond', serif",
                       fontSize: "1rem", fontWeight: 400, flexShrink: 0,
-                    }}>{visibleSessions.length - i}</div>
+                    }}>{sessions.length - i}</div>
 
                     {/* Date + time */}
                     <div style={{ flex: 1 }}>
@@ -216,17 +231,6 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                         {s.duration ? ` · ${s.duration} דקות` : ""}
                       </div>
                     </div>
-
-                    {/* Delete button */}
-                    <button
-                      onClick={e => hideSession(s.id, e)}
-                      title="הסתר שיחה"
-                      style={{
-                        background: "none", border: "none", cursor: "pointer",
-                        color: COLORS.muted, fontSize: "0.85rem",
-                        padding: "4px 6px", borderRadius: 8,
-                        lineHeight: 1,
-                      }}>🗑</button>
 
                     {/* Chevron */}
                     <span style={{
