@@ -220,11 +220,17 @@ export default function PersonalCard({
             flexShrink: 0,
           }}>
             <button className="close-btn" onClick={onClose} title="חזרה לשיחה">✕</button>
-            <div style={{
-              fontFamily: "'Alef', sans-serif",
-              fontSize: "1.35rem", fontWeight: 700,
-              color: COLORS.secondary, direction: "rtl",
-            }}>הכרטיס האישי שלי</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+              <svg width={18} height={18} viewBox="0 0 512 512" fill="none" style={{ display: "block", flexShrink: 0 }}>
+                <path fill="#E7590C" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
+                <path fill="#213A84" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
+              </svg>
+              <div style={{
+                fontFamily: "'Alef', sans-serif",
+                fontSize: "1.05rem", fontWeight: 700,
+                color: COLORS.secondary, direction: "rtl",
+              }}>הכרטיס האישי שלי</div>
+            </div>
             <div style={{ width: 30 }} />
           </div>
 

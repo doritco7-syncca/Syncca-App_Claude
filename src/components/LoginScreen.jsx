@@ -1,12 +1,10 @@
-// LoginScreen.jsx — Syncca · Heavy Stone Slab Edition
-// Props: onLogin(email) => void, onBack () => void
-
+// LoginScreen.jsx — Syncca
 import { useState } from "react";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
-  primary: "#ea580c", primaryH: "#c2410c",
-  secondary: "#1e3a8a",
+  primary: "#ea580c",
+  secondary: "#1e3a8a", secondaryH: "#1e40af",
   text: "#1a1a1a", muted: "#6b7280",
 };
 
@@ -18,11 +16,10 @@ const STONE_SHADOW = `
   inset 0 1px 0px rgba(255,255,255,0.90)
 `;
 
-const LogoSymbol = ({ size = 56 }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none"
-    style={{ transform: "rotate(180deg)", display: "block" }}>
-    <path d="M25 20C15 30 10 45 10 60C10 82 28 100 50 100C72 100 90 82 90 60C90 45 85 30 75 20C82 30 85 42 85 55C85 75 70 90 50 90C30 90 15 75 15 55C15 42 18 30 25 20Z" fill="#ea580c"/>
-    <path d="M40 35C35 40 32 48 32 58C32 70 40 80 50 80C60 80 68 70 68 58C68 48 65 40 60 35C65 40 68 48 68 55C68 65 60 73 50 73C40 73 32 65 32 55C32 48 35 40 40 35Z" fill="#1e3a8a"/>
+const LogoSymbol = ({ size = 62 }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill="none">
+    <path fill="#E7590C" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
+    <path fill="#213A84" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
   </svg>
 );
 
@@ -60,7 +57,7 @@ function TermsModal({ onClose }) {
         ))}
         <button onClick={onClose} style={{
           marginTop: "8px", width: "100%",
-          background: "#ea580c", color: "white", border: "none",
+          background: "#1e3a8a", color: "white", border: "none",
           borderRadius: 9999, padding: "12px", cursor: "pointer",
           fontFamily: "'Alef', sans-serif", fontSize: "0.9rem", fontWeight: 600,
         }}>הבנתי, סגור</button>
@@ -103,12 +100,11 @@ export default function LoginScreen({ onLogin, onBack }) {
         .login-slab { animation: stoneRise 0.7s cubic-bezier(0.22,1,0.36,1) both; }
         .lr { opacity: 0; animation: fadeUp 0.48s ease both; }
         .lr:nth-child(1) { animation-delay: 0.18s; }
-        .lr:nth-child(2) { animation-delay: 0.28s; }
-        .lr:nth-child(3) { animation-delay: 0.38s; }
-        .lr:nth-child(4) { animation-delay: 0.48s; }
-        .lr:nth-child(5) { animation-delay: 0.58s; }
-        .lr:nth-child(6) { animation-delay: 0.66s; }
-        .lr:nth-child(7) { animation-delay: 0.72s; }
+        .lr:nth-child(2) { animation-delay: 0.30s; }
+        .lr:nth-child(3) { animation-delay: 0.42s; }
+        .lr:nth-child(4) { animation-delay: 0.54s; }
+        .lr:nth-child(5) { animation-delay: 0.64s; }
+        .lr:nth-child(6) { animation-delay: 0.72s; }
         .syncca-field {
           width: 100%; height: 52px;
           background: #FCFAF5; border: 1.5px solid transparent;
@@ -117,7 +113,7 @@ export default function LoginScreen({ onLogin, onBack }) {
           color: #1a1a1a; outline: none; transition: border-color 0.18s;
           direction: ltr; text-align: center;
         }
-        .syncca-field:focus { border-color: #ea580c; }
+        .syncca-field:focus { border-color: #1e3a8a; }
         .syncca-field.err   { border-color: #dc2626; }
         .syncca-field::placeholder { color: #6b7280; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -146,37 +142,50 @@ export default function LoginScreen({ onLogin, onBack }) {
           overflow: "hidden",
         }}>
 
-          {/* Logo */}
-          <div className="lr" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-            <LogoSymbol size={60} />
+          {/* TOP: Logo + Syncca + heading — same structure as WelcomeScreen */}
+          <div className="lr" style={{
+            display: "flex", flexDirection: "column",
+            alignItems: "center", gap: "10px",
+          }}>
+            <LogoSymbol size={62} />
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "clamp(2.6rem,9vw,3.2rem)", fontWeight: 700,
+              fontSize: "clamp(2.8rem,9vw,3.4rem)", fontWeight: 700,
               color: COLORS.primary, letterSpacing: "-0.01em", lineHeight: 1,
             }}>Syncca</div>
+            {/* ! at end = appears on LEFT in RTL */}
+            <div style={{
+              fontFamily: "'Alef', sans-serif",
+              fontSize: "clamp(1.25rem,4.2vw,1.5rem)",
+              fontWeight: 700, color: COLORS.secondary,
+              direction: "rtl", textAlign: "center", lineHeight: 1.3,
+              marginTop: "2px",
+            }}>ברוכים הבאים!</div>
           </div>
 
-          {/* Middle */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", flex: 1, justifyContent: "center", width: "100%" }}>
-            <div className="lr" style={{
-              fontFamily: "'Alef', sans-serif", fontSize: "clamp(1.4rem,5vw,1.7rem)",
-              fontWeight: 700, color: COLORS.secondary, direction: "rtl", textAlign: "center",
-            }}>!ברוכים הבאים</div>
-            <div className="lr" style={{ width: "48px", height: "1.5px", background: `linear-gradient(90deg, transparent, ${COLORS.primary}50, transparent)` }} />
-            <div className="lr" style={{
+          {/* MIDDLE: Body text */}
+          <div className="lr" style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", width: "100%",
+          }}>
+            <div style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
               color: COLORS.text, textAlign: "center", lineHeight: 1.72,
               direction: "rtl", maxWidth: "290px", opacity: 0.82,
-            }}>כדי להבטיח בקרת איכות ולשמור על התובנות – נבקש להזדהות.</div>
+            }}>
+              כדי להבטיח בקרת איכות ולשמור על התובנות – נבקש להזדהות.
+            </div>
           </div>
 
-          {/* Bottom */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", width: "100%" }}>
-
+          {/* BOTTOM: Input + button + footer */}
+          <div style={{
+            display: "flex", flexDirection: "column",
+            alignItems: "center", gap: "12px", width: "100%",
+          }}>
             <div className="lr" style={{ width: "100%" }}>
               <div style={{
                 fontFamily: "'Alef', sans-serif", fontSize: "0.68rem", fontWeight: 700,
-                color: COLORS.primary, letterSpacing: "0.09em", textTransform: "uppercase",
+                color: COLORS.secondary, letterSpacing: "0.09em", textTransform: "uppercase",
                 textAlign: "right", direction: "rtl", marginBottom: "7px",
               }}>כתובת אימייל</div>
               <input
@@ -187,20 +196,25 @@ export default function LoginScreen({ onLogin, onBack }) {
                 autoComplete="email" inputMode="email"
               />
               {error && (
-                <div style={{ color: "#dc2626", fontSize: "0.76rem", textAlign: "right", direction: "rtl", marginTop: "6px", paddingRight: "8px", fontFamily: "'Alef', sans-serif" }}>{error}</div>
+                <div style={{
+                  color: "#dc2626", fontSize: "0.76rem", textAlign: "right",
+                  direction: "rtl", marginTop: "6px", paddingRight: "8px",
+                  fontFamily: "'Alef', sans-serif",
+                }}>{error}</div>
               )}
             </div>
 
-            <div className="lr" style={{ width: "100%" }}>
+            {/* Button — 75% width, blue */}
+            <div className="lr" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
               <button onClick={handleSubmit} disabled={loading}
                 onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
                 style={{
-                  background: loading ? "#f97316" : (btnHover ? COLORS.primaryH : COLORS.primary),
+                  background: loading ? COLORS.secondaryH : (btnHover ? COLORS.secondaryH : COLORS.secondary),
                   color: "#fff", border: "none", borderRadius: "9999px",
                   fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 700,
-                  height: "56px", width: "100%", cursor: loading ? "default" : "pointer",
+                  height: "52px", width: "75%", cursor: loading ? "default" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(234,88,12,0.40)" : "0 4px 18px rgba(234,88,12,0.28)",
+                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(30,58,138,0.38)" : "0 4px 18px rgba(30,58,138,0.28)",
                   transform: btnHover && !loading ? "translateY(-2px)" : "translateY(0)",
                   transition: "all 0.18s ease",
                 }}>
@@ -208,6 +222,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               </button>
             </div>
 
+            {/* Disclaimer */}
             <div className="lr" style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.72rem", color: COLORS.muted,
               textAlign: "center", direction: "rtl", lineHeight: 1.6, maxWidth: "280px",
@@ -215,7 +230,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               השימוש מיועד למשתמשים מעל גיל 18. סינקה אינה תחליף לטיפול מקצועי.{" "}
               <button onClick={() => setShowTerms(true)} style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: COLORS.primary, fontFamily: "'Alef', sans-serif",
+                color: COLORS.secondary, fontFamily: "'Alef', sans-serif",
                 fontSize: "0.72rem", textDecoration: "underline", padding: 0,
               }}>תנאי שימוש</button>
             </div>
@@ -230,13 +245,13 @@ export default function LoginScreen({ onLogin, onBack }) {
               <div className="lr">
                 <button onClick={onBack} style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: COLORS.muted, fontSize: "0.82rem",
-                  fontFamily: "'Alef', sans-serif",
+                  color: COLORS.muted, fontSize: "0.82rem", fontFamily: "'Alef', sans-serif",
                   textDecoration: "underline", textDecorationColor: "#d1d5db",
                 }}>חזרה למסך הבית</button>
               </div>
             )}
           </div>
+
         </div>
       </div>
     </>
