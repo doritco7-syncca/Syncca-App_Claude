@@ -2,46 +2,32 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8" />
+
+    <!-- ── Viewport ── -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#E8532A" />
-    <meta name="description" content="Syncca — Conscious Love" />
 
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- ── Theme color — Syncca orange, blends browser chrome on mobile ── -->
+    <meta name="theme-color" content="#ea580c" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- ── Standard favicon ── -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
 
-    <title>Syncca | Conscious Love</title>
+    <!-- ── Apple Touch Icon (iOS home screen, 180×180) ── -->
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
 
-    <style>
-      *, *::before, *::after { box-sizing: border-box; }
-      html, body, #root {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        background-color: #FAF8F5;
-      }
-      body {
-        font-family: 'DM Sans', system-ui, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      /* Scrollbar styling */
-      ::-webkit-scrollbar { width: 5px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb {
-        background: #E8E3DC;
-        border-radius: 999px;
-      }
-    </style>
+    <!-- ── Android / PWA manifest ── -->
+    <link rel="manifest" href="%PUBLIC_URL%/site.webmanifest" />
+
+    <!-- ── SEO & social ── -->
+    <meta name="description" content="המרחב שבו האהבה נושמת — ליווי בתקשורת בין-אישית וזוגית" />
+    <meta name="apple-mobile-web-app-title" content="Syncca" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <title>Syncca</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run Syncca.</noscript>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
 </html>
