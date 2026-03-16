@@ -19,10 +19,11 @@ import { sendToSyncca, parseResponse, SYNCCA_OPENING_MESSAGE, generateSessionIns
 // Install Airtable request logger — remove before production
 
 // ─── Beta modal: show only on first 2 sessions ───────────────────
-function shouldShowBetaModal() {
-  const n = parseInt(localStorage.getItem("syncca_session_count") || "0", 10) + 1;
-  localStorage.setItem("syncca_session_count", String(n));
-  return n <= 2;
+function shouldShowBetaModal(email) {
+  const key = `syncca_beta_seen_${email}`;
+  if (localStorage.getItem(key)) return false;
+  localStorage.setItem(key, "1");
+  return true;
 }
 
 // ─── Dynamic opening message ─────────────────────────────────────
@@ -165,21 +166,21 @@ function BetaModal({ onClose }) {
     "הפידבק שלכם עוזר לנו לצמוח. בסיום השיחה נשמח לשמוע.",
   ];
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(0,0,0,0.22)",
+    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(30,58,138,0.18)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
-      <div style={{ background:"#FDFBF7", borderRadius:"24px", padding:"28px 24px",
+      <div style={{ background:"#F9F6EE", borderRadius:"24px", padding:"28px 24px",
                     maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", fontWeight:700,
+        <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.25rem", fontWeight:700,
                       color:"#1e3a8a", marginBottom:"16px", textAlign:"center" }}>ברוכים ל-Syncca 👋</div>
         <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
-            <li key={i} style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.86rem",
+            <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.86rem",
                                  lineHeight:1.65, marginBottom:"10px", color:"#1a1a1a" }}>{item}</li>
           ))}
         </ol>
         <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"50px",
-          background:"#ea580c", color:"white", border:"none", borderRadius:"9999px",
-          fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"1rem", cursor:"pointer" }}>
+          background:"#1e3a8a", color:"white", border:"none", borderRadius:"9999px",
+          fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}>
           הבנתי, בואנו ✦
         </button>
       </div>
@@ -331,7 +332,7 @@ export default function App() {
       text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
     }]);
 
-    if (shouldShowBetaModal()) setShowBetaModal(true);
+    if (shouldShowBetaModal(email)) setShowBetaModal(true);
     setScreen("chat");
   }
 
