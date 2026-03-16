@@ -160,18 +160,18 @@ function TimeoutModal({ onClose, logRecordId }) {
 // ─── Beta modal ───────────────────────────────────────────────────
 function BetaModal({ onClose }) {
   const items = [
-    "המערכת מבוססת על Claude ועל מתודולוגיה של תקשורת בין-אישית וזוגית שפותחה בעשרים השנים האחרונות.",
-    "במהלך השיחה יופיעו מושגים מודגשים. לחיצה עליהם תפתח הסבר. כל מושג שתשמרו יחכה לכם בכרטיס האישי.",
-    "כל שיחה מוגבלת ל-30 דקות — זמן להתבוננות ממוקדת.",
-    "הפידבק שלכם עוזר לנו לצמוח. בסיום השיחה נשמח לשמוע.",
+    "סינקה היא המקום שלך כשעולה רצון להבין קצת יותר, ללמוד או ליצור שינוי בתקשורת הבין אישית שלך. היא מבוססת על ידע וניסיון של שנים בליווי זוגות ומשפחות, ונועדה לעזור לך לזהות ולהבין דפוסי תקשורת שעלולים לחנוק את האהבה — ולגלות איך משתחררים מהם..",
+    "במהלך השיחה עם סינקה, יתכן שהיא תציע לך מושגים רלבנטים. הם מיועדים לעזור לנו לתת מילים למה שקורה לכולנו בפנים. ניתן להרחיב אותם (על ידי לחיצה), ואף לשמור אותם בכרטיס האישי שלך (שנמצא בראש הצ'אט).",
+    "כל שיחה מוגבלת ל-30 דקות כדי לאפשר זמן ממוקד לעיבוד והתבוננות.",
+    "בסוף השיחה נשמח לפידבק, זה עוזר לנו להשתפר.",
   ];
   return (
     <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(30,58,138,0.18)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
       <div style={{ background:"#F9F6EE", borderRadius:"24px", padding:"28px 24px",
                     maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
-        <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.25rem", fontWeight:700,
-                      color:"#1e3a8a", marginBottom:"16px", textAlign:"center" }}>ברוכים ל-Syncca 👋</div>
+        <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.15rem", fontWeight:700,
+                      color:"#1e3a8a", marginBottom:"16px", textAlign:"center" }}>טוב שהגעת לסינקה 👋</div>
         <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
             <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.86rem",
@@ -181,7 +181,7 @@ function BetaModal({ onClose }) {
         <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"50px",
           background:"#1e3a8a", color:"white", border:"none", borderRadius:"9999px",
           fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}>
-          הבנתי, בואנו ✦
+          הבנתי, אפשר להתחיל ✦
         </button>
       </div>
     </div>
