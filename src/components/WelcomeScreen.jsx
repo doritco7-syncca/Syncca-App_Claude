@@ -89,22 +89,26 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
 
           {/* MIDDLE: Body text — inverted triangle */}
           <div className="wr" style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
+            display: "flex", flexDirection: "column",
+            alignItems: "center",
+            paddingTop: "clamp(12px, 4vh, 28px)",
             gap: "0px", width: "100%",
           }}>
             <div style={{
               display: "flex", flexDirection: "column", alignItems: "center",
-              gap: "5px", direction: "rtl", textAlign: "center",
+              gap: "6px", direction: "rtl", textAlign: "center",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "clamp(0.86rem,3vw,0.95rem)",
-              color: COLORS.text, lineHeight: 1.75, opacity: 0.82,
+              fontSize: "clamp(0.97rem,3.5vw,1.05rem)",
+              color: COLORS.text, lineHeight: 1.8, opacity: 0.82,
             }}>
-              <p style={{ maxWidth: "262px" }}>אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים יום אחר יום את האהבה,</p>
-              <p style={{ maxWidth: "195px" }}>בשפה של תקשורת ישירה ובוגרת,</p>
-              <p style={{ maxWidth: "138px" }}>שרואה גם את האחר.</p>
+              <p style={{ maxWidth: "272px" }}>אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים יום אחר יום את האהבה,</p>
+              <p style={{ maxWidth: "200px" }}>בשפה של תקשורת ישירה ובוגרת,</p>
+              <p style={{ maxWidth: "142px" }}>שרואה גם את האחר.</p>
             </div>
           </div>
+
+          {/* Spacer */}
+          <div style={{ flex: 1 }} />
 
           {/* BOTTOM: Button + footer */}
           <div className="wr" style={{
