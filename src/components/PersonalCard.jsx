@@ -4,23 +4,7 @@
 //   savedConcepts ([{word, explanation}]), onClose () => void
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { updateUserProfile, FIELD_MAPS } from "../AirtableService";
-
-// Fetch latest saved concepts directly from Airtable (bypasses any stale state)
-async function fetchFreshConcepts(recordId) {
-  if (!recordId) return null;
-  try {
-    const BASE_ID  = process.env.REACT_APP_AIRTABLE_BASE_ID;
-    const API_KEY  = process.env.REACT_APP_AIRTABLE_TOKEN;
-    const res = await fetch(
-      `https://api.airtable.com/v0/${BASE_ID}/Users/${recordId}?fields%5B%5D=Saved_Concepts`,
-      { headers: { Authorization: `Bearer ${API_KEY}` } }
-    );
-    const data = await res.json();
-    const raw = data.fields?.Saved_Concepts || "";
-    return raw.split(",").map(s => s.trim()).filter(Boolean);
-  } catch { return null; }
-}
+import { updateUserProfile, FIELD_MAPS, fetchSavedConcepts } from "../AirtableService";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -78,18 +62,16 @@ export default function PersonalCard({
 
   // On open: refresh concepts directly from Airtable to avoid stale props
   useEffect(() => {
-    fetchFreshConcepts(airtableRecordId).then(words => {
-      if (words !== null) {
-        // Merge with conceptLexicon to get full objects
-        const enriched = words.map(w => {
-          const entry = conceptLexicon.find(e =>
-            e.englishTerm === w || e.word === w ||
-            e.aliases?.includes(w)
-          );
-          return entry || { word: w, englishTerm: w, explanation: "" };
-        });
-        setFreshConcepts(enriched);
-      }
+    if (!airtableRecordId) return;
+    fetchSavedConcepts(airtableRecordId).then(words => {
+      const enriched = words.map(w => {
+        const entry = conceptLexicon.find(e =>
+          e.englishTerm === w || e.word === w ||
+          e.aliases?.includes(w)
+        );
+        return entry || { word: w, englishTerm: w, explanation: "" };
+      });
+      setFreshConcepts(enriched);
     });
   }, [airtableRecordId]);
 
@@ -411,7 +393,7 @@ export default function PersonalCard({
                 border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 600,
-                height: "56px", width: "100%",
+                height: "36px", width: "100%",
                 cursor: saveState === "saving" ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
                 boxShadow: saveShadow,

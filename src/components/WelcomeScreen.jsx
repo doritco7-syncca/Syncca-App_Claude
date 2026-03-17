@@ -125,7 +125,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 700,
-                height: "52px", width: "75%", cursor: "pointer",
+                height: "36px", width: "75%", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
                 boxShadow: hovered ? "0 8px 28px rgba(117,117,117,0.38)" : "0 4px 18px rgba(117,117,117,0.28)",
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",

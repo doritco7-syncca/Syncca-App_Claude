@@ -212,7 +212,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                   background: loading ? COLORS.secondaryH : (btnHover ? COLORS.secondaryH : COLORS.secondary),
                   color: "#fff", border: "none", borderRadius: "9999px",
                   fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 700,
-                  height: "52px", width: "75%", cursor: loading ? "default" : "pointer",
+                  height: "36px", width: "75%", cursor: loading ? "default" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
                   boxShadow: btnHover && !loading ? "0 8px 28px rgba(117,117,117,0.38)" : "0 4px 18px rgba(117,117,117,0.28)",
                   transform: btnHover && !loading ? "translateY(-2px)" : "translateY(0)",
