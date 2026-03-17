@@ -24,8 +24,8 @@ const CARD_SHADOW = `
 function LogoSymbol({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" style={{ display: "block", flexShrink: 0 }}>
-      <path fill="#E7590C" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
-      <path fill="#213A84" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
+      <path fill="#C62828" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
+      <path fill="#757575" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
     </svg>
   );
 }
