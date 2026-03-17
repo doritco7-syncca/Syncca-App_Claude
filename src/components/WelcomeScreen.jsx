@@ -3,7 +3,7 @@ import { useState } from "react";
 
 const COLORS = {
   stone: "#F9F6EE", frame: "#E8E0F0",
-  primary: "#C62828",
+  primary: "#C62828", primaryHover: "#B71C1C",
   secondary: "#757575", secondaryH: "#616161",
   text: "#1a1a1a", muted: "#6b7280",
 };
@@ -121,13 +121,13 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               onMouseLeave={() => setHovered(false)}
               onClick={onEnter}
               style={{
-                background: hovered ? COLORS.secondaryH : COLORS.secondary,
+                background: hovered ? COLORS.primaryHover : COLORS.primary,
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 700,
                 height: "36px", width: "75%", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                boxShadow: hovered ? "0 8px 28px rgba(117,117,117,0.38)" : "0 4px 18px rgba(117,117,117,0.28)",
+                boxShadow: hovered ? "0 8px 28px rgba(198,40,40,0.35)" : "0 4px 18px rgba(198,40,40,0.25)",
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.18s ease",
               }}>

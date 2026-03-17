@@ -3,7 +3,7 @@ import { useState } from "react";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
-  primary: "#C62828",
+  primary: "#C62828", primaryHover: "#B71C1C",
   secondary: "#757575", secondaryH: "#616161",
   text: "#1a1a1a", muted: "#6b7280",
 };
@@ -209,12 +209,12 @@ export default function LoginScreen({ onLogin, onBack }) {
               <button onClick={handleSubmit} disabled={loading}
                 onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
                 style={{
-                  background: loading ? COLORS.secondaryH : (btnHover ? COLORS.secondaryH : COLORS.secondary),
+                  background: loading ? COLORS.primaryHover : (btnHover ? COLORS.primaryHover : COLORS.primary),
                   color: "#fff", border: "none", borderRadius: "9999px",
                   fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 700,
                   height: "36px", width: "75%", cursor: loading ? "default" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(117,117,117,0.38)" : "0 4px 18px rgba(117,117,117,0.28)",
+                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(198,40,40,0.35)" : "0 4px 18px rgba(198,40,40,0.25)",
                   transform: btnHover && !loading ? "translateY(-2px)" : "translateY(0)",
                   transition: "all 0.18s ease",
                 }}>

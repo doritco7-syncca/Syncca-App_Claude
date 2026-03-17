@@ -3,8 +3,8 @@
 //   record (object), airtableBaseId, airtableTableId, airtableToken, airtableRecordId
 //   savedConcepts ([{word, explanation}]), onClose () => void
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { updateUserProfile, FIELD_MAPS, fetchSavedConcepts } from "../AirtableService";
+import { useState, useCallback, useRef } from "react";
+import { updateUserProfile, FIELD_MAPS } from "../AirtableService";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -36,6 +36,7 @@ export default function PersonalCard({
   airtableRecordId,
   savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose, onRecordUpdate, onDeleteConcept,
 }) {
+  console.log("[PersonalCard] render — savedConcepts:", savedConcepts, "airtableRecordId:", airtableRecordId);
   // Reverse-map: Airtable stores English values, UI shows Hebrew
   function fromAirtable(key, val) {
     if (!val) return "";
@@ -58,22 +59,8 @@ export default function PersonalCard({
   const [saveState, setSaveState] = useState("idle");
   const [errMsg, setErrMsg]       = useState("");
   const [activeConcept, setActiveConcept] = useState(null);
-  const [freshConcepts, setFreshConcepts] = useState(null); // null = not loaded yet
 
-  // On open: refresh concepts directly from Airtable to avoid stale props
-  useEffect(() => {
-    if (!airtableRecordId) return;
-    fetchSavedConcepts(airtableRecordId).then(words => {
-      const enriched = words.map(w => {
-        const entry = conceptLexicon.find(e =>
-          e.englishTerm === w || e.word === w ||
-          e.aliases?.includes(w)
-        );
-        return entry || { word: w, englishTerm: w, explanation: "" };
-      });
-      setFreshConcepts(enriched);
-    });
-  }, [airtableRecordId]);
+
 
   function stripHe(term) {
     return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
@@ -315,7 +302,7 @@ export default function PersonalCard({
           {/* BOTTOM PANEL — saved concepts, 1/3 */}
           <div style={{ flex: 1, overflowY: "auto", padding: "18px 18px 12px", minHeight: 0 }}>
             {(() => {
-              const displayConcepts = freshConcepts ?? savedConcepts;
+              const displayConcepts = savedConcepts;
               return displayConcepts.length === 0 ? (
               <div style={{
                 color: COLORS.muted, fontSize: "0.82rem",
