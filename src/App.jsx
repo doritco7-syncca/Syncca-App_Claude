@@ -140,7 +140,7 @@ function TimeoutModal({ onClose, logRecordId }) {
                        borderRadius:"12px", padding:"12px", fontFamily:"'Alef',sans-serif",
                        fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
                        direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
-            <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"48px",
+            <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"34px",
               background:"#757575", color:"white", border:"none", borderRadius:"9999px",
               fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"0.95rem", cursor:"pointer" }}>
               שלח פידבק וסיים
@@ -157,7 +157,7 @@ function TimeoutModal({ onClose, logRecordId }) {
             </div>
           </div>
         )}
-        <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"44px",
+        <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"30px",
           background:"transparent", color:"#6b7280", border:"1px solid #E5E0D8",
           borderRadius:"9999px", fontFamily:"'Alef',sans-serif", fontSize:"0.9rem", cursor:"pointer" }}>
           סגירה
@@ -188,7 +188,7 @@ function BetaModal({ onClose }) {
                                  lineHeight:1.65, marginBottom:"10px", color:"#1a1a1a" }}>{item}</li>
           ))}
         </ol>
-        <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"50px",
+        <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"36px",
           background:"#757575", color:"white", border:"none", borderRadius:"9999px",
           fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}>
           הבנתי, אפשר להתחיל ✦

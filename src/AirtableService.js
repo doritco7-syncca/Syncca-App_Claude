@@ -130,6 +130,18 @@ export async function updateUserProfile(recordId, fields) {
 
 // ATOMIC wallet update: GET current list → merge → PATCH once.
 // Called by handleSaveConcept which passes the FULL updated list.
+// Fetch current saved concepts for a user — used by PersonalCard on open
+export async function fetchSavedConcepts(recordId) {
+  if (!recordId) return [];
+  try {
+    const rec = await airtableFetch(`Users/${recordId}?fields%5B%5D=Saved_Concepts`);
+    return (rec.fields?.Saved_Concepts || "").split(",").map(s => s.trim()).filter(Boolean);
+  } catch (e) {
+    console.warn("[fetchSavedConcepts] failed:", e);
+    return [];
+  }
+}
+
 export async function updateSavedConcepts(recordId, allConceptWords) {
   if (!recordId || !allConceptWords?.length) return;
 
