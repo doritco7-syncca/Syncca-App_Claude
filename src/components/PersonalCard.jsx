@@ -3,8 +3,24 @@
 //   record (object), airtableBaseId, airtableTableId, airtableToken, airtableRecordId
 //   savedConcepts ([{word, explanation}]), onClose () => void
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { updateUserProfile, FIELD_MAPS } from "../AirtableService";
+
+// Fetch latest saved concepts directly from Airtable (bypasses any stale state)
+async function fetchFreshConcepts(recordId) {
+  if (!recordId) return null;
+  try {
+    const BASE_ID  = process.env.REACT_APP_AIRTABLE_BASE_ID;
+    const API_KEY  = process.env.REACT_APP_AIRTABLE_TOKEN;
+    const res = await fetch(
+      `https://api.airtable.com/v0/${BASE_ID}/Users/${recordId}?fields%5B%5D=Saved_Concepts`,
+      { headers: { Authorization: `Bearer ${API_KEY}` } }
+    );
+    const data = await res.json();
+    const raw = data.fields?.Saved_Concepts || "";
+    return raw.split(",").map(s => s.trim()).filter(Boolean);
+  } catch { return null; }
+}
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -57,7 +73,25 @@ export default function PersonalCard({
   });
   const [saveState, setSaveState] = useState("idle");
   const [errMsg, setErrMsg]       = useState("");
-  const [activeConcept, setActiveConcept] = useState(null); // for concept tooltip
+  const [activeConcept, setActiveConcept] = useState(null);
+  const [freshConcepts, setFreshConcepts] = useState(null); // null = not loaded yet
+
+  // On open: refresh concepts directly from Airtable to avoid stale props
+  useEffect(() => {
+    fetchFreshConcepts(airtableRecordId).then(words => {
+      if (words !== null) {
+        // Merge with conceptLexicon to get full objects
+        const enriched = words.map(w => {
+          const entry = conceptLexicon.find(e =>
+            e.englishTerm === w || e.word === w ||
+            e.aliases?.includes(w)
+          );
+          return entry || { word: w, englishTerm: w, explanation: "" };
+        });
+        setFreshConcepts(enriched);
+      }
+    });
+  }, [airtableRecordId]);
 
   function stripHe(term) {
     return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
@@ -298,7 +332,9 @@ export default function PersonalCard({
 
           {/* BOTTOM PANEL — saved concepts, 1/3 */}
           <div style={{ flex: 1, overflowY: "auto", padding: "18px 18px 12px", minHeight: 0 }}>
-            {savedConcepts.length === 0 ? (
+            {(() => {
+              const displayConcepts = freshConcepts ?? savedConcepts;
+              return displayConcepts.length === 0 ? (
               <div style={{
                 color: COLORS.muted, fontSize: "0.82rem",
                 fontFamily: "'Alef', sans-serif",
@@ -308,7 +344,7 @@ export default function PersonalCard({
               </div>
             ) : (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", direction: "rtl" }}>
-                {savedConcepts.map((c, i) => (
+                {displayConcepts.map((c, i) => (
                   <div key={i} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
                     <div className="concept-pill"
                       onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
@@ -327,7 +363,8 @@ export default function PersonalCard({
                   </div>
                 ))}
               </div>
-            )}
+            );
+            })()}
 
             {activeConcept && (
               <div style={{

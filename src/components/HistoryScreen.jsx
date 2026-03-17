@@ -42,13 +42,13 @@ function formatTime(iso) {
   return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoryScreen({ username, firstName, onClose }) {
+export default function HistoryScreen({ userRecordId, firstName, onClose }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [expanded, setExpanded]             = useState(null);
   const [transcriptOpen, setTranscriptOpen] = useState(null);
-  const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
+  const storageKey = userRecordId ? `syncca_hidden_sessions_${userRecordId}` : null;
 
   // Load previously deleted session IDs from localStorage
   const deletedIds = (() => {
@@ -69,8 +69,8 @@ export default function HistoryScreen({ username, firstName, onClose }) {
   }
 
   useEffect(() => {
-    if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
-    fetchFullHistory(username, 30)
+    if (!userRecordId) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
+    fetchFullHistory(userRecordId, 30)
       .then(data => {
         const withContent = data.filter(s =>
           s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
@@ -79,7 +79,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
         setLoading(false);
       })
       .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
-  }, [username]);
+  }, [userRecordId]);
 
 
   const name = firstName ? `, ${firstName}` : "";
