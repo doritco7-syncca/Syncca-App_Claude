@@ -121,7 +121,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               onMouseLeave={() => setHovered(false)}
               onClick={onEnter}
               style={{
-                background: hovered ? COLORS.secondaryH : COLORS.primary,
+                background: hovered ? COLORS.primaryH : COLORS.primary,
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 700,
@@ -158,7 +158,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               letterSpacing: "0.13em", textTransform: "uppercase", color: COLORS.primary,
             }}>
               <span>BETA PHASE</span>
-              <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: COLORS.primary, opacity: 0.45 }} />
+              <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: COLORS.secondary, opacity: 0.45 }} />
               <span>SECURE &amp; PRIVATE</span>
             </div>
           </div>
