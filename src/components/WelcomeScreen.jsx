@@ -121,7 +121,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               onMouseLeave={() => setHovered(false)}
               onClick={onEnter}
               style={{
-                background: hovered ? COLORS.secondaryH : COLORS.secondary,
+                background: hovered ? COLORS.secondaryH : COLORS.primary,
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 700,
