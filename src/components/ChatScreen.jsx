@@ -10,8 +10,8 @@ const SESSION_SECS = 30 * 60;
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
-  primary: "#ea580c", primaryH: "#c2410c", primaryLight: "#FED7AA",
-  secondary: "#1e3a8a",
+  primary: "#C62828", primaryH: "#B71C1C", primaryLight: "#FFCDD2",
+  secondary: "#757575",
   text: "#1a1a1a", muted: "#6b7280", border: "#E5E0D8",
 };
 
@@ -26,8 +26,8 @@ const STONE_SHADOW = [
 function LogoSymbol({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" style={{ display: "block", flexShrink: 0 }}>
-      <path fill="#E7590C" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
-      <path fill="#213A84" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
+      <path fill="#C62828" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
+      <path fill="#757575" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
     </svg>
   );
 }
@@ -179,7 +179,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               }}>
                 <button onClick={() => toggleConcept(c)} style={{
                   padding: "3px 11px", borderRadius: "9999px",
-                  border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(234,88,12,0.4)"}`,
+                  border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(198,40,40,0.4)"}`,
                   background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
                   color: COLORS.primary,
                   fontFamily: "'Alef', sans-serif", fontSize: "0.78rem", fontWeight: 600,
@@ -202,7 +202,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
           {activeConcept && (
             <div style={{
               margin: "8px 0 4px", background: "white", borderRadius: "10px",
-              border: `1px solid rgba(234,88,12,0.2)`,
+              border: `1px solid rgba(198,40,40,0.2)`,
               padding: "10px 32px 10px 12px", position: "relative",
             }}>
               <div style={{
@@ -328,7 +328,7 @@ export default function ChatScreen({
           background: ${COLORS.primary}; color: white; border: none;
           font-size: 1.05rem; cursor: pointer; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 3px 12px rgba(234,88,12,0.32);
+          box-shadow: 0 3px 12px rgba(198,40,40,0.32);
           transition: background 0.15s;
         }
         .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; }
@@ -436,8 +436,8 @@ export default function ChatScreen({
           {/* 5-MINUTE WARNING BANNER */}
           {showWarning && !timedOut && (
             <div style={{
-              background: "rgba(234,88,12,0.08)",
-              borderBottom: "1px solid rgba(234,88,12,0.2)",
+              background: "rgba(198,40,40,0.08)",
+              borderBottom: "1px solid rgba(198,40,40,0.2)",
               padding: "12px 16px",
               display: "flex", alignItems: "flex-start", justifyContent: "space-between",
               direction: "rtl", flexShrink: 0, gap: "8px",

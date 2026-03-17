@@ -3,8 +3,8 @@ import { useState } from "react";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
-  primary: "#ea580c",
-  secondary: "#1e3a8a", secondaryH: "#1e40af",
+  primary: "#C62828",
+  secondary: "#757575", secondaryH: "#616161",
   text: "#1a1a1a", muted: "#6b7280",
 };
 
@@ -18,8 +18,8 @@ const STONE_SHADOW = `
 
 const LogoSymbol = ({ size = 62 }) => (
   <svg width={size} height={size} viewBox="0 0 512 512" fill="none">
-    <path fill="#E7590C" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
-    <path fill="#213A84" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
+    <path fill="#C62828" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
+    <path fill="#757575" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
   </svg>
 );
 
@@ -35,7 +35,7 @@ function TermsModal({ onClose }) {
   return (
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(30,58,138,0.18)",
+      background: "rgba(117,117,117,0.18)",
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: "20px",
     }}>
@@ -47,7 +47,7 @@ function TermsModal({ onClose }) {
       }}>
         <div style={{
           fontFamily: "'Alef', sans-serif", fontSize: "1.1rem", fontWeight: 700,
-          color: "#1e3a8a", marginBottom: "16px", textAlign: "center",
+          color: "#757575", marginBottom: "16px", textAlign: "center",
         }}>תנאי שימוש — סינקה</div>
         {TERMS_TEXT.map((para, i) => (
           <p key={i} style={{
@@ -57,7 +57,7 @@ function TermsModal({ onClose }) {
         ))}
         <button onClick={onClose} style={{
           marginTop: "8px", width: "100%",
-          background: "#1e3a8a", color: "white", border: "none",
+          background: "#757575", color: "white", border: "none",
           borderRadius: 9999, padding: "12px", cursor: "pointer",
           fontFamily: "'Alef', sans-serif", fontSize: "0.9rem", fontWeight: 600,
         }}>הבנתי, סגור</button>
@@ -113,7 +113,7 @@ export default function LoginScreen({ onLogin, onBack }) {
           color: #1a1a1a; outline: none; transition: border-color 0.18s;
           direction: ltr; text-align: center;
         }
-        .syncca-field:focus { border-color: #1e3a8a; }
+        .syncca-field:focus { border-color: #757575; }
         .syncca-field.err   { border-color: #dc2626; }
         .syncca-field::placeholder { color: #6b7280; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -214,7 +214,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                   fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 700,
                   height: "52px", width: "75%", cursor: loading ? "default" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(30,58,138,0.38)" : "0 4px 18px rgba(30,58,138,0.28)",
+                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(117,117,117,0.38)" : "0 4px 18px rgba(117,117,117,0.28)",
                   transform: btnHover && !loading ? "translateY(-2px)" : "translateY(0)",
                   transition: "all 0.18s ease",
                 }}>

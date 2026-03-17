@@ -7,8 +7,8 @@ import { fetchFullHistory } from "../AirtableService";
 const COLORS = {
   stone:     "#F9F6EE",
   frame:     "#E8E0F0",
-  primary:   "#ea580c",
-  secondary: "#1e3a8a",
+  primary:   "#C62828",
+  secondary: "#757575",
   success:   "#16a34a",
   text:      "#374151",
   muted:     "#9ca3af",
@@ -16,8 +16,8 @@ const COLORS = {
 
 const CARD_SHADOW = `
   0 1px 2px rgba(0,0,0,0.04),
-  0 4px 16px rgba(30,58,138,0.07),
-  0 8px 32px rgba(234,88,12,0.05),
+  0 4px 16px rgba(117,117,117,0.07),
+  0 8px 32px rgba(198,40,40,0.05),
   inset 0 1px 0 rgba(255,255,255,0.9)
 `.trim();
 
@@ -42,13 +42,13 @@ function formatTime(iso) {
   return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoryScreen({ userRecordId, firstName, onClose }) {
+export default function HistoryScreen({ username, firstName, onClose }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [expanded, setExpanded]             = useState(null);
   const [transcriptOpen, setTranscriptOpen] = useState(null);
-  const storageKey = userRecordId ? `syncca_hidden_sessions_${userRecordId}` : null;
+  const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
 
   // Load previously deleted session IDs from localStorage
   const deletedIds = (() => {
@@ -69,8 +69,8 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
   }
 
   useEffect(() => {
-    if (!userRecordId) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
-    fetchFullHistory(userRecordId, 30)
+    if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
+    fetchFullHistory(username, 30)
       .then(data => {
         const withContent = data.filter(s =>
           s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
@@ -79,7 +79,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
         setLoading(false);
       })
       .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
-  }, [userRecordId]);
+  }, [username]);
 
 
   const name = firstName ? `, ${firstName}` : "";
@@ -88,7 +88,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
     <div style={{
       position: "fixed", inset: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: "rgba(30,58,138,0.10)",
+      background: "rgba(117,117,117,0.10)",
       zIndex: 200,
       padding: "10px",
     }}>
@@ -179,7 +179,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
                 marginBottom: 12,
                 overflow: "hidden",
                 transition: "border-color 0.2s",
-                boxShadow: "0 2px 8px rgba(30,58,138,0.05)",
+                boxShadow: "0 2px 8px rgba(117,117,117,0.05)",
                 position: "relative",
               }}>
                 {/* Delete button — outside clickable area */}
@@ -260,7 +260,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
                       )}
                       {hasConcepts && (
                         <div style={{
-                          background: "rgba(234,88,12,0.1)",
+                          background: "rgba(198,40,40,0.1)",
                           color: COLORS.primary,
                           borderRadius: 9999,
                           padding: "3px 10px",
@@ -314,7 +314,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
                             <span key={ci} style={{
                               padding: "3px 11px", borderRadius: 9999,
                               background: "rgba(254,215,170,0.45)",
-                              border: "1.5px solid rgba(234,88,12,0.3)",
+                              border: "1.5px solid rgba(198,40,40,0.3)",
                               color: COLORS.primary,
                               fontFamily: "'Alef', sans-serif",
                               fontSize: "0.76rem", fontWeight: 600,
@@ -384,7 +384,7 @@ export default function HistoryScreen({ userRecordId, firstName, onClose }) {
                                     display: "inline-block",
                                     padding: "6px 11px",
                                     borderRadius: 14,
-                                    background: isUser ? "#FED7AA" : "white",
+                                    background: isUser ? "#FFCDD2" : "white",
                                     color: COLORS.text,
                                     fontFamily: "'Alef', sans-serif",
                                     fontSize: "0.78rem",

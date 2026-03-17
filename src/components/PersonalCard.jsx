@@ -24,8 +24,8 @@ async function fetchFreshConcepts(recordId) {
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
-  primary: "#ea580c", primaryH: "#c2410c",
-  secondary: "#1e3a8a",
+  primary: "#C62828", primaryH: "#B71C1C",
+  secondary: "#757575",
   text: "#1a1a1a", muted: "#6b7280", border: "#E5E0D8",
   success: "#16a34a",
 };
@@ -151,11 +151,11 @@ export default function PersonalCard({
     }
   }, [form, airtableRecordId]);
 
-  const saveBg    = { idle: COLORS.primary, saving: "#f97316", saved: COLORS.success, error: "#dc2626" }[saveState];
+  const saveBg    = { idle: COLORS.primary, saving: "#E53935", saved: COLORS.success, error: "#dc2626" }[saveState];
   const saveLabel = { idle: "שמירה  💾", saving: "שומר...", saved: "✓  נשמר!", error: "שגיאה — נסי שוב" }[saveState];
   const saveShadow = saveState === "saved"
     ? "0 4px 14px rgba(22,163,74,0.35)"
-    : "0 4px 14px rgba(234,88,12,0.30)";
+    : "0 4px 14px rgba(198,40,40,0.30)";
 
   const initials = (form.First_Name?.[0] || form.Full_Name?.[0] || "?").toUpperCase();
 
@@ -256,8 +256,8 @@ export default function PersonalCard({
             <button className="close-btn" onClick={onClose} title="חזרה לשיחה">✕</button>
             <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
               <svg width={18} height={18} viewBox="0 0 512 512" fill="none" style={{ display: "block", flexShrink: 0 }}>
-                <path fill="#E7590C" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
-                <path fill="#213A84" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
+                <path fill="#C62828" d="M 412.87 453.22 A 252 252 0 1 0 99.13 453.22 L 134.61 408.61 A 195 195 0 1 1 377.39 408.61 Z"/>
+                <path fill="#757575" d="M 335.06 355.39 A 127 127 0 1 0 176.94 355.39 L 201.84 324.09 A 87 87 0 1 1 310.16 324.09 Z"/>
               </svg>
               <div style={{
                 fontFamily: "'Alef', sans-serif",
@@ -357,7 +357,7 @@ export default function PersonalCard({
                       style={{
                         position: "absolute", left: "6px",
                         background: "none", border: "none", cursor: "pointer",
-                        color: "rgba(234,88,12,0.45)", fontSize: "0.6rem", lineHeight: 1,
+                        color: "rgba(198,40,40,0.45)", fontSize: "0.6rem", lineHeight: 1,
                         padding: "2px", display: "flex", alignItems: "center",
                       }}>✕</button>
                   </div>
@@ -377,7 +377,7 @@ export default function PersonalCard({
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
                   fontSize: "1rem", fontWeight: 700,
-                  color: "#1e3a8a", marginBottom: "6px",
+                  color: "#757575", marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",

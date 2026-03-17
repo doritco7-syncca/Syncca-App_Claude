@@ -4,7 +4,7 @@ import { useState } from "react";
 const COLORS = {
   stone: "#F9F6EE", frame: "#E8E0F0",
   primary: "#C62828",
-  secondary: "#757575", secondaryH: "#1e40af",
+  secondary: "#757575", secondaryH: "#616161",
   text: "#1a1a1a", muted: "#6b7280",
 };
 
@@ -121,13 +121,13 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               onMouseLeave={() => setHovered(false)}
               onClick={onEnter}
               style={{
-                background: hovered ? COLORS.secondaryH : COLORS.primary,
+                background: hovered ? COLORS.secondaryH : COLORS.secondary,
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 700,
                 height: "52px", width: "75%", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                boxShadow: hovered ? "0 8px 28px rgba(30,58,138,0.38)" : "0 4px 18px rgba(30,58,138,0.28)",
+                boxShadow: hovered ? "0 8px 28px rgba(117,117,117,0.38)" : "0 4px 18px rgba(117,117,117,0.28)",
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.18s ease",
               }}>
@@ -155,10 +155,10 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             <div style={{
               display: "flex", alignItems: "center", gap: "8px",
               fontFamily: "'Alef', sans-serif", fontSize: "0.6rem", fontWeight: 500,
-              letterSpacing: "0.13em", textTransform: "uppercase", color: COLORS.secondary,
+              letterSpacing: "0.13em", textTransform: "uppercase", color: COLORS.primary,
             }}>
               <span>BETA PHASE</span>
-              <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: COLORS.secondary, opacity: 0.45 }} />
+              <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: COLORS.primary, opacity: 0.45 }} />
               <span>SECURE &amp; PRIVATE</span>
             </div>
           </div>
