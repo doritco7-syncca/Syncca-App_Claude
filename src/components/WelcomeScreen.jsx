@@ -155,7 +155,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             <div style={{
               display: "flex", alignItems: "center", gap: "8px",
               fontFamily: "'Alef', sans-serif", fontSize: "0.6rem", fontWeight: 500,
-              letterSpacing: "0.13em", textTransform: "uppercase", color: COLORS.primary,
+              letterSpacing: "0.13em", textTransform: "uppercase", color: COLORS.#212121,
             }}>
               <span>BETA PHASE</span>
               <span style={{ width: "3px", height: "3px", borderRadius: "50%", background: COLORS.secondary, opacity: 0.45 }} />
