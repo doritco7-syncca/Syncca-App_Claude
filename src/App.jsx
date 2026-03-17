@@ -550,7 +550,7 @@ export default function App() {
           savedConcepts={savedConcepts}
           conceptLexicon={conceptLexicon}
           chatLang={chatLang}
-          onClose={() => setScreen("chat")}
+          onClose={() => { console.log("[App] PersonalCard opened, savedConcepts:", savedConcepts); setScreen("chat"); }}
           onLogout={handleLogout}
           onRecordUpdate={(updated) => setUserRecord(prev => ({ ...prev, ...updated }))}
           onDeleteConcept={handleDeleteConcept}
