@@ -279,7 +279,8 @@ export default function ChatScreen({
     }
     return SESSION_SECS;
   });
-  const [timedOut, setTimedOut] = useState(false);
+  const [timedOut, setTimedOut]       = useState(false);
+  const [showWarning, setShowWarning] = useState(false); // 5-min warning
   const bottomRef = useRef(null);
 
   const displayName = firstName?.trim() ||
@@ -288,8 +289,10 @@ export default function ChatScreen({
   useEffect(() => {
     if (timedOut || secondsLeft <= 0) return;
     const id = setInterval(() => setSecondsLeft(s => {
-      if (s <= 1) { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
-      return s - 1;
+      const next = s - 1;
+      if (next <= 1)   { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
+      if (next === 300) setShowWarning(true);  // exactly 5 minutes left
+      return next;
     }), 1000);
     return () => clearInterval(id);
   }, [timedOut]);
@@ -429,6 +432,28 @@ export default function ChatScreen({
                 title="כרטיס אישי" style={{ fontSize: "1.05rem" }}>👤</button>
             </div>
           </div>
+
+          {/* 5-MINUTE WARNING BANNER */}
+          {showWarning && !timedOut && (
+            <div style={{
+              background: "rgba(234,88,12,0.08)",
+              borderBottom: "1px solid rgba(234,88,12,0.2)",
+              padding: "12px 16px",
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              direction: "rtl", flexShrink: 0, gap: "8px",
+            }}>
+              <span style={{
+                fontFamily: "'Alef', sans-serif", fontSize: "0.85rem",
+                color: "#92400e", lineHeight: 1.6,
+              }}>
+                סליחה {displayName || ""}, אנחנו מתקרבים לסיום הזמן. האם תרצה לכתוב לי משהו שאתה לוקח מהשיחה שלנו? אתה גם מוזמן להישאר ולמלא פידבק עבורנו.
+              </span>
+              <button onClick={() => setShowWarning(false)} style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: "#92400e", fontSize: "0.85rem", padding: 0, flexShrink: 0,
+              }}>✕</button>
+            </div>
+          )}
 
           {/* MESSAGES */}
           <div style={{
