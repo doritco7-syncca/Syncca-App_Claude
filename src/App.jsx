@@ -117,39 +117,49 @@ function TimeoutModal({ onClose, logRecordId }) {
   }
 
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(0,0,0,0.25)",
+    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(30,58,138,0.15)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
-      <div style={{ background:"#EFF6FF", borderRadius:"24px", border:"1.5px solid rgba(30,58,138,0.15)",
+      <div style={{ background:"#F9F6EE", borderRadius:"24px",
+                    border:"1.5px solid rgba(30,58,138,0.12)",
                     padding:"28px 24px", maxWidth:"380px", width:"100%", direction:"rtl",
-                    boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem", fontWeight:700,
-                      color:"#1e3a8a", marginBottom:"10px" }}>זמן השיחה הסתיים</div>
-        <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"0.88rem", color:"#374151",
-                    lineHeight:1.6, marginBottom:"18px" }}>
-          הזמן המיועד להתבוננות הסתיים. זהו רגע טוב לעצור ולחשוב.
-        </p>
+                    boxShadow:"0 8px 40px rgba(0,0,0,0.12)" }}>
         {!sent ? (
           <>
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.2rem", fontWeight:700,
+                          color:"#1e3a8a", marginBottom:"10px", textAlign:"center" }}>
+              זמן השיחה הסתיים 🙏
+            </div>
+            <p style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
+                        lineHeight:1.7, marginBottom:"18px", textAlign:"center" }}>
+              30 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך.
+              נשמח לשמוע מה חשבת.
+            </p>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
-              placeholder="מה כדאי להוסיף, להוריד או לשנות ב-Syncca?"
-              style={{ width:"100%", height:"84px", border:"1.5px solid rgba(30,58,138,0.2)",
-                       borderRadius:"12px", padding:"12px", fontFamily:"'Inter',sans-serif",
+              placeholder="מה עזר? מה אפשר לשפר?"
+              style={{ width:"100%", height:"80px", border:"1.5px solid rgba(30,58,138,0.2)",
+                       borderRadius:"12px", padding:"12px", fontFamily:"'Alef',sans-serif",
                        fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
-                       direction:"rtl", boxSizing:"border-box" }} />
+                       direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"48px",
               background:"#1e3a8a", color:"white", border:"none", borderRadius:"9999px",
-              fontFamily:"'Inter',sans-serif", fontWeight:600, cursor:"pointer" }}>
+              fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"0.95rem", cursor:"pointer" }}>
               שלח פידבק וסיים
             </button>
           </>
         ) : (
-          <div style={{ textAlign:"center", color:"#16a34a", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
-            ✓ תודה! נתראה בסינק הבא.
+          <div style={{ textAlign:"center", padding:"12px 0" }}>
+            <div style={{ fontSize:"1.5rem", marginBottom:"10px" }}>✦</div>
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1rem", fontWeight:700,
+                          color:"#16a34a", marginBottom:"6px" }}>תודה!</div>
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
+                          lineHeight:1.6 }}>
+              נתראה בסינק הבא.
+            </div>
           </div>
         )}
         <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"44px",
           background:"transparent", color:"#6b7280", border:"1px solid #E5E0D8",
-          borderRadius:"9999px", fontFamily:"'Inter',sans-serif", cursor:"pointer" }}>
+          borderRadius:"9999px", fontFamily:"'Alef',sans-serif", fontSize:"0.9rem", cursor:"pointer" }}>
           סגירה
         </button>
       </div>
