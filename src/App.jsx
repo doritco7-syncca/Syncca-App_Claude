@@ -117,16 +117,16 @@ function TimeoutModal({ onClose, logRecordId }) {
   }
 
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(30,58,138,0.15)",
+    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(117,117,117,0.15)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
       <div style={{ background:"#F9F6EE", borderRadius:"24px",
-                    border:"1.5px solid rgba(30,58,138,0.12)",
+                    border:"1.5px solid rgba(117,117,117,0.12)",
                     padding:"28px 24px", maxWidth:"380px", width:"100%", direction:"rtl",
                     boxShadow:"0 8px 40px rgba(0,0,0,0.12)" }}>
         {!sent ? (
           <>
             <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.2rem", fontWeight:700,
-                          color:"#1e3a8a", marginBottom:"10px", textAlign:"center" }}>
+                          color:"#757575", marginBottom:"10px", textAlign:"center" }}>
               זמן השיחה הסתיים 🙏
             </div>
             <p style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
@@ -136,12 +136,12 @@ function TimeoutModal({ onClose, logRecordId }) {
             </p>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
               placeholder="מה עזר? מה אפשר לשפר?"
-              style={{ width:"100%", height:"80px", border:"1.5px solid rgba(30,58,138,0.2)",
+              style={{ width:"100%", height:"80px", border:"1.5px solid rgba(117,117,117,0.2)",
                        borderRadius:"12px", padding:"12px", fontFamily:"'Alef',sans-serif",
                        fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
                        direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"48px",
-              background:"#1e3a8a", color:"white", border:"none", borderRadius:"9999px",
+              background:"#757575", color:"white", border:"none", borderRadius:"9999px",
               fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"0.95rem", cursor:"pointer" }}>
               שלח פידבק וסיים
             </button>
@@ -176,12 +176,12 @@ function BetaModal({ onClose }) {
     "בסוף השיחה נשמח לפידבק, זה עוזר לנו להשתפר.",
   ];
   return (
-    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(30,58,138,0.18)",
+    <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(117,117,117,0.18)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
       <div style={{ background:"#F9F6EE", borderRadius:"24px", padding:"28px 24px",
                     maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
         <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.15rem", fontWeight:700,
-                      color:"#1e3a8a", marginBottom:"16px", textAlign:"center" }}>טוב שהגעת לסינקה 👋</div>
+                      color:"#757575", marginBottom:"16px", textAlign:"center" }}>טוב שהגעת לסינקה 👋</div>
         <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
             <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.86rem",
@@ -189,7 +189,7 @@ function BetaModal({ onClose }) {
           ))}
         </ol>
         <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"50px",
-          background:"#1e3a8a", color:"white", border:"none", borderRadius:"9999px",
+          background:"#757575", color:"white", border:"none", borderRadius:"9999px",
           fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}>
           הבנתי, אפשר להתחיל ✦
         </button>
@@ -277,7 +277,8 @@ export default function App() {
         // Load prior session concepts + history for memory injection
         const prev = await fetchPreviousConcepts(recordId);
         previousConceptsRef.current = prev;
-        const history = await fetchFullHistory(recordId, 10);
+        const username = result?.fields?.Username || recordId;
+        const history = await fetchFullHistory(username, 10);
         sessionHistoryRef.current = history;
         console.log("[Memory] Previous concepts:", prev);
         console.log("[Memory] Session history:", history.length, "sessions");
@@ -323,7 +324,7 @@ export default function App() {
     // Load prior concepts + history for memory
     const prev = await fetchPreviousConcepts(rid).catch(() => []);
     previousConceptsRef.current = prev;
-    const history = await fetchFullHistory(rid, 10).catch(() => []);
+    const history = await fetchFullHistory(fields.Username || rid, 10).catch(() => []);
     sessionHistoryRef.current = history;
     console.log("[Memory] Previous concepts loaded:", prev);
     console.log("[Memory] Session history loaded:", history.length, "sessions");
@@ -557,7 +558,7 @@ export default function App() {
       )}
       {screen === "history" && (
         <HistoryScreen
-          userRecordId={recordId}
+          username={userRecord?.Username || recordId}
           firstName={userRecord?.First_Name || ""}
           onClose={() => setScreen("chat")}
         />
