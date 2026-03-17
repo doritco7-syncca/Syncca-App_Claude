@@ -3,8 +3,8 @@ import { useState } from "react";
 
 const COLORS = {
   stone: "#F9F6EE", frame: "#E8E0F0",
-  primary: "#ea580c",
-  secondary: "#1e3a8a", secondaryH: "#1e40af",
+  primary: "#C62828",
+  secondary: "#757575", secondaryH: "#1e40af",
   text: "#1a1a1a", muted: "#6b7280",
 };
 
