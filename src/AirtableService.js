@@ -278,23 +278,22 @@ export async function finalizeSession({ logRecordId, fullTranscript, conceptsSur
 }
 
 // Fetch last N sessions with full data for History screen
-export async function fetchFullHistory(username, limit = 10) {
-  if (!username) return [];
-
-  // User_Link stores the Username (primary field of Users table), not the record ID
-  const formula = `FIND("${username}", ARRAYJOIN({User_Link}))`;
+export async function fetchFullHistory(userRecordId, limit = 10) {
+  if (!userRecordId) return [];
+  // User_Link is a Linked Record field — Airtable stores and matches by record ID (recXXX)
+  const formula = `FIND("${userRecordId}", ARRAYJOIN({User_Link}))`;
   const fieldList = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used", "Session_Insight", "Full_Transcript"];
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
   const data = await airtableFetch(url);
-  console.log("[fetchFullHistory] records found:", data.records?.length, "for username:", username);
+  console.log("[fetchFullHistory] records found:", data.records?.length, "for recordId:", userRecordId);
   return (data.records || []).map(rec => ({
-    id:        rec.id,
-    date:      rec.fields?.Created_At || "",
-    concepts:  (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean),
-    duration:  rec.fields?.Session_Duration_Minutes || null,
-    feedback:  rec.fields?.Feedback || "",
-    language:  rec.fields?.Language_Used || "Hebrew",
+    id:         rec.id,
+    date:       rec.fields?.Created_At || "",
+    concepts:   (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean),
+    duration:   rec.fields?.Session_Duration_Minutes || null,
+    feedback:   rec.fields?.Feedback || "",
+    language:   rec.fields?.Language_Used || "Hebrew",
     insight:    rec.fields?.Session_Insight || "",
     transcript: rec.fields?.Full_Transcript || "",
   }));
