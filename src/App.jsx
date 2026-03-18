@@ -141,7 +141,7 @@ function TimeoutModal({ onClose, logRecordId }) {
                        fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
                        direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"34px",
-              background:"#757575", color:"white", border:"none", borderRadius:"9999px",
+              background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
               fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"0.95rem", cursor:"pointer" }}>
               שלח פידבק וסיים
             </button>
@@ -189,7 +189,7 @@ function BetaModal({ onClose }) {
           ))}
         </ol>
         <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"36px",
-          background:"#757575", color:"white", border:"none", borderRadius:"9999px",
+          background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
           fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}>
           הבנתי, אפשר להתחיל ✦
         </button>
