@@ -570,6 +570,7 @@ export default function App() {
         <HistoryScreen
           username={userRecord?.Username || recordId}
           firstName={userRecord?.First_Name || ""}
+          conceptLexicon={conceptLexicon}
           onClose={() => setScreen("chat")}
         />
       )}
