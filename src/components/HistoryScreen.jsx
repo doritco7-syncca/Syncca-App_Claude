@@ -42,12 +42,23 @@ function formatTime(iso) {
   return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoryScreen({ username, firstName, onClose }) {
+export default function HistoryScreen({ username, firstName, onClose, conceptLexicon = [] }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [expanded, setExpanded]             = useState(null);
   const [transcriptOpen, setTranscriptOpen] = useState(null);
+  const [activeConcept, setActiveConcept]   = useState(null); // { word, explanation, sessionIdx }
+
+  function findConceptEntry(word) {
+    if (!word) return null;
+    const w = word.toLowerCase().trim();
+    return conceptLexicon.find(e =>
+      e.word?.toLowerCase() === w ||
+      e.englishTerm?.toLowerCase() === w ||
+      e.aliases?.some(a => a.toLowerCase().trim() === w)
+    );
+  }
   const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
 
   // Load previously deleted session IDs from localStorage
@@ -273,17 +284,53 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                           textTransform: "uppercase", letterSpacing: "0.04em",
                         }}>✦ מושגים</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                          {s.concepts.map((c, ci) => (
-                            <span key={ci} style={{
-                              padding: "3px 11px", borderRadius: 9999,
-                              background: "rgba(254,215,170,0.45)",
-                              border: "1.5px solid rgba(198,40,40,0.3)",
-                              color: COLORS.primary,
-                              fontFamily: "'Alef', sans-serif",
-                              fontSize: "0.76rem", fontWeight: 600,
-                            }}>{c}</span>
-                          ))}
+                          {s.concepts.map((c, ci) => {
+                            const entry = findConceptEntry(c);
+                            const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
+                            return (
+                              <span key={ci}
+                                onClick={() => setActiveConcept(
+                                  isActive ? null : { word: c, entry, sessionIdx: i }
+                                )}
+                                style={{
+                                  padding: "3px 11px", borderRadius: 9999,
+                                  background: isActive ? "rgba(198,40,40,0.15)" : "rgba(254,215,170,0.45)",
+                                  border: `1.5px solid ${isActive ? COLORS.primary : "rgba(198,40,40,0.3)"}`,
+                                  color: COLORS.primary,
+                                  fontFamily: "'Alef', sans-serif",
+                                  fontSize: "0.76rem", fontWeight: 600,
+                                  cursor: entry ? "pointer" : "default",
+                                  userSelect: "none",
+                                }}>{entry ? "✦ " : ""}{entry?.word || c}</span>
+                            );
+                          })}
                         </div>
+
+                        {/* Concept explanation */}
+                        {activeConcept?.sessionIdx === i && activeConcept.entry && (
+                          <div style={{
+                            marginTop: "8px",
+                            background: "#f0fdf4",
+                            border: "1.5px solid #bbf7d0",
+                            borderRadius: 12, padding: "10px 14px",
+                            direction: "rtl", position: "relative",
+                          }}>
+                            <div style={{
+                              fontFamily: "'Alef', sans-serif",
+                              fontSize: "0.88rem", fontWeight: 700,
+                              color: COLORS.secondary, marginBottom: "4px",
+                            }}>{activeConcept.entry.word}</div>
+                            <div style={{
+                              fontFamily: "'Alef', sans-serif",
+                              fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.65,
+                            }}>{activeConcept.entry.explanation}</div>
+                            <button onClick={() => setActiveConcept(null)} style={{
+                              position: "absolute", top: 8, left: 10,
+                              background: "none", border: "none", cursor: "pointer",
+                              color: COLORS.muted, fontSize: "0.75rem",
+                            }}>✕</button>
+                          </div>
+                        )}
                       </div>
                     )}
 
