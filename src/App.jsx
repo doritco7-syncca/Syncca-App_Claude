@@ -476,10 +476,20 @@ export default function App() {
 
   // ── FINALIZE SESSION (generate insight + save) ────────────────
   async function handleFinalizeSession() {
-    const logId     = logRecordIdRef.current;
-    const transcript = fullTranscriptRef.current;
+    const logId      = logRecordIdRef.current;
     const concepts   = conceptsIntroducedRef.current;
-    if (!logId || !transcript) return;
+    if (!logId) return;
+
+    // Build transcript: use ref if available, else reconstruct from messages state
+    let transcript = fullTranscriptRef.current;
+    if (!transcript && messages.length > 1) {
+      transcript = messages
+        .filter(m => m.role === "user" || m.role === "syncca")
+        .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
+        .join("\n");
+    }
+    if (!transcript) return; // truly empty session — nothing to save
+
     try {
       const insight = await generateSessionInsight(transcript, concepts);
       await finalizeSession({
