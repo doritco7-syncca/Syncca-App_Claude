@@ -131,8 +131,7 @@ function TimeoutModal({ onClose, logRecordId }) {
             </div>
             <p style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.88rem", color:"#374151",
                         lineHeight:1.7, marginBottom:"18px", textAlign:"center" }}>
-              30 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך.
-              נשמח לשמוע מה חשבת.
+              30 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך. נשמח לשמוע מה עלה בשיחה.
             </p>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
               placeholder="מה עזר? מה אפשר לשפר?"
@@ -143,7 +142,7 @@ function TimeoutModal({ onClose, logRecordId }) {
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"34px",
               background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
               fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize: "0.95rem", cursor:"pointer" }}>
-              שלח פידבק וסיים
+              שליחת פידבק וסיום
             </button>
           </>
         ) : (
@@ -153,7 +152,7 @@ function TimeoutModal({ onClose, logRecordId }) {
                           color:"#16a34a", marginBottom:"6px" }}>תודה!</div>
             <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.88rem", color:"#374151",
                           lineHeight:1.6 }}>
-              נתראה בסינק הבא.
+              תודה! נתראה בסינק הבא.
             </div>
           </div>
         )}
@@ -170,10 +169,10 @@ function TimeoutModal({ onClose, logRecordId }) {
 // ─── Beta modal ───────────────────────────────────────────────────
 function BetaModal({ onClose }) {
   const items = [
-    "סינקה היא המקום שלך כשעולה רצון להבין קצת יותר, ללמוד או ליצור שינוי בתקשורת הבין אישית שלך. היא מבוססת על ידע וניסיון של שנים בליווי זוגות ומשפחות, ונועדה לעזור לך לזהות ולהבין דפוסי תקשורת שעלולים לחנוק את האהבה — ולגלות איך משתחררים מהם..",
-    "במהלך השיחה עם סינקה, יתכן שהיא תציע לך מושגים רלבנטים. הם מיועדים לעזור לנו לתת מילים למה שקורה לכולנו בפנים. ניתן להרחיב אותם (על ידי לחיצה), ואף לשמור אותם בכרטיס האישי שלך (שנמצא בראש הצ'אט).",
+    "סינקה היא המקום שלך כשעולה רצון להבין קצת יותר, ללמוד או ליצור שינוי בתקשורת הבין אישית. היא מבוססת על ידע וניסיון של שנים בליווי זוגות ומשפחות, ונועדה לעזור בזיהוי והבנה של דפוסי תקשורת ואיך משתחררים מהם.",
+    "במהלך השיחה, יתכן שסינקה תציע מושגים רלבנטיים. הם מיועדים לתת מילים למה שקורה לנו בפנים. ניתן להרחיב אותם (בלחיצה), ואף לשמור אותם בכרטיס האישי (שנמצא בראש הצ'אט).",
     "כל שיחה מוגבלת ל-30 דקות כדי לאפשר זמן ממוקד לעיבוד והתבוננות.",
-    "בסוף השיחה נשמח לפידבק, זה עוזר לנו להשתפר.",
+    "בסוף השיחה, נשמח לקבל פידבק — זה עוזר לנו להשתפר.",
   ];
   return (
     <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(117,117,117,0.18)",
