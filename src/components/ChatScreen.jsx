@@ -54,14 +54,14 @@ function ConceptTooltip({ concept, onSave, onClose }) {
           color: COLORS.secondary, marginBottom: "10px",
         }}>{concept.word}</div>
         <div style={{
-          fontFamily: "'Alef', sans-serif", fontSize: "1rem",
+          fontFamily: "'Alef', sans-serif", fontSize: "1.5rem",
           color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
         }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => { onSave?.(concept); onClose(); }} style={{
             flex: 1, height: "44px", background: COLORS.primary, color: "white",
             border: "none", borderRadius: "9999px",
-            fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.98rem",
+            fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "1.47rem",
             cursor: "pointer",
           }}>✦ שמור מושג זה</button>
           <button onClick={onClose} style={{
@@ -74,7 +74,7 @@ function ConceptTooltip({ concept, onSave, onClose }) {
         <button onClick={onClose} style={{
           position: "absolute", top: "14px", left: "14px",
           background: "none", border: "none", cursor: "pointer",
-          color: COLORS.muted, fontSize: "1.1rem",
+          color: COLORS.muted, fontSize: "1.65rem",
         }}>✕</button>
       </div>
     </div>
@@ -170,7 +170,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
             <span style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "0.92rem", fontWeight: 700,
+              fontSize: "1.38rem", fontWeight: 700,
               color: COLORS.secondary, flexShrink: 0, marginLeft: "2px",
             }}>✦ שלי:</span>
             {savedConcepts.map((c, i) => (
@@ -182,7 +182,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                   border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(198,40,40,0.4)"}`,
                   background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
                   color: COLORS.primary,
-                  fontFamily: "'Alef', sans-serif", fontSize: "0.88rem", fontWeight: 600,
+                  fontFamily: "'Alef', sans-serif", fontSize: "1.32rem", fontWeight: 600,
                   cursor: "pointer", transition: "all 0.15s",
                 }}>{resolveWord(c)}</button>
                 <button
@@ -190,7 +190,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                   title="הסר מושג"
                   style={{
                     background: "none", border: "none", cursor: "pointer",
-                    color: "rgba(180,80,0,0.5)", fontSize: "0.65rem",
+                    color: "rgba(180,80,0,0.5)", fontSize: "1.3rem",
                     padding: "0 1px", lineHeight: 1,
                     display: "flex", alignItems: "center",
                   }}>✕</button>
@@ -207,17 +207,17 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
             }}>
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "1.05rem", fontWeight: 700,
+                fontSize: "1.58rem", fontWeight: 700,
                 color: COLORS.secondary, marginBottom: "3px",
               }}>{resolveWord(activeConcept)}</div>
               <div style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "1.35rem",
                 color: COLORS.text, lineHeight: 1.55,
               }}>{resolveExplanation(activeConcept)}</div>
               <button onClick={() => setActiveConcept(null)} style={{
                 position: "absolute", top: "8px", left: "8px",
                 background: "none", border: "none", cursor: "pointer",
-                color: COLORS.muted, fontSize: "0.92rem", lineHeight: 1,
+                color: COLORS.muted, fontSize: "1.38rem", lineHeight: 1,
               }}>✕</button>
             </div>
           )}
@@ -237,7 +237,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 flex: 1, height: "34px", borderRadius: "9999px",
                 border: `1.5px solid ${COLORS.border}`,
                 padding: "0 13px",
-                fontFamily: "'Alef', sans-serif", fontSize: "0.92rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "1.38rem",
                 background: "white", outline: "none", direction: "rtl",
               }}
             />
@@ -245,7 +245,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               height: "34px", padding: "0 13px", flexShrink: 0,
               background: COLORS.secondary, color: "white",
               border: "none", borderRadius: "9999px",
-              fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.88rem",
+              fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "1.32rem",
               cursor: feedback.trim() ? "pointer" : "not-allowed",
               opacity: feedback.trim() ? 1 : 0.5,
             }}>שלח ✓</button>
@@ -253,7 +253,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
         ) : (
           <div style={{
             flex: 1, textAlign: "center", color: "#16a34a",
-            fontFamily: "'Alef', sans-serif", fontSize: "0.92rem", fontWeight: 600,
+            fontFamily: "'Alef', sans-serif", fontSize: "1.38rem", fontWeight: 600,
           }}>✓ תודה! נתראה בסינק הבא.</div>
         )}
       </div>
@@ -298,7 +298,22 @@ export default function ChatScreen({
     const id = setInterval(() => setSecondsLeft(s => {
       const next = s - 1;
       if (next <= 1)   { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
-      if (next <= 300 && next > 299) setShowWarning(true);  // 5 minutes left (catches even if skipped)
+      if (next <= 300 && next > 299) {
+        setShowWarning(true);
+        // Play bell sound
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.4);
+          gain.gain.setValueAtTime(0.4, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 1.2);
+        } catch(e) { /* audio not supported */ }
+      }
       return next;
     }), 1000);
     return () => clearInterval(id);
@@ -393,14 +408,13 @@ export default function ChatScreen({
               onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
               onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
               >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={COLORS.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6"/>
                 </svg>
               </button>
               <span style={{
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "0.72rem", fontWeight: 600,
+                fontSize: "1.44rem", fontWeight: 600,
                 color: isLow ? COLORS.primary : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
@@ -408,35 +422,31 @@ export default function ChatScreen({
 
             {/* Center: logo + name */}
             <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "1px",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
               flex: 1,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <LogoSymbol size={18} />
+                <LogoSymbol size={20} />
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "1.1rem", fontWeight: 700, color: COLORS.primary,
+                  fontSize: "1.5rem", fontWeight: 700, color: COLORS.primary,
                 }}>Syncca</span>
-                <span style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "0.7rem", color: COLORS.secondary, fontWeight: 600,
-                }}>| Conscious Love</span>
               </div>
               {displayName && (
                 <div style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "0.88rem", fontWeight: 700,
-                  color: "#16a34a", direction: "rtl",
-                }}>{`בסינק עם ${displayName}`}</div>
+                  fontFamily: "'Alef', sans-serif",
+                  fontSize: "1rem", fontWeight: 600,
+                  color: COLORS.secondary, direction: "rtl",
+                }}>{`עם ${displayName}`}</div>
               )}
             </div>
 
             {/* Right: history + personal card */}
             <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end", gap: "4px" }}>
               <button className="icon-btn" onClick={onOpenHistory}
-                title="היסטוריית שיחות" style={{ fontSize: "1.1rem" }}>📋</button>
+                title="היסטוריית שיחות" style={{ fontSize: "2rem" }}>📋</button>
               <button className="icon-btn" onClick={onOpenPersonalCard}
-                title="כרטיס אישי" style={{ fontSize: "1.05rem" }}>👤</button>
+                title="כרטיס אישי" style={{ fontSize: "2rem" }}>👤</button>
             </div>
           </div>
 
@@ -450,14 +460,14 @@ export default function ChatScreen({
               direction: "rtl", flexShrink: 0, gap: "8px",
             }}>
               <span style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "0.95rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "1.43rem",
                 color: "#92400e", lineHeight: 1.6,
               }}>
                 סליחה {displayName || ""}, אנחנו מתקרבים לסיום הזמן. האם תרצה לכתוב לי משהו שאתה לוקח מהשיחה שלנו? אתה גם מוזמן להישאר ולמלא פידבק עבורנו.
               </span>
               <button onClick={() => setShowWarning(false)} style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: "#92400e", fontSize: "0.95rem", padding: 0, flexShrink: 0,
+                color: "#92400e", fontSize: "1.43rem", padding: 0, flexShrink: 0,
               }}>✕</button>
             </div>
           )}
@@ -474,7 +484,7 @@ export default function ChatScreen({
                 alignItems: msg.role === "user" ? "flex-end" : "flex-start",
               }}>
                 <div style={{
-                  fontSize: "0.66rem", fontWeight: 600,
+                  fontSize: "1.32rem", fontWeight: 600,
                   color: COLORS.muted, marginBottom: "3px",
                   paddingLeft: "4px", paddingRight: "4px",
                 }}>
@@ -484,7 +494,7 @@ export default function ChatScreen({
                   background: COLORS.primaryLight,
                   borderRadius: "18px 0 18px 18px",
                   padding: "13px 17px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "1.04rem",
+                  fontFamily: "'Alef', sans-serif", fontSize: "1.56rem",
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 } : {
@@ -492,7 +502,7 @@ export default function ChatScreen({
                   border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "1.04rem",
+                  fontFamily: "'Alef', sans-serif", fontSize: "1.56rem",
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 }}>
@@ -505,7 +515,7 @@ export default function ChatScreen({
                 </div>
                 {msg.timestamp && (
                   <div style={{
-                    fontSize: "0.6rem", color: COLORS.muted,
+                    fontSize: "1.2rem", color: COLORS.muted,
                     marginTop: "3px", paddingLeft: "4px", paddingRight: "4px",
                   }}>
                     {new Date(msg.timestamp).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
@@ -521,7 +531,7 @@ export default function ChatScreen({
                   background: "#FDFBF7", border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px", color: COLORS.muted,
-                  fontStyle: "italic", fontSize: "0.98rem",
+                  fontStyle: "italic", fontSize: "1.47rem",
                   fontFamily: "'Alef', sans-serif",
                 }}>...</div>
               </div>
@@ -540,12 +550,12 @@ export default function ChatScreen({
                 marginBottom: "8px", padding: "0 2px",
               }}>
                 <div style={{
-                  fontSize: "0.6rem", color: COLORS.muted,
+                  fontSize: "1.2rem", color: COLORS.muted,
                   fontFamily: "'Alef', sans-serif",
                   letterSpacing: "0.08em", textTransform: "uppercase",
                 }}>🔒 פרטי ומאובטח</div>
                 <div style={{
-                  fontSize: "0.6rem", color: COLORS.muted,
+                  fontSize: "1.2rem", color: COLORS.muted,
                   fontFamily: "'Alef', sans-serif", direction: "rtl",
                 }}>
                   {input.length > 0 ? `${input.length} תווים` : ""}

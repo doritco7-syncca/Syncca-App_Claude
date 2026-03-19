@@ -46,12 +46,12 @@ function TermsModal({ onClose }) {
         boxShadow: STONE_SHADOW, direction: "rtl",
       }}>
         <div style={{
-          fontFamily: "'Alef', sans-serif", fontSize: "1.1rem", fontWeight: 700,
+          fontFamily: "'Alef', sans-serif", fontSize: "1.65rem", fontWeight: 700,
           color: "#757575", marginBottom: "16px", textAlign: "center",
         }}>תנאי שימוש — סינקה</div>
         {TERMS_TEXT.map((para, i) => (
           <p key={i} style={{
-            fontFamily: "'Alef', sans-serif", fontSize: "0.96rem",
+            fontFamily: "'Alef', sans-serif", fontSize: "1.44rem",
             color: "#1a1a1a", lineHeight: 1.7, marginBottom: "12px",
           }}>{para}</p>
         ))}
@@ -59,7 +59,7 @@ function TermsModal({ onClose }) {
           marginTop: "8px", width: "100%",
           background: "#C62828", color: "white", border: "none",
           borderRadius: 9999, padding: "12px", cursor: "pointer",
-          fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 600,
+          fontFamily: "'Alef', sans-serif", fontSize: "1.5rem", fontWeight: 600,
         }}>הבנתי, סגור</button>
       </div>
     </div>
@@ -169,7 +169,7 @@ export default function LoginScreen({ onLogin, onBack }) {
             alignItems: "center", justifyContent: "center", width: "100%",
           }}>
             <div style={{
-              fontFamily: "'Alef', sans-serif", fontSize: "1rem",
+              fontFamily: "'Alef', sans-serif", fontSize: "1.5rem",
               color: COLORS.text, textAlign: "center", lineHeight: 1.72,
               direction: "rtl", maxWidth: "290px", opacity: 0.82,
             }}>
@@ -197,7 +197,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               />
               {error && (
                 <div style={{
-                  color: "#dc2626", fontSize: "0.86rem", textAlign: "right",
+                  color: "#dc2626", fontSize: "1.29rem", textAlign: "right",
                   direction: "rtl", marginTop: "6px", paddingRight: "8px",
                   fontFamily: "'Alef', sans-serif",
                 }}>{error}</div>
@@ -211,7 +211,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                 style={{
                   background: loading ? COLORS.primaryHover : (btnHover ? COLORS.primaryHover : COLORS.primary),
                   color: "#fff", border: "none", borderRadius: "9999px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "1.1rem", fontWeight: 700,
+                  fontFamily: "'Alef', sans-serif", fontSize: "1.65rem", fontWeight: 700,
                   height: "36px", width: "75%", cursor: loading ? "default" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
                   boxShadow: btnHover && !loading ? "0 8px 28px rgba(198,40,40,0.35)" : "0 4px 18px rgba(198,40,40,0.25)",
@@ -224,19 +224,19 @@ export default function LoginScreen({ onLogin, onBack }) {
 
             {/* Disclaimer */}
             <div className="lr" style={{
-              fontFamily: "'Alef', sans-serif", fontSize: "0.72rem", color: COLORS.muted,
+              fontFamily: "'Alef', sans-serif", fontSize: "1.44rem", color: COLORS.muted,
               textAlign: "center", direction: "rtl", lineHeight: 1.6, maxWidth: "280px",
             }}>
               השימוש מיועד למשתמשים מעל גיל 18. סינקה אינה תחליף לטיפול מקצועי.{" "}
               <button onClick={() => setShowTerms(true)} style={{
                 background: "none", border: "none", cursor: "pointer",
                 color: COLORS.secondary, fontFamily: "'Alef', sans-serif",
-                fontSize: "0.72rem", textDecoration: "underline", padding: 0,
+                fontSize: "1.44rem", textDecoration: "underline", padding: 0,
               }}>תנאי שימוש</button>
             </div>
 
             <div className="lr" style={{
-              fontFamily: "'Alef', sans-serif", fontSize: "0.6rem", fontWeight: 700,
+              fontFamily: "'Alef', sans-serif", fontSize: "1.2rem", fontWeight: 700,
               letterSpacing: "0.13em", textTransform: "uppercase",
               color: COLORS.primary, textAlign: "center",
             }}>SECURE &amp; PRIVATE CONNECTION</div>
@@ -245,7 +245,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               <div className="lr">
                 <button onClick={onBack} style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: COLORS.muted, fontSize: "0.92rem", fontFamily: "'Alef', sans-serif",
+                  color: COLORS.muted, fontSize: "1.38rem", fontFamily: "'Alef', sans-serif",
                   textDecoration: "underline", textDecorationColor: "#d1d5db",
                 }}>חזרה למסך הבית</button>
               </div>
