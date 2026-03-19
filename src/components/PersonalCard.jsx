@@ -294,7 +294,7 @@ export default function PersonalCard({
               transform: "translateX(-50%)",
               background: COLORS.stone, padding: "0 12px",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "0.8rem", fontWeight: 700,
+              fontSize: "0.92rem", fontWeight: 700,
               color: COLORS.secondary, whiteSpace: "nowrap",
             }}>✦ המושגים שלי</span>
           </div>
@@ -305,7 +305,7 @@ export default function PersonalCard({
               const displayConcepts = savedConcepts;
               return displayConcepts.length === 0 ? (
               <div style={{
-                color: COLORS.muted, fontSize: "0.82rem",
+                color: COLORS.muted, fontSize: "0.92rem",
                 fontFamily: "'Alef', sans-serif",
                 direction: "rtl", lineHeight: 1.6,
               }}>
@@ -345,17 +345,17 @@ export default function PersonalCard({
               }}>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "1rem", fontWeight: 700,
+                  fontSize: "1.1rem", fontWeight: 700,
                   color: "#757575", marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.82rem", color: "#374151", lineHeight: 1.6,
+                  fontSize: "0.92rem", color: "#374151", lineHeight: 1.6,
                 }}>{resolveExplanation(activeConcept)}</div>
                 <button onClick={() => setActiveConcept(null)} style={{
                   position: "absolute", top: "10px", left: "10px",
                   background: "none", border: "none", cursor: "pointer",
-                  color: "#6b7280", fontSize: "0.9rem", lineHeight: 1,
+                  color: "#6b7280", fontSize: "1rem", lineHeight: 1,
                 }}>✕</button>
               </div>
             )}
@@ -369,7 +369,7 @@ export default function PersonalCard({
           }}>
             {saveState === "error" && errMsg && (
               <div style={{
-                color: "#dc2626", fontSize: "0.76rem",
+                color: "#dc2626", fontSize: "0.86rem",
                 textAlign: "right", direction: "rtl",
                 marginBottom: "8px", paddingRight: "4px",
               }}>{errMsg}</div>
@@ -379,7 +379,7 @@ export default function PersonalCard({
                 background: saveBg, color: "#fff",
                 border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "1rem", fontWeight: 600,
+                fontSize: "1.1rem", fontWeight: 600,
                 height: "36px", width: "100%",
                 cursor: saveState === "saving" ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",

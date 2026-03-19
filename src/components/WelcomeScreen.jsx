@@ -124,7 +124,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 background: hovered ? COLORS.primaryHover : COLORS.primary,
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "1rem", fontWeight: 700,
+                fontSize: "1.1rem", fontWeight: 700,
                 height: "36px", width: "75%", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
                 boxShadow: hovered ? "0 8px 28px rgba(198,40,40,0.35)" : "0 4px 18px rgba(198,40,40,0.25)",
@@ -136,7 +136,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
 
             {userEmail && (
               <div style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "0.8rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.92rem",
                 color: COLORS.muted, direction: "rtl", textAlign: "center",
               }}>
                 <span>התנתקות מ-</span>
@@ -145,7 +145,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                   {" · "}
                   <button onClick={onLogout} style={{
                     background: "none", border: "none", cursor: "pointer",
-                    color: COLORS.muted, fontSize: "0.78rem",
+                    color: COLORS.muted, fontSize: "0.88rem",
                     textDecoration: "underline", fontFamily: "'Alef', sans-serif",
                   }}>יציאה</button>
                 </>}
