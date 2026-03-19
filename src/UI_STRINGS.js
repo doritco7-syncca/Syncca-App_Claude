@@ -23,10 +23,10 @@ export const UI_STRINGS = {
   // ── Login / Welcome Screen ──────────────────────────────────
  login: {
     headline:    { en: "The Space for Conscious Love", he: "המרחב שבו האהבה נושמת" },
-    line1: { en: "We are here to help you replace", he: "אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים" },
-    line2: { en: "the power struggles that dim love,", he: "יום אחר יום את האהבה, בשפה של תקשורת ישירה" },
-    line3: { en: "with mature, direct communication.", he: "ובוגרת, שרואה גם את העצמי וגם את האחר." },
-    line4: { en: "", he: "" },
+    line1: { en: "We are here to help you replace", he: "אני סינקה, ואני בינה מלאכותית שמאומנת בכלי תקשורת בין אישית" },
+    line2: { en: "the power struggles that dim love,", he: "שפותחו במשך עשרות שנים. אם הגעת לכאן," },
+    line3: { en: "with mature, direct communication.", he: "סימן שחשוב לך לגלות דרך חדשה." },
+    line4: { en: "", he: "אני איתך יד ביד." },
     emailLabel:       { en: "Email", he: "אימייל" },
     emailPlaceholder: { en: "judi@gmail.com", he: "judi@gmail.com" },
     ctaButton:        { en: "Start a Session with Syncca", he: "שניכנס ל״סינק״?" },
