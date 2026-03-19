@@ -101,9 +101,9 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               fontSize: "clamp(0.82rem,3vw,0.9rem)",
               color: COLORS.text, lineHeight: 1.85, opacity: 0.8,
             }}>
-              <p style={{ maxWidth: "340px" }}>אני סינקה, AI שמאומנת בכלי תקשורת בין אישית ייחודיים.</p>
-              <p style={{ maxWidth: "260px" }}>אם הגעת לכאן, סימן שחשוב לך</p>
-              <p style={{ maxWidth: "190px" }}>לגלות דרך חדשה,</p>
+              <p style={{ maxWidth: "310px" }}>אני סינקה, AI שמאומנת בכלי תקשורת</p>
+              <p style={{ maxWidth: "280px" }}>בין אישית ייחודיים. אם הגעת לכאן,</p>
+              <p style={{ maxWidth: "200px" }}>סימן שחשוב לך לגלות דרך חדשה,</p>
               <p style={{ maxWidth: "130px" }}>ואני איתך יד ביד.</p>
             </div>
           </div>
