@@ -125,11 +125,11 @@ function TimeoutModal({ onClose, logRecordId }) {
                     boxShadow:"0 8px 40px rgba(0,0,0,0.12)" }}>
         {!sent ? (
           <>
-            <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.2rem", fontWeight:700,
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.6rem", fontWeight:700,
                           color:"#757575", marginBottom:"10px", textAlign:"center" }}>
               זמן השיחה הסתיים 🙏
             </div>
-            <p style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.47rem", color:"#374151",
+            <p style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.98rem", color:"#374151",
                         lineHeight:1.7, marginBottom:"18px", textAlign:"center" }}>
               30 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך.
               נשמח לשמוע מה חשבת.
@@ -138,20 +138,20 @@ function TimeoutModal({ onClose, logRecordId }) {
               placeholder="מה עזר? מה אפשר לשפר?"
               style={{ width:"100%", height:"80px", border:"1.5px solid rgba(117,117,117,0.2)",
                        borderRadius:"12px", padding:"12px", fontFamily:"'Alef',sans-serif",
-                       fontSize: "1.47rem", background:"white", resize:"none", outline:"none",
+                       fontSize: "0.98rem", background:"white", resize:"none", outline:"none",
                        direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"34px",
               background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
-              fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize: "1.58rem", cursor:"pointer" }}>
+              fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize: "1.05rem", cursor:"pointer" }}>
               שלח פידבק וסיים
             </button>
           </>
         ) : (
           <div style={{ textAlign:"center", padding:"12px 0" }}>
-            <div style={{ fontSize: "1.5rem", marginBottom:"10px" }}>✦</div>
-            <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.65rem", fontWeight:700,
+            <div style={{ fontSize: "1rem", marginBottom:"10px" }}>✦</div>
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.1rem", fontWeight:700,
                           color:"#16a34a", marginBottom:"6px" }}>תודה!</div>
-            <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.47rem", color:"#374151",
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.98rem", color:"#374151",
                           lineHeight:1.6 }}>
               נתראה בסינק הבא.
             </div>
@@ -159,7 +159,7 @@ function TimeoutModal({ onClose, logRecordId }) {
         )}
         <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"30px",
           background:"transparent", color:"#6b7280", border:"1px solid #E5E0D8",
-          borderRadius:"9999px", fontFamily:"'Alef',sans-serif", fontSize: "1.5rem", cursor:"pointer" }}>
+          borderRadius:"9999px", fontFamily:"'Alef',sans-serif", fontSize: "1rem", cursor:"pointer" }}>
           סגירה
         </button>
       </div>
@@ -184,13 +184,13 @@ function BetaModal({ onClose }) {
                       color:"#757575", marginBottom:"16px", textAlign:"center" }}>טוב שהגעת לסינקה 👋</div>
         <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
-            <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.44rem",
+            <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.72rem",
                                  lineHeight:1.65, marginBottom:"10px", color:"#1a1a1a" }}>{item}</li>
           ))}
         </ol>
         <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"36px",
           background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
-          fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize: "1.65rem", cursor:"pointer" }}>
+          fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize: "1.1rem", cursor:"pointer" }}>
           הבנתי, אפשר להתחיל ✦
         </button>
       </div>
