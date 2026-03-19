@@ -250,9 +250,16 @@ export default function App() {
           // Re-hydrate saved concepts with real explanations now that lexicon is loaded
           setSavedConcepts(prev => prev.map(c => {
             const match = merged.find(e =>
-              e.englishTerm === c.englishTerm || e.word === c.word
+              e.englishTerm === c.englishTerm ||
+              e.word === c.word ||
+              e.word === c.englishTerm ||        // stored as English, find by Hebrew
+              e.englishTerm === c.word ||         // stored as Hebrew, find by English
+              e.aliases?.includes(c.word) ||
+              e.aliases?.includes(c.englishTerm)
             );
-            return match ? { ...c, word: match.word, explanation: match.explanation } : c;
+            return match
+              ? { word: match.word, englishTerm: match.englishTerm, explanation: match.explanation }
+              : c;
           }));
         }
       })
@@ -268,10 +275,20 @@ export default function App() {
         if (result?.fields) {
           setUserRecord(result.fields);
           // Restore saved concepts wallet from Airtable
-          const saved = (result.fields.Saved_Concepts || "")
-            .split(",").map(s => s.trim()).filter(Boolean)
-            .map(w => ({ word: w, englishTerm: w, explanation: "" }));
-          if (saved.length) setSavedConcepts(saved);
+          const savedRaw = (result.fields.Saved_Concepts || "")
+            .split(",").map(s => s.trim()).filter(Boolean);
+          if (savedRaw.length) {
+            const enriched = savedRaw.map(w => {
+              const entry = conceptLexicon.find(e =>
+                e.word === w || e.englishTerm === w ||
+                e.aliases?.includes(w)
+              );
+              return entry
+                ? { word: entry.word, englishTerm: entry.englishTerm, explanation: entry.explanation }
+                : { word: w, englishTerm: w, explanation: "" };
+            });
+            setSavedConcepts(enriched);
+          }
         }
 
         // Load prior session concepts + history for memory injection
@@ -312,11 +329,21 @@ export default function App() {
     localStorage.setItem("syncca_email",     email);
     localStorage.setItem("syncca_record_id", rid);
 
-    // Restore saved concepts wallet
-    const saved = (fields.Saved_Concepts || "")
-      .split(",").map(s => s.trim()).filter(Boolean)
-      .map(w => ({ word: w, englishTerm: w, explanation: "" }));
-    if (saved.length) setSavedConcepts(saved);
+    // Restore saved concepts wallet — enrich with lexicon
+    const savedRaw = (fields.Saved_Concepts || "")
+      .split(",").map(s => s.trim()).filter(Boolean);
+    if (savedRaw.length) {
+      const enriched = savedRaw.map(w => {
+        const entry = conceptLexicon.find(e =>
+          e.word === w || e.englishTerm === w ||
+          e.aliases?.includes(w)
+        );
+        return entry
+          ? { word: entry.word, englishTerm: entry.englishTerm, explanation: entry.explanation }
+          : { word: w, englishTerm: w, explanation: "" };
+      });
+      setSavedConcepts(enriched);
+    }
 
     // Increment sync count — result tells us new vs returning
     const newSyncCount = await incrementSyncCount(rid, fields.Sync_Count || 0);
@@ -454,7 +481,7 @@ export default function App() {
 
     // Write to Users.Saved_Concepts — atomic GET+merge in AirtableService
     if (recordId) {
-      const words = updated.map(c => c.englishTerm || c.word).filter(Boolean);
+      const words = updated.map(c => c.word || c.englishTerm).filter(Boolean); // save Hebrew word
       console.log("[handleSaveConcept] writing to Airtable:", words, "recordId:", recordId);
       updateSavedConcepts(recordId, words)
         .then(() => console.log("[handleSaveConcept] ✓ Airtable updated:", words))
@@ -468,7 +495,7 @@ export default function App() {
     const updated = savedConceptsRef.current.filter(c => c.word !== concept.word);
     setSavedConcepts(updated);
     if (recordId) {
-      const words = updated.map(c => c.englishTerm || c.word).filter(Boolean);
+      const words = updated.map(c => c.word || c.englishTerm).filter(Boolean); // save Hebrew word
       overwriteSavedConcepts(recordId, words)
         .catch(e => console.error("[handleDeleteConcept] ✗ failed:", e));
     }
