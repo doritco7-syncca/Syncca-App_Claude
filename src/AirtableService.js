@@ -147,21 +147,12 @@ export async function fetchSavedConcepts(recordId) {
 
 export async function updateSavedConcepts(recordId, allConceptWords) {
   if (!recordId || !allConceptWords?.length) return;
-
-  // GET existing saved concepts from server
-  let existing = [];
-  try {
-    const rec = await airtableFetch(`Users/${recordId}`);
-    existing  = (rec.fields?.Saved_Concepts || "").split(",").map(s => s.trim()).filter(Boolean);
-  } catch (e) {
-    console.warn("[updateSavedConcepts] GET failed — writing client list only:", e);
-  }
-
-  const merged = [...new Set([...existing, ...allConceptWords])];
-  console.log("[updateSavedConcepts] Writing:", merged);
+  // allConceptWords is the FULL updated list from client — just overwrite.
+  // No GET+merge needed (that was causing English+Hebrew duplicates).
+  console.log("[updateSavedConcepts] Writing:", allConceptWords);
   return airtableFetch(`Users/${recordId}`, {
     method: "PATCH",
-    body: JSON.stringify({ fields: { Saved_Concepts: merged.join(", ") } }),
+    body: JSON.stringify({ fields: { Saved_Concepts: allConceptWords.join(", ") } }),
   });
 }
 
