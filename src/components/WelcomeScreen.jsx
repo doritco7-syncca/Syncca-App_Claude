@@ -101,9 +101,11 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               fontSize: "clamp(0.97rem,3.5vw,1.05rem)",
               color: COLORS.text, lineHeight: 1.8, opacity: 0.82,
             }}>
-              <p style={{ maxWidth: "272px" }}>אנחנו כאן כדי לעזור להחליף את מאבקי הכוח שמכבים יום אחר יום את האהבה,</p>
-              <p style={{ maxWidth: "200px" }}>בשפה של תקשורת ישירה ובוגרת,</p>
-              <p style={{ maxWidth: "142px" }}>שרואה גם את האחר.</p>
+              <p style={{ maxWidth: "272px" }}>אני סינקה, בינה מלאכותית שמאומנת בכלים של תקשורת בין אישית,</p>
+              <p style={{ maxWidth: "200px" }}>שפותחו במשך עשרות שנים. אם הגעת לכאן,</p>
+              <p style={{ maxWidth: "142px" }}>סימן שחשוב לך לגלות דרך חדשה,</p>
+              <p style={{ maxWidth: "110px" }}>ואני איתך יד ביד.</p>
+
             </div>
           </div>
 
