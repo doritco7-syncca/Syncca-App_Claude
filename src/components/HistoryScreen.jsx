@@ -124,7 +124,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <button onClick={onClose} style={{
               background: "none", border: "none", cursor: "pointer",
-              color: COLORS.muted, fontSize: "1.1rem", padding: "4px",
+              color: COLORS.muted, fontSize: "1rem", padding: "4px",
               display: "flex", alignItems: "center",
             }}>✕</button>
             <div style={{ textAlign: "center", flex: 1 }}>
@@ -132,7 +132,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                 <LogoSymbol size={18} />
                 <span style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "1.05rem", fontWeight: 700,
+                  fontSize: "0.95rem", fontWeight: 700,
                   color: COLORS.secondary, letterSpacing: "0.01em",
                 }}>היסטוריית השיחות שלי</span>
               </div>
@@ -155,7 +155,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
             <div style={{
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "1.1rem", color: COLORS.muted,
+              fontSize: "1rem", color: COLORS.muted,
             }}>טוענת שיחות...</div>
           )}
 
@@ -163,7 +163,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
             <div style={{
               textAlign: "center", marginTop: "60px", padding: "0 24px",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "0.92rem", color: "#dc2626",
+              fontSize: "0.82rem", color: "#dc2626",
             }}>{error}</div>
           )}
 
@@ -171,7 +171,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
             <div style={{
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "1.1rem", color: COLORS.muted,
+              fontSize: "1rem", color: COLORS.muted,
             }}>עדיין אין שיחות שמורות{name}.</div>
           )}
 
@@ -200,7 +200,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                   style={{
                     position: "absolute", top: 10, left: 10,
                     background: "none", border: "none", cursor: "pointer",
-                    color: COLORS.muted, fontSize: "1rem",
+                    color: COLORS.muted, fontSize: "0.9rem",
                     padding: "4px 6px", borderRadius: 8,
                     lineHeight: 1, zIndex: 10,
                   }}>🗑</button>
@@ -222,19 +222,19 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                       color: i === 0 ? "white" : COLORS.secondary,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontFamily: "'Alef', sans-serif",
-                      fontSize: "1.1rem", fontWeight: 400, flexShrink: 0,
+                      fontSize: "1rem", fontWeight: 400, flexShrink: 0,
                     }}>{sessions.length - i}</div>
 
                     {/* Date + time */}
                     <div style={{ flex: 1 }}>
                       <div style={{
                         fontFamily: "'Alef', sans-serif",
-                        fontSize: "1.05rem", fontWeight: 400,
+                        fontSize: "0.95rem", fontWeight: 400,
                         color: COLORS.secondary,
                       }}>{formatDate(s.date)}</div>
                       <div style={{
                         fontFamily: "'Alef', sans-serif",
-                        fontSize: "0.86rem", color: COLORS.muted,
+                        fontSize: "0.76rem", color: COLORS.muted,
                         marginTop: "1px",
                       }}>
                         {formatTime(s.date)}
@@ -298,7 +298,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                                   border: `1.5px solid ${isActive ? COLORS.primary : "rgba(198,40,40,0.3)"}`,
                                   color: COLORS.primary,
                                   fontFamily: "'Alef', sans-serif",
-                                  fontSize: "0.86rem", fontWeight: 600,
+                                  fontSize: "0.76rem", fontWeight: 600,
                                   cursor: entry ? "pointer" : "default",
                                   userSelect: "none",
                                 }}>{entry ? "✦ " : ""}{entry?.word || c}</span>
@@ -317,12 +317,12 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           }}>
                             <div style={{
                               fontFamily: "'Alef', sans-serif",
-                              fontSize: "0.98rem", fontWeight: 700,
+                              fontSize: "0.88rem", fontWeight: 700,
                               color: COLORS.secondary, marginBottom: "4px",
                             }}>{activeConcept.entry.word}</div>
                             <div style={{
                               fontFamily: "'Alef', sans-serif",
-                              fontSize: "0.92rem", color: COLORS.text, lineHeight: 1.65,
+                              fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.65,
                             }}>{activeConcept.entry.explanation}</div>
                             <button onClick={() => setActiveConcept(null)} style={{
                               position: "absolute", top: 8, left: 10,
@@ -339,7 +339,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                       <div>
                         <div style={{
                           fontFamily: "'Alef', sans-serif",
-                          fontSize: "0.95rem", fontWeight: 400,
+                          fontSize: "0.85rem", fontWeight: 400,
                           color: COLORS.secondary, marginBottom: "6px",
                           letterSpacing: "0.02em",
                         }}>✦ פידבק</div>
@@ -413,7 +413,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     {!hasConcepts && !hasFeedback && !hasTranscript && (
                       <div style={{
                         fontFamily: "'Alef', sans-serif",
-                        fontSize: "0.92rem", color: COLORS.muted,
+                        fontSize: "0.82rem", color: COLORS.muted,
                         textAlign: "center", padding: "8px 0",
                       }}>אין פרטים נוספים לשיחה זו.</div>
                     )}

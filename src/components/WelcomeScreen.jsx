@@ -124,7 +124,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 background: hovered ? COLORS.primaryHover : COLORS.primary,
                 color: "#fff", border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "1.65rem", fontWeight: 700,
+                fontSize: "1rem", fontWeight: 700,
                 height: "36px", width: "75%", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
                 boxShadow: hovered ? "0 8px 28px rgba(198,40,40,0.35)" : "0 4px 18px rgba(198,40,40,0.25)",
@@ -136,7 +136,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
 
             {userEmail && (
               <div style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "1.38rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
                 color: COLORS.muted, direction: "rtl", textAlign: "center",
               }}>
                 <span>התנתקות מ-</span>
@@ -145,7 +145,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                   {" · "}
                   <button onClick={onLogout} style={{
                     background: "none", border: "none", cursor: "pointer",
-                    color: COLORS.muted, fontSize: "1.32rem",
+                    color: COLORS.muted, fontSize: "0.66rem",
                     textDecoration: "underline", fontFamily: "'Alef', sans-serif",
                   }}>יציאה</button>
                 </>}
@@ -154,7 +154,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
 
             <div style={{
               display: "flex", alignItems: "center", gap: "8px",
-              fontFamily: "'Alef', sans-serif", fontSize: "1.2rem", fontWeight: 500,
+              fontFamily: "'Alef', sans-serif", fontSize: "0.6rem", fontWeight: 500,
               letterSpacing: "0.13em", textTransform: "uppercase", color: COLORS.primary,
             }}>
               <span>BETA PHASE</span>

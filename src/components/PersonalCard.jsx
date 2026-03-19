@@ -230,7 +230,7 @@ export default function PersonalCard({
               </svg>
               <div style={{
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "1.58rem", fontWeight: 700,
+                fontSize: "0.95rem", fontWeight: 700,
                 color: COLORS.secondary, direction: "rtl",
               }}>הכרטיס האישי שלי</div>
             </div>
@@ -249,17 +249,17 @@ export default function PersonalCard({
                 width: 46, height: 46, borderRadius: "50%", flexShrink: 0,
                 background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontSize: "1.2rem", fontWeight: 700,
+                color: "white", fontSize: "0.6rem", fontWeight: 700,
                 fontFamily: "'Alef', sans-serif",
               }}>{initials}</div>
               <div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "1.58rem", fontWeight: 700, color: COLORS.text,
+                  fontSize: "0.95rem", fontWeight: 700, color: COLORS.text,
                 }}>{form.Full_Name || form.First_Name || "שם מלא"}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "1.44rem", color: COLORS.muted, direction: "rtl",
+                  fontSize: "0.72rem", color: COLORS.muted, direction: "rtl",
                 }}>{record.email || ""}</div>
               </div>
             </div>
@@ -294,7 +294,7 @@ export default function PersonalCard({
               transform: "translateX(-50%)",
               background: COLORS.stone, padding: "0 12px",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "1.38rem", fontWeight: 700,
+              fontSize: "0.82rem", fontWeight: 700,
               color: COLORS.secondary, whiteSpace: "nowrap",
             }}>✦ המושגים שלי</span>
           </div>
@@ -305,7 +305,7 @@ export default function PersonalCard({
               const displayConcepts = savedConcepts;
               return displayConcepts.length === 0 ? (
               <div style={{
-                color: COLORS.muted, fontSize: "1.38rem",
+                color: COLORS.muted, fontSize: "0.82rem",
                 fontFamily: "'Alef', sans-serif",
                 direction: "rtl", lineHeight: 1.6,
               }}>
@@ -326,7 +326,7 @@ export default function PersonalCard({
                       style={{
                         position: "absolute", left: "6px",
                         background: "none", border: "none", cursor: "pointer",
-                        color: "rgba(198,40,40,0.45)", fontSize: "1.2rem", lineHeight: 1,
+                        color: "rgba(198,40,40,0.45)", fontSize: "0.6rem", lineHeight: 1,
                         padding: "2px", display: "flex", alignItems: "center",
                       }}>✕</button>
                   </div>
@@ -345,17 +345,17 @@ export default function PersonalCard({
               }}>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "1.65rem", fontWeight: 700,
+                  fontSize: "1rem", fontWeight: 700,
                   color: "#757575", marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "1.38rem", color: "#374151", lineHeight: 1.6,
+                  fontSize: "0.82rem", color: "#374151", lineHeight: 1.6,
                 }}>{resolveExplanation(activeConcept)}</div>
                 <button onClick={() => setActiveConcept(null)} style={{
                   position: "absolute", top: "10px", left: "10px",
                   background: "none", border: "none", cursor: "pointer",
-                  color: "#6b7280", fontSize: "1.5rem", lineHeight: 1,
+                  color: "#6b7280", fontSize: "0.9rem", lineHeight: 1,
                 }}>✕</button>
               </div>
             )}
@@ -369,7 +369,7 @@ export default function PersonalCard({
           }}>
             {saveState === "error" && errMsg && (
               <div style={{
-                color: "#dc2626", fontSize: "1.29rem",
+                color: "#dc2626", fontSize: "0.76rem",
                 textAlign: "right", direction: "rtl",
                 marginBottom: "8px", paddingRight: "4px",
               }}>{errMsg}</div>
@@ -379,7 +379,7 @@ export default function PersonalCard({
                 background: saveBg, color: "#fff",
                 border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "1.65rem", fontWeight: 600,
+                fontSize: "1rem", fontWeight: 600,
                 height: "36px", width: "100%",
                 cursor: saveState === "saving" ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
