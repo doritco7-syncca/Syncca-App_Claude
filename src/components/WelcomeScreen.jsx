@@ -96,16 +96,15 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
           }}>
             <div style={{
               display: "flex", flexDirection: "column", alignItems: "center",
-              gap: "6px", direction: "rtl", textAlign: "center",
+              gap: "4px", direction: "rtl", textAlign: "center",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "clamp(0.97rem,3.5vw,1.05rem)",
-              color: COLORS.text, lineHeight: 1.8, opacity: 0.82,
+              fontSize: "clamp(0.82rem,3vw,0.9rem)",
+              color: COLORS.text, lineHeight: 1.85, opacity: 0.8,
             }}>
-              <p style={{ maxWidth: "272px" }}>אני סינקה, בינה מלאכותית שמאומנת בכלים של תקשורת בין אישית,</p>
-              <p style={{ maxWidth: "200px" }}>שפותחו במשך עשרות שנים. אם הגעת לכאן,</p>
-              <p style={{ maxWidth: "142px" }}>סימן שחשוב לך לגלות דרך חדשה,</p>
-              <p style={{ maxWidth: "110px" }}>ואני איתך יד ביד.</p>
-
+              <p style={{ maxWidth: "300px" }}>אני סינקה, בינה מלאכותית שמאומנת בכלים של תקשורת בין אישית</p>
+              <p style={{ maxWidth: "270px" }}>שפותחו במשך עשרות שנים. אם הגעת לכאן,</p>
+              <p style={{ maxWidth: "210px" }}>סימן שחשוב לך לגלות דרך חדשה,</p>
+              <p style={{ maxWidth: "145px" }}>ואני איתך יד ביד.</p>
             </div>
           </div>
 
