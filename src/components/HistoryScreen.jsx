@@ -239,35 +239,18 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                     }}>▼</span>
                   </div>
 
-                  {/* Preview row: insight snippet + concept count */}
-                  {(hasInsight || hasConcepts) && (
-                    <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
-                      {hasInsight && !isOpen && (
-                        <div style={{
-                          background: "#f0fdf4",
-                          border: "1px solid #bbf7d0",
-                          borderRadius: 10,
-                          padding: "4px 10px",
-                          fontFamily: "'Alef', sans-serif",
-                          fontSize: "0.76rem", color: "#166534",
-                          maxWidth: "100%",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}>
-                          {s.insight.length > 80 ? s.insight.slice(0, 80) + "…" : s.insight}
-                        </div>
-                      )}
-                      {hasConcepts && (
-                        <div style={{
-                          background: "rgba(198,40,40,0.1)",
-                          color: COLORS.primary,
-                          borderRadius: 9999,
-                          padding: "3px 10px",
-                          fontFamily: "'Alef', sans-serif",
-                          fontSize: "0.74rem", fontWeight: 400,
-                        }}>{s.concepts.length} מושגים</div>
-                      )}
+                  {/* Preview row: concept count only */}
+                  {hasConcepts && (
+                    <div style={{ marginTop: "8px" }}>
+                      <div style={{
+                        background: "rgba(198,40,40,0.1)",
+                        color: COLORS.primary,
+                        borderRadius: 9999,
+                        padding: "3px 10px",
+                        fontFamily: "'Alef', sans-serif",
+                        fontSize: "0.74rem", fontWeight: 400,
+                        display: "inline-block",
+                      }}>{s.concepts.length} מושגים</div>
                     </div>
                   )}
                 </div>
@@ -279,26 +262,6 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                     padding: "14px 16px 16px",
                     display: "flex", flexDirection: "column", gap: "12px",
                   }}>
-
-                    {/* Insight */}
-                    {hasInsight && (
-                      <div>
-                        <div style={{
-                          fontFamily: "'Alef', sans-serif",
-                          fontSize: "0.85rem", fontWeight: 400,
-                          color: COLORS.secondary, marginBottom: "6px",
-                          letterSpacing: "0.02em",
-                        }}>✦ תמצית</div>
-                        <div style={{
-                          fontFamily: "'Alef', sans-serif",
-                          fontSize: "0.86rem", color: COLORS.text,
-                          lineHeight: 1.6,
-                          background: "#f0fdf4",
-                          border: "1px solid #bbf7d0",
-                          borderRadius: 12, padding: "10px 12px",
-                        }}>{s.insight}</div>
-                      </div>
-                    )}
 
                     {/* Concepts */}
                     {hasConcepts && (
@@ -400,7 +363,7 @@ export default function HistoryScreen({ username, firstName, onClose }) {
                       </div>
                     )}
 
-                    {!hasInsight && !hasConcepts && !hasFeedback && !hasTranscript && (
+                    {!hasConcepts && !hasFeedback && !hasTranscript && (
                       <div style={{
                         fontFamily: "'Alef', sans-serif",
                         fontSize: "0.8rem", color: COLORS.muted,
