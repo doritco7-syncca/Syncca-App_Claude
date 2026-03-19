@@ -28,7 +28,7 @@ const TERMS_TEXT = [
   "המידע והליווי הניתנים על ידי סינקה מבוססים על בינה מלאכותית ונועדו למטרות העשרה, למידה ושיפור התקשורת הבין-אישית בלבד.",
   "סינקה אינה מהווה תחליף לטיפול פסיכולוגי, ייעוץ זוגי מקצועי או ייעוץ רפואי כלשהו.",
   "השירות אינו מיועד למצבי משבר נפשי דחופים או למקרים הכוללים אלימות. במצבי חירום יש לפנות לגורמים המוסמכים.",
-  "השימוש בסינקה ובכלים המוצעים בה הוא באחריות המשתמש/ת בלבד.",
+  "השימוש בסינקה ובכלים המוצעים בה הוא באחריות המשתמשים בלבד.",
 ];
 
 function TermsModal({ onClose }) {
@@ -60,7 +60,7 @@ function TermsModal({ onClose }) {
           background: "#C62828", color: "white", border: "none",
           borderRadius: 9999, padding: "12px", cursor: "pointer",
           fontFamily: "'Alef', sans-serif", fontSize: "0.9rem", fontWeight: 600,
-        }}>הבנתי, סגור</button>
+        }}>הבנתי, אפשר לסגור</button>
       </div>
     </div>
   );
@@ -160,7 +160,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               fontWeight: 700, color: COLORS.secondary,
               direction: "rtl", textAlign: "center", lineHeight: 1.3,
               marginTop: "2px",
-            }}>ברוכים הבאים!</div>
+            }}>טוב שהגעת!</div>
           </div>
 
           {/* MIDDLE: Body text */}
@@ -227,7 +227,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               fontFamily: "'Alef', sans-serif", fontSize: "0.72rem", color: COLORS.muted,
               textAlign: "center", direction: "rtl", lineHeight: 1.6, maxWidth: "280px",
             }}>
-              השימוש מיועד למשתמשים מעל גיל 18. סינקה אינה תחליף לטיפול מקצועי.{" "}
+              השימוש מיועד למשתמשים מעל גיל 18. סינקה אינה תחליף למקום של הקשבה ולמידה.{" "}
               <button onClick={() => setShowTerms(true)} style={{
                 background: "none", border: "none", cursor: "pointer",
                 color: COLORS.secondary, fontFamily: "'Alef', sans-serif",

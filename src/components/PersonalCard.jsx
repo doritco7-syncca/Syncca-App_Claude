@@ -121,7 +121,7 @@ export default function PersonalCard({
   }, [form, airtableRecordId]);
 
   const saveBg    = { idle: COLORS.primary, saving: "#E53935", saved: COLORS.success, error: "#dc2626" }[saveState];
-  const saveLabel = { idle: "שמירה  💾", saving: "שומר...", saved: "✓  נשמר!", error: "שגיאה — נסי שוב" }[saveState];
+  const saveLabel = { idle: "שמירה  💾", saving: "שומר...", saved: "✓  נשמר!", error: "שגיאה — כדאי לנסות שוב" }[saveState];
   const saveShadow = saveState === "saved"
     ? "0 4px 14px rgba(22,163,74,0.35)"
     : "0 4px 14px rgba(198,40,40,0.30)";
