@@ -132,7 +132,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.18s ease",
               }}>
-              <span>↺</span><span>שניכנס ל"סינק"?</span>
+              <span>↺</span><span>ניכנס ל"סינק"?</span>
             </button>
 
             {userEmail && (
