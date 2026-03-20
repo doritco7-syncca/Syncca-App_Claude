@@ -203,10 +203,10 @@ function BetaModal({ onClose }) {
 // ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,    setScreen]    = useState("welcome");
-  // Splash shows only once ever (localStorage persists across sessions)
+  // Splash shows every time app is opened (sessionStorage resets on each open)
   const [showSplash, setShowSplash] = useState(() => {
-    const seen = localStorage.getItem("syncca_splash_seen");
-    if (!seen) { localStorage.setItem("syncca_splash_seen", "1"); return true; }
+    const seen = sessionStorage.getItem("syncca_splash_seen");
+    if (!seen) { sessionStorage.setItem("syncca_splash_seen", "1"); return true; }
     return false;
   });
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem("syncca_email") || "");
