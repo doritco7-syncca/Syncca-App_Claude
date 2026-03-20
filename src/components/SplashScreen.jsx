@@ -1,6 +1,3 @@
-// SplashScreen.jsx — Syncca
-// Group transform על הרגל השמאלית — transformOrigin בנקודת החיבור לקשת
-
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,24 +7,16 @@ const LEFT_LEG = `M 111.28 85.30 C 90.71 113.36 79.04 146.42 71.96 180.21 C 69.7
 
 const GRAY = `M 193.03 66.99 C 205.13 70.58 216.03 78.27 224.55 87.46 C 238.86 102.30 248.21 121.75 254.99 141.02 C 260.21 154.98 263.19 169.22 266.15 183.77 C 267.29 190.58 267.58 197.44 268.67 204.26 C 269.42 208.93 270.07 213.60 270.50 218.32 C 261.09 211.52 251.93 204.41 242.60 197.52 C 241.76 192.57 240.51 187.70 239.60 182.77 C 236.79 165.83 231.43 149.26 224.37 133.64 C 219.07 121.94 212.13 111.10 202.77 102.23 C 196.23 95.56 187.23 91.36 178.05 90.04 C 169.59 90.69 161.21 94.20 154.81 99.78 C 144.30 108.76 136.33 121.10 130.57 133.56 C 122.02 152.08 116.94 171.78 113.54 191.84 C 113.08 194.68 111.25 196.43 109.10 198.13 C 101.01 204.47 92.70 210.60 84.88 217.27 C 86.09 207.71 86.15 198.17 88.40 188.75 C 89.55 178.72 91.88 168.97 94.30 159.19 C 100.48 137.46 108.07 116.88 121.40 98.42 C 125.69 92.61 130.41 86.60 136.01 82.02 C 142.16 77.05 147.95 72.31 155.42 69.41 C 167.23 64.14 180.66 62.87 193.03 66.99 Z`;
 
-const legVariants = {
-  idle:    { skewX: 0 },
-  stretch: { skewX: -15 },
-  back:    { skewX: 0 },
-};
-
-const spring = { type: "spring", stiffness: 300, damping: 20 };
-
 export default function SplashScreen({ onDone }) {
-  const [legPhase, setLegPhase] = useState("idle");
-  const [show,     setShow]     = useState(true);
+  const [show, setShow]       = useState(true);
+  const [stretched, setStretched] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setLegPhase("stretch"), 700);
-    const t2 = setTimeout(() => setLegPhase("back"),    1700);
-    const t3 = setTimeout(() => setShow(false),          3000);
-    const t4 = setTimeout(() => onDone?.(),              3800);
-    return () => [t1, t2, t3, t4].forEach(clearTimeout);
+    const t1 = setTimeout(() => setStretched(true),  700);
+    const t2 = setTimeout(() => setStretched(false), 1800);
+    const t3 = setTimeout(() => setShow(false),       3200);
+    const t4 = setTimeout(() => onDone?.(),           4000);
+    return () => [t1,t2,t3,t4].forEach(clearTimeout);
   }, [onDone]);
 
   const size = 180;
@@ -48,24 +37,27 @@ export default function SplashScreen({ onDone }) {
             alignItems: "center", justifyContent: "center", gap: "20px",
           }}
         >
-          <svg width={size} height={size * 289/357}
-               viewBox="0 0 357 289" fill="none"
-               style={{ overflow: "visible" }}>
-
+          <svg
+            width={size}
+            height={size * 289/357}
+            viewBox="0 0 357 289"
+            fill="none"
+            style={{ overflow: "visible" }}
+          >
             {/* קשת ימין — סטטית */}
             <path fill="#C62828" d={RED_ARCH} />
 
-            {/* רגל שמאל — עטופה ב-group עם transformOrigin בנקודת החיבור */}
+            {/* רגל שמאל — motion.g עם rotate במקום skewX */}
             <motion.g
-              variants={legVariants}
-              animate={legPhase}
-              transition={spring}
+              initial={{ rotate: 0 }}
+              animate={{ rotate: stretched ? -18 : 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 18 }}
               style={{ transformOrigin: "111px 85px" }}
             >
               <path fill="#C62828" d={LEFT_LEG} />
             </motion.g>
 
-            {/* קשת אפורה — סטטית */}
+            {/* קשת אפורה */}
             <path fill="#757575" d={GRAY} />
           </svg>
 
