@@ -7,7 +7,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
-import HistoryScreen from "./components/HistoryScreen";
+import SplashScreen   from "./components/SplashScreen";
 import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
   updateUserProfile, updateSavedConcepts, overwriteSavedConcepts,
@@ -202,6 +202,7 @@ function BetaModal({ onClose }) {
 // ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,    setScreen]    = useState("welcome");
+  const [showSplash, setShowSplash] = useState(true); // splash on first load
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem("syncca_email") || "");
   const [userRecord,setUserRecord]= useState(null);
   const [recordId,  setRecordId]  = useState(() => localStorage.getItem("syncca_record_id") || "");
@@ -576,6 +577,9 @@ export default function App() {
   // ── RENDER ────────────────────────────────────────────────────
   return (
     <>
+      {showSplash && (
+        <SplashScreen onDone={() => setShowSplash(false)} />
+      )}
       {screen === "welcome" && (
         <WelcomeScreen
           userEmail={userEmail}
