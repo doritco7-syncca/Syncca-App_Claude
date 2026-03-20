@@ -8,6 +8,7 @@ import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
 import SplashScreen   from "./components/SplashScreen";
+import HistoryScreen  from "./components/HistoryScreen";
 import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
   updateUserProfile, updateSavedConcepts, overwriteSavedConcepts,
