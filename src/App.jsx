@@ -7,7 +7,6 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import LoginScreen   from "./components/LoginScreen";
 import ChatScreen    from "./components/ChatScreen";
 import PersonalCard  from "./components/PersonalCard";
-import SplashScreen   from "./components/SplashScreen";
 import HistoryScreen  from "./components/HistoryScreen";
 import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
@@ -203,12 +202,6 @@ function BetaModal({ onClose }) {
 // ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,    setScreen]    = useState("welcome");
-  // Splash shows every time app is opened (sessionStorage resets on each open)
-  const [showSplash, setShowSplash] = useState(() => {
-    const seen = sessionStorage.getItem("syncca_splash_seen");
-    if (!seen) { sessionStorage.setItem("syncca_splash_seen", "1"); return true; }
-    return false;
-  });
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem("syncca_email") || "");
   const [userRecord,setUserRecord]= useState(null);
   const [recordId,  setRecordId]  = useState(() => localStorage.getItem("syncca_record_id") || "");
@@ -583,10 +576,7 @@ export default function App() {
   // ── RENDER ────────────────────────────────────────────────────
   return (
     <>
-      {showSplash && (
-        <SplashScreen onDone={() => setShowSplash(false)} />
-      )}
-      {screen === "welcome" && (
+{screen === "welcome" && (
         <WelcomeScreen
           userEmail={userEmail}
           onEnter={() => setScreen(userEmail ? "chat" : "login")}
