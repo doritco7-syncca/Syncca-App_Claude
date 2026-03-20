@@ -14,9 +14,9 @@ export default function SplashScreen({ onDone }) {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    // אנימציה: 3s + 0.4s המתנה + 0.6s fade out
-    const fadeTimer  = setTimeout(() => setFading(true),  3400);
-    const doneTimer  = setTimeout(() => onDone?.(),       4000);
+    // אנימציה: 4.5s + 0.3s המתנה + 0.5s fade out
+    const fadeTimer  = setTimeout(() => setFading(true),  4800);
+    const doneTimer  = setTimeout(() => onDone?.(),       5300);
     return () => { clearTimeout(fadeTimer); clearTimeout(doneTimer); };
   }, [onDone]);
 
@@ -66,7 +66,7 @@ export default function SplashScreen({ onDone }) {
         pointerEvents: fading ? "none" : "auto",
       }}>
         <div className="splash-logo">
-          <LogoSymbol size={130} />
+          <LogoSymbol size={62} />
         </div>
         <div style={{
           fontFamily: "'Cormorant Garamond', serif",

@@ -101,9 +101,8 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               fontSize: "clamp(0.82rem,3vw,0.9rem)",
               color: COLORS.text, lineHeight: 1.85, opacity: 0.8,
             }}>
-              <p style={{ maxWidth: "310px" }}>אני סינקה AI, שמאומנת בכלי תקשורת בין אישית </p>
-              <p style={{ maxWidth: "280px" }}>ייחודיים. אם הגעת לכאן, סימן שחשוב </p>
-              <p style={{ maxWidth: "200px" }}>לך לגלות דרך חדשה,</p>
+              <p style={{ maxWidth: "310px" }}>אני סינקה AI, שמאומנת בכלי תקשורת בין אישית ייחודיים.</p>
+              <p style={{ maxWidth: "260px" }}>אם הגעת לכאן, סימן שחשוב לך לגלות דרך חדשה,</p>
               <p style={{ maxWidth: "130px" }}>ואני איתך יד ביד.</p>
             </div>
           </div>
@@ -132,7 +131,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.18s ease",
               }}>
-              <span>↺</span><span>ניכנס ל"סינק"?</span>
+              <span>↺</span><span>שניכנס ל"סינק"?</span>
             </button>
 
             {userEmail && (
