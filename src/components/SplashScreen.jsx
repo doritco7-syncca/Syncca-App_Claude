@@ -1,5 +1,4 @@
 // SplashScreen.jsx — Syncca
-// מופיע בכל פתיחה של האפליקציה, מציג לוגו גדול עם אנימציה קלה ועובר בפייד לWelcome
 
 import { useEffect, useState } from "react";
 
@@ -11,35 +10,46 @@ const LogoSymbol = ({ size = 180 }) => (
 );
 
 export default function SplashScreen({ onDone }) {
-  const [fading, setFading] = useState(false);
+  const [phase, setPhase] = useState("fadein"); // fadein → still → stretch → still2 → fadeout
 
   useEffect(() => {
-    const fadeTimer = setTimeout(() => setFading(true), 3300);
-    const doneTimer = setTimeout(() => onDone?.(),      4000);
-    return () => { clearTimeout(fadeTimer); clearTimeout(doneTimer); };
+    // fade in: 0.6s
+    // still: wait a beat before stretching
+    // stretch animation: 2.8s
+    // still2: 0.4s pause
+    // fade out: 0.7s → done
+    const t1 = setTimeout(() => setPhase("still"),   600);
+    const t2 = setTimeout(() => setPhase("stretch"), 1000);
+    const t3 = setTimeout(() => setPhase("still2"),  3800);
+    const t4 = setTimeout(() => setPhase("fadeout"), 4200);
+    const t5 = setTimeout(() => onDone?.(),           4900);
+    return () => [t1,t2,t3,t4,t5].forEach(clearTimeout);
   }, [onDone]);
 
   return (
     <>
       <style>{`
-        @keyframes leg-wiggle {
-          0%   { transform: scale(1) skewX(0deg) translateX(0); }
-          5%   { transform: scale(1) skewX(0deg) translateX(0); }
-          18%  { transform: scaleX(0.78) scaleY(1.22) skewX(-18deg) translateX(-10px); }
-          28%  { transform: scaleX(1.22) scaleY(0.82) skewX(18deg)  translateX(10px); }
-          38%  { transform: scaleX(0.95) scaleY(1.04) skewX(-3deg); }
-          46%  { transform: scale(1) skewX(0deg) translateX(0); }
-          55%  { transform: scale(1) skewX(0deg) translateX(0); }
-          65%  { transform: skewX(-10deg) translateX(-6px); }
-          72%  { transform: skewX(5deg)   translateX(3px); }
-          78%  { transform: skewX(-2deg)  translateX(-1px); }
-          88%  { transform: scale(1) skewX(0deg) translateX(0); }
-          100% { transform: scale(1) skewX(0deg) translateX(0); }
+        @keyframes one-leg-stretch {
+          /* מנוחה */
+          0%   { transform: skewX(0deg) translateX(0) scaleY(1); }
+
+          /* מתחיל למתוח את הרגל הימנית לאט */
+          20%  { transform: skewX(8deg) translateX(5px) scaleY(1.06); }
+
+          /* שיא המתיחה */
+          45%  { transform: skewX(18deg) translateX(12px) scaleY(1.12); }
+
+          /* חוזר לאט */
+          70%  { transform: skewX(5deg) translateX(3px) scaleY(1.03); }
+
+          /* מנוחה */
+          100% { transform: skewX(0deg) translateX(0) scaleY(1); }
         }
-        .splash-logo-anim {
+
+        .splash-logo-stretch {
           display: inline-block;
-          transform-origin: center 88%;
-          animation: leg-wiggle 3s ease-in-out 1 forwards;
+          transform-origin: center 90%;
+          animation: one-leg-stretch 2.8s ease-in-out 1 forwards;
         }
       `}</style>
 
@@ -53,11 +63,11 @@ export default function SplashScreen({ onDone }) {
         alignItems:     "center",
         justifyContent: "center",
         gap:            "20px",
-        opacity:        fading ? 0 : 1,
-        transition:     "opacity 0.7s ease",
-        pointerEvents:  fading ? "none" : "auto",
+        opacity:        (phase === "fadein" || phase === "fadeout") ? 0 : 1,
+        transition:     "opacity 0.6s ease",
+        pointerEvents:  phase === "fadeout" ? "none" : "auto",
       }}>
-        <div className="splash-logo-anim">
+        <div className={phase === "stretch" ? "splash-logo-stretch" : ""}>
           <LogoSymbol size={180} />
         </div>
         <div style={{
