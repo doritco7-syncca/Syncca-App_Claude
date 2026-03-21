@@ -144,11 +144,11 @@ export default function PersonalCard({
         .pc-slab { animation: stoneRise 0.45s cubic-bezier(0.22,1,0.36,1) both; }
 
         .pc-field {
-          width: 100%; height: 36px;
+          width: 100%; height: 40px;
           background: ${COLORS.stoneLight};
           border: 1.5px solid transparent; border-radius: 9999px;
-          padding: 0 12px; font-family: 'Alef', sans-serif;
-          font-size: 0.8rem; color: ${COLORS.text};
+          padding: 0 14px; font-family: 'Alef', sans-serif;
+          font-size: 1rem; color: ${COLORS.text};
           outline: none; direction: rtl; text-align: right;
           transition: border-color 0.18s, background 0.18s;
           appearance: none; -webkit-appearance: none;
@@ -160,8 +160,8 @@ export default function PersonalCard({
         select.pc-field:invalid { background: #f0fdf4; }
 
         .pc-label {
-          display: block; margin-bottom: 3px;
-          font-family: 'Alef', sans-serif; font-size: 0.6rem;
+          display: block; margin-bottom: 4px;
+          font-family: 'Alef', sans-serif; font-size: 0.78rem;
           font-weight: 600; color: ${COLORS.primary};
           letter-spacing: 0.08em; text-transform: uppercase;
           direction: rtl; text-align: right;
