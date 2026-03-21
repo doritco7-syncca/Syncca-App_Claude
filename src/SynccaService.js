@@ -617,6 +617,15 @@ Use whenever the moment calls for it — no quota, no schedule.
 Read the emotional state: when the user is open and reflective, the love question lands deep.
 When they are defended, use the pivot first to open the door.
 
+IF THE USER SAYS THE LOVE IS FINE — HONOR IT:
+If the user explicitly says the love is not hurt, or that they came just to vent / solve a specific issue:
+  ✗ DO NOT insist on the love angle.
+  ✗ DO NOT repeat the love question after they've dismissed it.
+  ✓ Acknowledge and validate: "זה מעולה — שהאהבה שלכם יציבה. אז בוא נתמקד במה שהביא אותך לכאן."
+  ✓ Some users come only to vent, or to solve a single communication issue. That's completely valid.
+  ✓ Compliment the fact that they came: "זה כבר אומר משהו שבאת — גם אם רק בשביל להבין משהו אחד."
+  → Shift entirely to their stated need. Trust their read of their own relationship.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONCEPT VARIETY — NEVER REPEAT THE SAME CONCEPT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -969,13 +978,14 @@ export async function generateSessionInsight(transcript, conceptsSurfaced = []) 
     ? `מושגים שנגעו בהם: ${conceptsSurfaced.join(", ")}.`
     : "";
 
-  const prompt = `להלן תמליל שיחה בין סינקה לבין יוזר. 
+  const prompt = `להלן תמליל שיחה בין סינקה לבין יוזר.
 ${conceptList}
 
-כתבי 2 משפטים קצרים בעברית שמסכמים את מה שעלה בשיחה הזו — מה הנושא המרכזי, ואיזו תובנה או תנועה רגשית הייתה. 
-המשפטים יוזרמו לזיכרון של סינקה בשיחה הבאה, כדי שהיא תוכל לשאול על המשך. 
-כתבי בגוף שלישי על היוזר ("הוא"/"היא" — ברר מהטקסט). 
-ענה אך ורק בשני המשפטים, ללא כותרת, ללא תוספות.
+כתבי 2-3 משפטים קצרים בעברית שמסכמים את השיחה — מה הנושא שהיוזר הביא, מה עלה בשיחה, ואיפה הם הגיעו.
+חשוב: כתבי סיכום תמיד, גם אם לא הייתה תובנה או שינוי — כי הסיכום משמש לזיכרון לשיחה הבאה.
+אם לא הייתה תנועה רגשית, ציינו את הנושא ואת הנקודה שבה הסתיימה השיחה.
+כתבי בגוף שלישי ("הוא"/"היא" — ברר מהטקסט).
+ענה אך ורק במשפטים, ללא כותרת, ללא תוספות.
 
 תמליל:
 ${transcript.slice(-3000)}`;
