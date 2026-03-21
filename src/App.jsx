@@ -177,13 +177,13 @@ function BetaModal({ onClose }) {
   return (
     <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(117,117,117,0.18)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
-      <div style={{ background:"#F9F6EE", borderRadius:"24px", padding:"28px 24px",
+      <div style={{ background:"#f0fdf4", borderRadius:"24px", padding:"28px 24px",
                     maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
-        <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.15rem", fontWeight:700,
+        <div style={{ fontFamily:"'Alef',sans-serif", fontSize: "1.27rem", fontWeight:700,
                       color:"#757575", marginBottom:"16px", textAlign:"center" }}>טוב שהגעת לסינקה 👋</div>
         <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
-            <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.72rem",
+            <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize: "0.79rem",
                                  lineHeight:1.65, marginBottom:"10px", color:"#1a1a1a" }}>{item}</li>
           ))}
         </ol>
