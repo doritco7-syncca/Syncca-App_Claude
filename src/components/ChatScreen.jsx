@@ -430,7 +430,7 @@ export default function ChatScreen({
               flex: 1,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <LogoSymbol size={20} />
+                <LogoSymbol size={40} />
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif",
                   fontSize: "0.99rem", fontWeight: 700, color: COLORS.primary,
