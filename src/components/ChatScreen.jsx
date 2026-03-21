@@ -300,21 +300,24 @@ export default function ChatScreen({
       if (next <= 1)   { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
       if (next <= 300 && next > 299) {
         setShowWarning(true);
-        // Play zen bowl sound — calm, resonant
+        // Play chime — 3 rising notes
         try {
           const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const gain = ctx.createGain();
-          gain.connect(ctx.destination);
-          // Two harmonics for a singing bowl feel
-          [528, 1056].forEach((freq, i) => {
-            const osc = ctx.createOscillator();
-            osc.connect(gain);
+          [
+            { freq: 400, delay: 0,    dur: 1.2 },
+            { freq: 530, delay: 0.22, dur: 1.2 },
+            { freq: 660, delay: 0.44, dur: 1.4 },
+          ].forEach(({ freq, delay, dur }) => {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
             osc.type = "sine";
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(i === 0 ? 0.25 : 0.1, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 2.5);
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+            gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + delay + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + dur);
           });
         } catch(e) { /* audio not supported */ }
       }
@@ -362,7 +365,7 @@ export default function ChatScreen({
         .chat-input {
           flex: 1; height: 44px; border-radius: 9999px;
           border: 1.5px solid ${COLORS.border};
-          padding: 0 18px; font-size: 0.93rem;
+          padding: 0 18px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
           background: white; outline: none;
           direction: rtl; text-align: right;
@@ -454,28 +457,6 @@ export default function ChatScreen({
             </div>
           </div>
 
-          {/* 5-MINUTE WARNING BANNER */}
-          {showWarning && !timedOut && (
-            <div style={{
-              background: "rgba(198,40,40,0.08)",
-              borderBottom: "1px solid rgba(198,40,40,0.2)",
-              padding: "12px 16px",
-              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-              direction: "rtl", flexShrink: 0, gap: "8px",
-            }}>
-              <span style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "0.94rem",
-                color: "#92400e", lineHeight: 1.6,
-              }}>
-                סליחה {displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך. אפשר גם להישאר עוד קצת ולמלא פידבק עבורנו.
-              </span>
-              <button onClick={() => setShowWarning(false)} style={{
-                background: "none", border: "none", cursor: "pointer",
-                color: "#92400e", fontSize: "0.94rem", padding: 0, flexShrink: 0,
-              }}>✕</button>
-            </div>
-          )}
-
           {/* MESSAGES */}
           <div style={{
             flex: 1, overflowY: "auto",
@@ -542,6 +523,27 @@ export default function ChatScreen({
             )}
             <div ref={bottomRef} />
           </div>
+
+          {/* 5-MINUTE WARNING — bottom, solid red, white bold */}
+          {showWarning && !timedOut && (
+            <div style={{
+              background: "#C62828",
+              padding: "12px 16px",
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              direction: "rtl", flexShrink: 0, gap: "8px",
+            }}>
+              <span style={{
+                fontFamily: "'Alef', sans-serif", fontSize: "0.94rem",
+                fontWeight: 700, color: "white", lineHeight: 1.6,
+              }}>
+                סליחה {displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך.
+              </span>
+              <button onClick={() => setShowWarning(false)} style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: "white", fontSize: "1.1rem", padding: 0, flexShrink: 0, fontWeight: 700,
+              }}>✕</button>
+            </div>
+          )}
 
           {/* INPUT BAR */}
             <div style={{

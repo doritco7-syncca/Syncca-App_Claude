@@ -259,7 +259,7 @@ export default function PersonalCard({
                 }}>{form.Full_Name || form.First_Name || "שם מלא"}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.86rem", color: COLORS.muted, direction: "rtl",
+                  fontSize: "1.03rem", color: COLORS.muted, direction: "rtl",
                 }}>{record.email || ""}</div>
               </div>
             </div>
@@ -294,7 +294,7 @@ export default function PersonalCard({
               transform: "translateX(-50%)",
               background: COLORS.stone, padding: "0 12px",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "0.82rem", fontWeight: 700,
+              fontSize: "0.98rem", fontWeight: 700,
               color: COLORS.secondary, whiteSpace: "nowrap",
             }}>✦ המושגים שלי</span>
           </div>
@@ -305,7 +305,7 @@ export default function PersonalCard({
               const displayConcepts = savedConcepts;
               return displayConcepts.length === 0 ? (
               <div style={{
-                color: COLORS.muted, fontSize: "0.82rem",
+                color: COLORS.muted, fontSize: "0.98rem",
                 fontFamily: "'Alef', sans-serif",
                 direction: "rtl", lineHeight: 1.6,
               }}>
@@ -350,12 +350,12 @@ export default function PersonalCard({
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.82rem", color: "#374151", lineHeight: 1.6,
+                  fontSize: "0.98rem", color: "#374151", lineHeight: 1.6,
                 }}>{resolveExplanation(activeConcept)}</div>
                 <button onClick={() => setActiveConcept(null)} style={{
                   position: "absolute", top: "10px", left: "10px",
                   background: "none", border: "none", cursor: "pointer",
-                  color: "#6b7280", fontSize: "0.9rem", lineHeight: 1,
+                  color: "#6b7280", fontSize: "1.08rem", lineHeight: 1,
                 }}>✕</button>
               </div>
             )}
