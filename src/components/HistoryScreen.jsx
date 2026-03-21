@@ -129,7 +129,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
             }}>✕</button>
             <div style={{ textAlign: "center", flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                <LogoSymbol size={18} />
+                <LogoSymbol size={36} />
                 <span style={{
                   fontFamily: "'Alef', sans-serif",
                   fontSize: "0.95rem", fontWeight: 700,

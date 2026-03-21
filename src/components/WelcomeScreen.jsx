@@ -145,7 +145,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                   {" · "}
                   <button onClick={onLogout} style={{
                     background: "none", border: "none", cursor: "pointer",
-                    color: COLORS.muted, fontSize: "0.66rem",
+                    color: COLORS.muted, fontSize: "0.73rem",
                     textDecoration: "underline", fontFamily: "'Alef', sans-serif",
                   }}>יציאה</button>
                 </>}

@@ -54,14 +54,14 @@ function ConceptTooltip({ concept, onSave, onClose }) {
           color: COLORS.secondary, marginBottom: "10px",
         }}>{concept.word}</div>
         <div style={{
-          fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
+          fontFamily: "'Alef', sans-serif", fontSize: "0.99rem",
           color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
         }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => { onSave?.(concept); onClose(); }} style={{
             flex: 1, height: "44px", background: COLORS.primary, color: "white",
             border: "none", borderRadius: "9999px",
-            fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.88rem",
+            fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.97rem",
             cursor: "pointer",
           }}>✦ שמור מושג זה</button>
           <button onClick={onClose} style={{
@@ -74,7 +74,7 @@ function ConceptTooltip({ concept, onSave, onClose }) {
         <button onClick={onClose} style={{
           position: "absolute", top: "14px", left: "14px",
           background: "none", border: "none", cursor: "pointer",
-          color: COLORS.muted, fontSize: "1rem",
+          color: COLORS.muted, fontSize: "1.1rem",
         }}>✕</button>
       </div>
     </div>
@@ -170,7 +170,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
             <span style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "0.82rem", fontWeight: 700,
+              fontSize: "0.9rem", fontWeight: 700,
               color: COLORS.secondary, flexShrink: 0, marginLeft: "2px",
             }}>✦ שלי:</span>
             {savedConcepts.map((c, i) => (
@@ -207,7 +207,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
             }}>
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "0.95rem", fontWeight: 700,
+                fontSize: "1.05rem", fontWeight: 700,
                 color: COLORS.secondary, marginBottom: "3px",
               }}>{resolveWord(activeConcept)}</div>
               <div style={{
@@ -217,7 +217,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               <button onClick={() => setActiveConcept(null)} style={{
                 position: "absolute", top: "8px", left: "8px",
                 background: "none", border: "none", cursor: "pointer",
-                color: COLORS.muted, fontSize: "0.82rem", lineHeight: 1,
+                color: COLORS.muted, fontSize: "0.9rem", lineHeight: 1,
               }}>✕</button>
             </div>
           )}
@@ -237,7 +237,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 flex: 1, height: "34px", borderRadius: "9999px",
                 border: `1.5px solid ${COLORS.border}`,
                 padding: "0 13px",
-                fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
                 background: "white", outline: "none", direction: "rtl",
               }}
             />
@@ -253,7 +253,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
         ) : (
           <div style={{
             flex: 1, textAlign: "center", color: "#16a34a",
-            fontFamily: "'Alef', sans-serif", fontSize: "0.82rem", fontWeight: 600,
+            fontFamily: "'Alef', sans-serif", fontSize: "0.9rem", fontWeight: 600,
           }}>✓ תודה! נתראה בסינק הבא.</div>
         )}
       </div>
@@ -300,18 +300,22 @@ export default function ChatScreen({
       if (next <= 1)   { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
       if (next <= 300 && next > 299) {
         setShowWarning(true);
-        // Play bell sound
+        // Play zen bowl sound — calm, resonant
         try {
           const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.connect(gain); gain.connect(ctx.destination);
-          osc.frequency.setValueAtTime(880, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.4);
-          gain.gain.setValueAtTime(0.4, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-          osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 1.2);
+          gain.connect(ctx.destination);
+          // Two harmonics for a singing bowl feel
+          [528, 1056].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            osc.connect(gain);
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            gain.gain.setValueAtTime(i === 0 ? 0.25 : 0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.5);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 2.5);
+          });
         } catch(e) { /* audio not supported */ }
       }
       return next;
@@ -414,7 +418,7 @@ export default function ChatScreen({
               </button>
               <span style={{
                 fontFamily: "'Alef', sans-serif",
-                fontSize: "0.72rem", fontWeight: 600,
+                fontSize: "0.79rem", fontWeight: 600,
                 color: isLow ? COLORS.primary : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
@@ -429,13 +433,13 @@ export default function ChatScreen({
                 <LogoSymbol size={20} />
                 <span style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "0.9rem", fontWeight: 700, color: COLORS.primary,
+                  fontSize: "0.99rem", fontWeight: 700, color: COLORS.primary,
                 }}>Syncca</span>
               </div>
               {displayName && (
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.9rem", fontWeight: 600,
+                  fontSize: "0.99rem", fontWeight: 600,
                   color: COLORS.secondary, direction: "rtl",
                 }}>{`עם ${displayName}`}</div>
               )}
@@ -460,14 +464,14 @@ export default function ChatScreen({
               direction: "rtl", flexShrink: 0, gap: "8px",
             }}>
               <span style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "0.85rem",
+                fontFamily: "'Alef', sans-serif", fontSize: "0.94rem",
                 color: "#92400e", lineHeight: 1.6,
               }}>
                 סליחה {displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך. אפשר גם להישאר עוד קצת ולמלא פידבק עבורנו.
               </span>
               <button onClick={() => setShowWarning(false)} style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: "#92400e", fontSize: "0.85rem", padding: 0, flexShrink: 0,
+                color: "#92400e", fontSize: "0.94rem", padding: 0, flexShrink: 0,
               }}>✕</button>
             </div>
           )}
@@ -494,7 +498,7 @@ export default function ChatScreen({
                   background: COLORS.primaryLight,
                   borderRadius: "18px 0 18px 18px",
                   padding: "13px 17px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "0.93rem",
+                  fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 } : {
@@ -502,7 +506,7 @@ export default function ChatScreen({
                   border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "0.93rem",
+                  fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right", width: "100%",
                 }}>
@@ -531,7 +535,7 @@ export default function ChatScreen({
                   background: "#FDFBF7", border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px", color: COLORS.muted,
-                  fontStyle: "italic", fontSize: "0.88rem",
+                  fontStyle: "italic", fontSize: "0.97rem",
                   fontFamily: "'Alef', sans-serif",
                 }}>...</div>
               </div>

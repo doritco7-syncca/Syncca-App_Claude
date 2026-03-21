@@ -107,7 +107,7 @@ export default function LoginScreen({ onLogin, onBack }) {
         .lr:nth-child(6) { animation-delay: 0.72s; }
         .syncca-field {
           width: 100%; height: 52px;
-          background: #FCFAF5; border: 1.5px solid transparent;
+          background: #f0fdf4; border: 1.5px solid transparent;
           border-radius: 9999px; padding: 0 22px;
           font-family: 'Alef', sans-serif; font-size: 1rem;
           color: #1a1a1a; outline: none; transition: border-color 0.18s;
@@ -163,24 +163,11 @@ export default function LoginScreen({ onLogin, onBack }) {
             }}>טוב שהגעת!</div>
           </div>
 
-          {/* MIDDLE: Body text */}
-          <div className="lr" style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", width: "100%",
-          }}>
-            <div style={{
-              fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
-              color: COLORS.text, textAlign: "center", lineHeight: 1.72,
-              direction: "rtl", maxWidth: "290px", opacity: 0.82,
-            }}>
-              כדי להבטיח בקרת איכות ולשמור על התובנות – נבקש להזדהות.
-            </div>
-          </div>
-
-          {/* BOTTOM: Input + button + footer */}
+          {/* MIDDLE+BOTTOM: Input + button + footer — centered */}
           <div style={{
-            display: "flex", flexDirection: "column",
-            alignItems: "center", gap: "12px", width: "100%",
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: "12px", width: "100%",
           }}>
             <div className="lr" style={{ width: "100%" }}>
               <div style={{
@@ -222,16 +209,21 @@ export default function LoginScreen({ onLogin, onBack }) {
               </button>
             </div>
 
-            {/* Disclaimer */}
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* Disclaimer — bottom, red border, prominent */}
             <div className="lr" style={{
-              fontFamily: "'Alef', sans-serif", fontSize: "0.72rem", color: COLORS.muted,
-              textAlign: "center", direction: "rtl", lineHeight: 1.6, maxWidth: "280px",
+              fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
+              textAlign: "center", direction: "rtl", lineHeight: 1.7, maxWidth: "280px",
+              border: "1px solid rgba(198,40,40,0.4)", borderRadius: "10px",
+              padding: "10px 14px", marginTop: "8px",
             }}>
               השימוש מיועד למשתמשים מעל גיל 18. סינקה אינה תחליף למקום של הקשבה ולמידה.{" "}
               <button onClick={() => setShowTerms(true)} style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: COLORS.secondary, fontFamily: "'Alef', sans-serif",
-                fontSize: "0.72rem", textDecoration: "underline", padding: 0,
+                color: COLORS.primary, fontFamily: "'Alef', sans-serif",
+                fontSize: "0.87rem", fontWeight: 700, textDecoration: "underline", padding: 0,
               }}>תנאי שימוש</button>
             </div>
 
