@@ -171,10 +171,11 @@ export default function LoginScreen({ onLogin, onBack }) {
           }}>
             <div className="lr" style={{ width: "100%" }}>
               <div style={{
-                fontFamily: "'Alef', sans-serif", fontSize: "0.68rem", fontWeight: 700,
-                color: COLORS.secondary, letterSpacing: "0.09em", textTransform: "uppercase",
-                textAlign: "right", direction: "rtl", marginBottom: "7px",
-              }}>כתובת אימייל</div>
+                fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
+                color: COLORS.secondary,
+                textAlign: "center", direction: "rtl", marginBottom: "10px",
+                lineHeight: 1.6,
+              }}>כדי שסינקה תוכל לשמור עבורך על רצף השיחות והתובנות<br/>— נבקש להזדהות</div>
               <input
                 className={`syncca-field${error ? " err" : ""}`}
                 type="email" placeholder="your@email.com" value={email}
@@ -212,19 +213,19 @@ export default function LoginScreen({ onLogin, onBack }) {
             {/* Spacer */}
             <div style={{ flex: 1 }} />
 
-            {/* Disclaimer — bottom, red border, prominent */}
+            {/* Disclaimer — bottom, red border */}
             <div className="lr" style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
               textAlign: "center", direction: "rtl", lineHeight: 1.7, maxWidth: "280px",
               border: "1px solid rgba(198,40,40,0.4)", borderRadius: "10px",
               padding: "10px 14px", marginTop: "8px",
             }}>
-              השימוש מיועד למשתמשים מעל גיל 18. סינקה אינה תחליף למקום של הקשבה ולמידה.{" "}
+              השימוש מיועד לגיל 18 ומעלה. סינקה נועדה ללמידה והתפתחות אישית ואינה מהווה תחליף לייעוץ פסיכולוגי או רפואי מקצועי. השימוש באפליקציה מהווה הסכמה ל
               <button onClick={() => setShowTerms(true)} style={{
                 background: "none", border: "none", cursor: "pointer",
                 color: COLORS.primary, fontFamily: "'Alef', sans-serif",
-                fontSize: "0.87rem", fontWeight: 700, textDecoration: "underline", padding: 0,
-              }}>תנאי שימוש</button>
+                fontSize: "0.87rem", fontWeight: 700, textDecoration: "underline", padding: "0 2px",
+              }}>תנאי השימוש</button>
             </div>
 
             <div className="lr" style={{
