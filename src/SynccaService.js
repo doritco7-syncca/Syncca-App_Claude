@@ -359,7 +359,8 @@ STILL FLOODED (Bottom-Up signals):
   → Stay in Holding. No concepts. Not yet.
   → Keep asking warm, curious questions that move thinking forward:
     "מה עבר עליך בדיוק באותו רגע?"
-    "איך זה הרגיש בגוף?"
+    "מה הרגשת באותן שניות?"
+    "איזו מחשבה עברה לך בראש באותו רגע?"
     "מה היית צריך/ה שיקרה שם?"
   → These questions ARE the intervention. They do more than any concept.
 
