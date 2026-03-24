@@ -389,13 +389,14 @@ export default function ChatScreen({
         .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; }
         .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chat-input {
-          flex: 1; height: clamp(38px, 6vh, 44px); border-radius: 9999px;
+          width: 100%; height: clamp(38px, 6vh, 44px); border-radius: 9999px;
           border: 1.5px solid ${COLORS.border};
-          padding: 0 18px; font-size: 1.12rem;
+          padding: 0 18px 0 44px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
           background: white; outline: none;
           direction: rtl; text-align: right;
           transition: border-color 0.15s;
+          box-sizing: border-box;
         }
         .chat-input:focus { border-color: ${COLORS.primary}; }
         .icon-btn {
@@ -407,10 +408,10 @@ export default function ChatScreen({
         }
         .icon-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
         .mic-btn {
-          width: clamp(34px, 8vw, 40px); height: clamp(34px, 8vw, 40px);
-          border-radius: 9999px; border: none; cursor: pointer;
+          width: 32px; height: 32px;
+          border-radius: 9999px; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          font-size: 1rem; flex-shrink: 0;
+          font-size: 0.9rem; flex-shrink: 0;
           transition: background 0.2s, transform 0.15s;
         }
         .mic-btn.listening {
@@ -609,26 +610,34 @@ export default function ChatScreen({
                   {input.length > 0 ? `${input.length} תווים` : ""}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "6px", alignItems: "center", overflow: "hidden" }}>
-                <button className="send-btn"
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {/* Send button — never shrinks */}
+                <button className="send-btn" style={{ flexShrink: 0 }}
                   onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
-                <input className="chat-input"
-                  placeholder={timedOut ? "השיחה הסתיימה" : "אפשר לאפשר לכתוב כאן..."}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  disabled={timedOut} />
-                <button
-                  className={`mic-btn${isListening ? " listening" : ""}`}
-                  onClick={startVoice}
-                  disabled={timedOut}
-                  title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
-                  style={{
-                    background: isListening ? COLORS.primary : COLORS.border,
-                    color: isListening ? "white" : COLORS.muted,
-                  }}>
-                  🎤
-                </button>
+                {/* Input + mic wrapper */}
+                <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
+                  <input className="chat-input"
+                    placeholder={timedOut ? "השיחה הסתיימה" : "כתבי כאן..."}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    disabled={timedOut} />
+                  {/* Mic — absolute inside input wrapper, left side */}
+                  <button
+                    className={`mic-btn${isListening ? " listening" : ""}`}
+                    onClick={startVoice}
+                    disabled={timedOut}
+                    title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
+                    style={{
+                      position: "absolute", left: "6px", top: "50%",
+                      transform: "translateY(-50%)",
+                      background: isListening ? COLORS.primary : "transparent",
+                      color: isListening ? "white" : COLORS.muted,
+                      border: `1.5px solid ${isListening ? COLORS.primary : COLORS.border}`,
+                    }}>
+                    🎤
+                  </button>
+                </div>
               </div>
             </div>
 
