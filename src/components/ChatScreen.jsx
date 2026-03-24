@@ -532,7 +532,7 @@ export default function ChatScreen({
                   color: COLORS.text, lineHeight: 1.68,
                   direction: "rtl", textAlign: "right",
                   maxWidth: "92%", wordBreak: "break-word",
-                }}}>
+                }}>
                   {isLoading && i === messages.length - 1 && msg.role === "syncca" ? (
                     <span style={{ color: COLORS.muted, fontStyle: "italic" }}>...</span>
                   ) : (
