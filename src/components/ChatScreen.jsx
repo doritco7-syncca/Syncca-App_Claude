@@ -272,6 +272,8 @@ export default function ChatScreen({
   sessionStartTime, logRecordId, chatLang = "he",
 }) {
   const [input, setInput]               = useState("");
+  const [isListening, setIsListening]     = useState(false);
+  const recognitionRef = useRef(null);
   const [activeConcept, setActiveConcept] = useState(null);
   const [secondsLeft, setSecondsLeft]   = useState(() => {
     if (sessionStartTime) {
@@ -331,6 +333,29 @@ export default function ChatScreen({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  function startVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert("הדפדפן שלך אינו תומך בזיהוי קול"); return; }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.lang = "he-IL";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onstart  = () => setIsListening(true);
+    rec.onend    = () => setIsListening(false);
+    rec.onerror  = () => setIsListening(false);
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(prev => prev ? prev + " " + transcript : transcript);
+    };
+    recognitionRef.current = rec;
+    rec.start();
+  }
+
   function handleSend() {
     const t = input.trim();
     if (!t || timedOut) return;
@@ -381,6 +406,20 @@ export default function ChatScreen({
           font-size: 0.95rem; transition: background 0.15s, color 0.15s;
         }
         .icon-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
+        .mic-btn {
+          width: clamp(38px, 10vw, 44px); height: clamp(38px, 10vw, 44px);
+          border-radius: 9999px; border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.1rem; flex-shrink: 0;
+          transition: background 0.2s, transform 0.15s;
+        }
+        .mic-btn.listening {
+          animation: mic-pulse 1s ease-in-out infinite;
+        }
+        @keyframes mic-pulse {
+          0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(198,40,40,0.4); }
+          50%       { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(198,40,40,0); }
+        }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 2px; }
       `}</style>
@@ -577,6 +616,17 @@ export default function ChatScreen({
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                   disabled={timedOut} />
+                <button
+                  className={`mic-btn${isListening ? " listening" : ""}`}
+                  onClick={startVoice}
+                  disabled={timedOut}
+                  title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
+                  style={{
+                    background: isListening ? COLORS.primary : COLORS.border,
+                    color: isListening ? "white" : COLORS.muted,
+                  }}>
+                  🎤
+                </button>
               </div>
             </div>
 
