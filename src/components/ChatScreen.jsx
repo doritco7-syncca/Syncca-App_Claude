@@ -379,7 +379,7 @@ export default function ChatScreen({
         }
         .chat-bubble-anim { animation: bubbleIn 0.22s ease; }
         .send-btn {
-          width: clamp(38px, 10vw, 44px); height: clamp(38px, 10vw, 44px); border-radius: 9999px;
+          width: clamp(36px, 9vw, 42px); height: clamp(36px, 9vw, 42px); border-radius: 9999px;
           background: ${COLORS.primary}; color: white; border: none;
           font-size: 1.05rem; cursor: pointer; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
@@ -407,10 +407,10 @@ export default function ChatScreen({
         }
         .icon-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
         .mic-btn {
-          width: clamp(38px, 10vw, 44px); height: clamp(38px, 10vw, 44px);
+          width: clamp(34px, 8vw, 40px); height: clamp(34px, 8vw, 40px);
           border-radius: 9999px; border: none; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          font-size: 1.1rem; flex-shrink: 0;
+          font-size: 1rem; flex-shrink: 0;
           transition: background 0.2s, transform 0.15s;
         }
         .mic-btn.listening {
@@ -521,7 +521,8 @@ export default function ChatScreen({
                   padding: "13px 17px",
                   fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
                   color: COLORS.text, lineHeight: 1.68,
-                  direction: "rtl", textAlign: "right", width: "100%",
+                  direction: "rtl", textAlign: "right",
+                  maxWidth: "85%", wordBreak: "break-word",
                 } : {
                   background: "#FDFBF7",
                   border: `1.5px solid ${COLORS.primaryLight}`,
@@ -529,8 +530,9 @@ export default function ChatScreen({
                   padding: "13px 17px",
                   fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
                   color: COLORS.text, lineHeight: 1.68,
-                  direction: "rtl", textAlign: "right", width: "100%",
-                }}>
+                  direction: "rtl", textAlign: "right",
+                  maxWidth: "92%", wordBreak: "break-word",
+                }}}>
                   {isLoading && i === messages.length - 1 && msg.role === "syncca" ? (
                     <span style={{ color: COLORS.muted, fontStyle: "italic" }}>...</span>
                   ) : (
@@ -599,7 +601,7 @@ export default function ChatScreen({
                   fontSize: "0.6rem", color: COLORS.muted,
                   fontFamily: "'Alef', sans-serif",
                   letterSpacing: "0.08em", textTransform: "uppercase",
-                }}>🔒 פרטי ומאובטח</div>
+                }}>🔒</div>
                 <div style={{
                   fontSize: "0.6rem", color: COLORS.muted,
                   fontFamily: "'Alef', sans-serif", direction: "rtl",
@@ -607,7 +609,7 @@ export default function ChatScreen({
                   {input.length > 0 ? `${input.length} תווים` : ""}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center", overflow: "hidden" }}>
                 <button className="send-btn"
                   onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
                 <input className="chat-input"
