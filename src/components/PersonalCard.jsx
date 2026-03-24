@@ -217,7 +217,7 @@ export default function PersonalCard({
 
           {/* HEADER */}
           <div style={{
-            padding: "20px 22px 16px",
+            padding: "clamp(12px,3vh,20px) 22px clamp(10px,2vh,16px)",
             borderBottom: `1px solid ${COLORS.border}`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             flexShrink: 0,
@@ -380,7 +380,7 @@ export default function PersonalCard({
                 border: "none", borderRadius: "9999px",
                 fontFamily: "'Alef', sans-serif",
                 fontSize: "1rem", fontWeight: 600,
-                height: "36px", width: "100%",
+                height: "clamp(32px,5vh,36px)", width: "100%",
                 cursor: saveState === "saving" ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
                 boxShadow: saveShadow,

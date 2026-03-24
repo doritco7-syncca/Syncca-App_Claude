@@ -106,7 +106,7 @@ export default function LoginScreen({ onLogin, onBack }) {
         .lr:nth-child(5) { animation-delay: 0.64s; }
         .lr:nth-child(6) { animation-delay: 0.72s; }
         .syncca-field {
-          width: 100%; height: 52px;
+          width: 100%; height: clamp(42px, 7vh, 52px);
           background: #f0fdf4; border: 1.5px solid transparent;
           border-radius: 9999px; padding: 0 22px;
           font-family: 'Alef', sans-serif; font-size: 1rem;
@@ -138,7 +138,7 @@ export default function LoginScreen({ onLogin, onBack }) {
           height: "calc(100dvh - 20px)", maxHeight: "880px",
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "space-between",
-          padding: "clamp(44px,9vh,72px) clamp(28px,7vw,44px) clamp(36px,7vh,56px)",
+          padding: "clamp(28px,7vh,72px) clamp(28px,7vw,44px) clamp(36px,7vh,56px)",
           overflow: "hidden",
         }}>
 

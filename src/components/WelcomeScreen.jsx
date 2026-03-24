@@ -62,7 +62,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
           height: "calc(100dvh - 20px)", maxHeight: "880px",
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "space-between",
-          padding: "clamp(44px,9vh,72px) clamp(28px,7vw,44px) clamp(36px,7vh,56px)",
+          padding: "clamp(24px,6vh,72px) clamp(28px,7vw,44px) clamp(36px,7vh,56px)",
           overflow: "hidden",
         }}>
 

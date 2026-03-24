@@ -162,6 +162,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
       borderTop: `1px solid ${COLORS.border}`,
       background: COLORS.stoneLight,
       flexShrink: 0, direction: "rtl",
+      maxHeight: "35vh", overflowY: "auto",
     }}>
 
       {/* Saved concept pills — only if something saved */}
@@ -353,7 +354,7 @@ export default function ChatScreen({
         }
         .chat-bubble-anim { animation: bubbleIn 0.22s ease; }
         .send-btn {
-          width: 44px; height: 44px; border-radius: 9999px;
+          width: clamp(38px, 10vw, 44px); height: clamp(38px, 10vw, 44px); border-radius: 9999px;
           background: ${COLORS.primary}; color: white; border: none;
           font-size: 1.05rem; cursor: pointer; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
@@ -363,7 +364,7 @@ export default function ChatScreen({
         .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; }
         .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chat-input {
-          flex: 1; height: 44px; border-radius: 9999px;
+          flex: 1; height: clamp(38px, 6vh, 44px); border-radius: 9999px;
           border: 1.5px solid ${COLORS.border};
           padding: 0 18px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
@@ -547,13 +548,13 @@ export default function ChatScreen({
 
           {/* INPUT BAR */}
             <div style={{
-              padding: "12px 16px 16px",
+              padding: "clamp(6px, 2vh, 12px) 16px clamp(8px, 2vh, 16px)",
               borderTop: `1px solid ${COLORS.border}`,
               flexShrink: 0,
             }}>
               <div style={{
                 display: "flex", justifyContent: "space-between",
-                marginBottom: "8px", padding: "0 2px",
+                marginBottom: "clamp(2px, 1vh, 8px)", padding: "0 2px",
               }}>
                 <div style={{
                   fontSize: "0.6rem", color: COLORS.muted,

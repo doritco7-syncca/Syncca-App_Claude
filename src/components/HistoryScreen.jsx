@@ -209,7 +209,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                 <div
                   onClick={() => setExpanded(isOpen ? null : i)}
                   style={{
-                    padding: "14px 16px 10px",
+                    padding: "clamp(8px,2vh,14px) 16px clamp(6px,1.5vh,10px)",
                     cursor: "pointer",
                   }}>
 
@@ -270,7 +270,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                 {isOpen && (
                   <div style={{
                     borderTop: `1px solid ${COLORS.frame}`,
-                    padding: "14px 16px 16px",
+                    padding: "clamp(8px,2vh,14px) 16px clamp(8px,2vh,16px)",
                     display: "flex", flexDirection: "column", gap: "12px",
                   }}>
 
