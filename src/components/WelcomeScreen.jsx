@@ -87,23 +87,23 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             }}>המרחב שבו האהבה נושמת</div>
           </div>
 
-          {/* MIDDLE: Body text — inverted triangle */}
+          {/* MIDDLE: Body text — centered, no constraints */}
           <div className="wr" style={{
             display: "flex", flexDirection: "column",
             alignItems: "center",
             paddingTop: "clamp(12px, 4vh, 28px)",
-            gap: "0px", width: "100%",
+            width: "100%",
           }}>
             <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              gap: "4px", direction: "rtl", textAlign: "center",
+              direction: "rtl", textAlign: "center",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "clamp(0.82rem,3vw,0.9rem)",
-              color: COLORS.text, lineHeight: 1.85, opacity: 0.8,
+              fontSize: "clamp(0.98rem,3.5vw,1.08rem)",
+              color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
+              maxWidth: "320px",
             }}>
-              <p style={{ maxWidth: "310px" }}>אני סינקה AI, שמאומנת בכלי תקשורת בין אישית ייחודיים.</p>
-              <p style={{ maxWidth: "260px" }}>אם הגעת לכאן, סימן שחשוב לך לגלות דרך חדשה,</p>
-              <p style={{ maxWidth: "130px" }}>ואני איתך יד ביד.</p>
+              אני סינקה AI, שמאומנת בכלי תקשורת בין אישית ייחודיים.
+              אם הגעת לכאן, סימן שחשוב לך לגלות דרך חדשה,
+              ואני איתך יד ביד.
             </div>
           </div>
 
