@@ -6,6 +6,7 @@
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
 import { getConceptColors } from "../conceptColors";
+import VOICE_DICTIONARY from "../dictionary.json";
 
 const SESSION_SECS = 30 * 60;
 
@@ -338,6 +339,15 @@ export default function ChatScreen({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  function applyVoiceCorrections(text) {
+    let result = text;
+    Object.entries(VOICE_DICTIONARY).forEach(([wrong, correct]) => {
+      const regex = new RegExp(wrong, "gi");
+      result = result.replace(regex, correct);
+    });
+    return result;
+  }
+
   function startVoice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert("הדפדפן שלך אינו תומך בזיהוי קול"); return; }
@@ -354,7 +364,8 @@ export default function ChatScreen({
     rec.onend    = () => setIsListening(false);
     rec.onerror  = () => setIsListening(false);
     rec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
+      const raw = e.results[0][0].transcript;
+      const transcript = applyVoiceCorrections(raw);
       setInput(prev => prev ? prev + " " + transcript : transcript);
     };
     recognitionRef.current = rec;
