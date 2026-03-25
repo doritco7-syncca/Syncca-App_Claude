@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { updateUserProfile, FIELD_MAPS } from "../AirtableService";
+import { getConceptColors } from "../conceptColors";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -317,7 +318,15 @@ export default function PersonalCard({
                   <div key={i} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
                     <div className="concept-pill"
                       onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
-                      style={{ cursor: "pointer", userSelect: "none", paddingLeft: "22px" }}>
+                      style={(() => {
+                        const cols = getConceptColors(c);
+                        const isActive = activeConcept?._idx === i;
+                        return {
+                          cursor: "pointer", userSelect: "none", paddingLeft: "22px",
+                          background: isActive ? cols.headerBg : cols.bg,
+                          borderColor: cols.border, color: cols.text,
+                        };
+                      })()}>
                       <span>✦</span><span>{resolveWord(c)}</span>
                     </div>
                     <button
@@ -337,16 +346,17 @@ export default function PersonalCard({
 
             {activeConcept && (
               <div style={{
-                marginTop: "10px", background: "#f0fdf4",
-                border: "1.5px solid #bbf7d0",
+                marginTop: "10px",
+                background: getConceptColors(activeConcept).headerBg,
+                border: `1.5px solid ${getConceptColors(activeConcept).border}`,
                 borderRadius: "14px", padding: "12px 16px",
                 direction: "rtl", position: "relative",
-                boxShadow: "0 2px 12px rgba(22,163,74,0.08)",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
               }}>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
                   fontSize: "1rem", fontWeight: 700,
-                  color: "#757575", marginBottom: "6px",
+                  color: getConceptColors(activeConcept).text, marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",

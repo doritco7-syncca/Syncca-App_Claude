@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
+import { getConceptColors } from "../conceptColors";
 
 const SESSION_SECS = 30 * 60;
 
@@ -178,14 +179,18 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               <div key={i} style={{
                 display: "inline-flex", alignItems: "center", gap: "2px",
               }}>
-                <button onClick={() => toggleConcept(c)} style={{
-                  padding: "3px 11px", borderRadius: "9999px",
-                  border: `1.5px solid ${activeConcept?.word === c.word ? COLORS.primary : "rgba(198,40,40,0.4)"}`,
-                  background: activeConcept?.word === c.word ? "#FFF0E8" : "rgba(254,215,170,0.35)",
-                  color: COLORS.primary,
-                  fontFamily: "'Alef', sans-serif", fontSize: "0.66rem", fontWeight: 600,
-                  cursor: "pointer", transition: "all 0.15s",
-                }}>{resolveWord(c)}</button>
+                <button onClick={() => toggleConcept(c)} style={(() => {
+                  const cols = getConceptColors(findEntry(c));
+                  const isActive = activeConcept?.word === c.word;
+                  return {
+                    padding: "3px 11px", borderRadius: "9999px",
+                    border: `1.5px solid ${cols.border}`,
+                    background: isActive ? cols.headerBg : cols.bg,
+                    color: cols.text,
+                    fontFamily: "'Alef', sans-serif", fontSize: "0.66rem", fontWeight: 600,
+                    cursor: "pointer", transition: "all 0.15s",
+                  };
+                })()}>{resolveWord(c)}</button>
                 <button
                   onClick={(e) => { e.stopPropagation(); if (activeConcept?.word === c.word) setActiveConcept(null); onDeleteConcept?.(c); }}
                   title="הסר מושג"
@@ -209,7 +214,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               <div style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: "1.05rem", fontWeight: 700,
-                color: COLORS.secondary, marginBottom: "3px",
+                color: getConceptColors(findEntry(activeConcept)).text, marginBottom: "3px",
               }}>{resolveWord(activeConcept)}</div>
               <div style={{
                 fontFamily: "'Alef', sans-serif", fontSize: "0.8rem",
@@ -631,11 +636,17 @@ export default function ChatScreen({
                     style={{
                       position: "absolute", left: "6px", top: "50%",
                       transform: "translateY(-50%)",
-                      background: isListening ? COLORS.primary : "transparent",
-                      color: isListening ? "white" : COLORS.muted,
-                      border: `1.5px solid ${isListening ? COLORS.primary : COLORS.border}`,
+                      background: isListening ? "#B71C1C" : "transparent",
+                      color: isListening ? "white" : "#2E7D32",
+                      border: `1.5px solid ${isListening ? "#B71C1C" : "#2E7D32"}`,
                     }}>
-                    🎤
+                    <svg width="16" height="16" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" style={{ display:"block" }}>
+                      <g fill="currentColor">
+                        <path d="M77.87,69.9c-3.04-1.69-6.18-4.04-9.19-6.93c-2.3-2.21-4.29-4.53-5.9-6.82c-1.62-2.29-2.87-4.56-3.69-6.82c-0.15-0.41-0.24-0.84-0.35-1.26L6.2,111.94c-1.31,1.37,1.18,5.93,5.6,10.17c4.4,4.24,9.05,6.57,10.37,5.2v-0.01l61.78-54.97c-0.53-0.12-1.04-0.24-1.56-0.41C80.9,71.43,79.4,70.75,77.87,69.9z"/>
+                        <path d="M68.88,20.34c-0.98,1.16-1.86,2.38-2.64,3.63c-2.23,3.56-3.67,8.27-3.5,13.48c0.06,1.61,0.27,3.28,0.66,4.96l0,0.02c1.21,5.28,4.14,10.82,9.58,16.06h0.01c5.44,5.24,11.09,7.96,16.41,8.95c0.01,0,0.02,0,0.03,0.01c0.18,0.03,0.34,0.08,0.52,0.1c1.52,0.26,3.02,0.37,4.49,0.36c5.2-0.04,9.84-1.67,13.31-4.02c1.22-0.83,2.4-1.76,3.52-2.78c-2.96-1.71-11.84-7.25-23.26-18.23C76.56,31.88,70.69,23.22,68.88,20.34z"/>
+                        <path d="M112.7,17.21c-12.7-12.22-27.52-10.03-37.78-2.52c0.15,0.18,0.3,0.37,0.42,0.58l0.04,0.06l0.16,0.28c0.16,0.25,0.4,0.64,0.74,1.16c0.68,1.03,1.74,2.56,3.21,4.5c2.95,3.88,7.56,9.38,14.19,15.75c12.82,12.34,22.12,17.31,22.43,17.47v0c0.21,0.11,0.4,0.24,0.58,0.38C123.79,44.32,125.41,29.42,112.7,17.21z"/>
+                      </g>
+                    </svg>
                   </button>
                 </div>
               </div>

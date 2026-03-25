@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchFullHistory } from "../AirtableService";
+import { getConceptColors } from "../conceptColors";
 
 const COLORS = {
   stone:     "#F9F6EE",
@@ -294,9 +295,9 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                                 )}
                                 style={{
                                   padding: "3px 11px", borderRadius: 9999,
-                                  background: isActive ? "rgba(198,40,40,0.15)" : "rgba(254,215,170,0.45)",
-                                  border: `1.5px solid ${isActive ? COLORS.primary : "rgba(198,40,40,0.3)"}`,
-                                  color: COLORS.primary,
+                                  background: isActive ? getConceptColors(entry).headerBg : getConceptColors(entry).bg,
+                                  border: `1.5px solid ${getConceptColors(entry).border}`,
+                                  color: getConceptColors(entry).text,
                                   fontFamily: "'Alef', sans-serif",
                                   fontSize: "0.76rem", fontWeight: 600,
                                   cursor: entry ? "pointer" : "default",
@@ -310,8 +311,8 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                         {activeConcept?.sessionIdx === i && activeConcept.entry && (
                           <div style={{
                             marginTop: "8px",
-                            background: "#f0fdf4",
-                            border: "1.5px solid #bbf7d0",
+                            background: activeConcept?.entry ? getConceptColors(activeConcept.entry).headerBg : "#f0fdf4",
+                            border: `1.5px solid ${activeConcept?.entry ? getConceptColors(activeConcept.entry).border : "#bbf7d0"}`,
                             borderRadius: 12, padding: "10px 14px",
                             direction: "rtl", position: "relative",
                           }}>
