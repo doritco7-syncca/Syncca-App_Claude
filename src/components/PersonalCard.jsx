@@ -319,7 +319,7 @@ export default function PersonalCard({
                     <div className="concept-pill"
                       onClick={() => setActiveConcept(prev => prev?._idx === i ? null : { ...c, _idx: i })}
                       style={(() => {
-                        const cols = getConceptColors(c);
+                        const cols = getConceptColors(findEntry(c) || c);
                         const isActive = activeConcept?._idx === i;
                         return {
                           cursor: "pointer", userSelect: "none", paddingLeft: "22px",
@@ -347,8 +347,8 @@ export default function PersonalCard({
             {activeConcept && (
               <div style={{
                 marginTop: "10px",
-                background: getConceptColors(activeConcept).headerBg,
-                border: `1.5px solid ${getConceptColors(activeConcept).border}`,
+                background: getConceptColors(findEntry(activeConcept) || activeConcept).headerBg,
+                border: `1.5px solid ${getConceptColors(findEntry(activeConcept) || activeConcept).border}`,
                 borderRadius: "14px", padding: "12px 16px",
                 direction: "rtl", position: "relative",
                 boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
@@ -356,7 +356,7 @@ export default function PersonalCard({
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
                   fontSize: "1rem", fontWeight: 700,
-                  color: getConceptColors(activeConcept).text, marginBottom: "6px",
+                  color: getConceptColors(findEntry(activeConcept) || activeConcept).text, marginBottom: "6px",
                 }}>{resolveWord(activeConcept)}</div>
                 <div style={{
                   fontFamily: "'Alef', sans-serif",
