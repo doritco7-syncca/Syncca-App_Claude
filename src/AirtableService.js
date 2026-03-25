@@ -62,6 +62,7 @@ export async function fetchLexicon() {
       word:          r.fields.Hebrew_Term    || r.fields.English_Term || "",
       explanation:   r.fields.Description_HE || r.fields.Description_EN || "",
       explanationEN: r.fields.Description_EN || "",
+      category:      r.fields.Category       || "",
       aliases:       r.fields.Aliases_Heb
                        ? r.fields.Aliases_Heb.split(",").map(a => a.trim()).filter(Boolean)
                        : [],
