@@ -633,7 +633,7 @@ export default function ChatScreen({
                 {/* Input + mic wrapper */}
                 <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
                   <input className="chat-input"
-                    placeholder={timedOut ? "השיחה הסתיימה" : "כתבי כאן..."}
+                    placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
