@@ -224,6 +224,7 @@ export default function App() {
   const previousConceptsRef    = useRef([]); // from all prior sessions
   const sessionHistoryRef      = useRef([]); // last 5 sessions with dates/concepts/feedback
   const savedConceptsRef       = useRef([]); // mirrors savedConcepts state
+  const securityAlertRef        = useRef(false); // tracks if security alert triggered this session
 
   // Keep savedConceptsRef in sync with state
   useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
