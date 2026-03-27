@@ -293,7 +293,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                             return (
                               <div key={ci} style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
                                 <span
-                                  onClick={() => setActiveConcept(isActive ? null : { word: c, entry, sessionIdx: i })}
+                                  onClick={() => setActiveConcept(isActive ? null : { word: c, sessionIdx: i })}
                                   style={{
                                     padding: "3px 11px", borderRadius: 9999,
                                     background: isActive ? getConceptColors(entry).headerBg : getConceptColors(entry).bg,
@@ -323,11 +323,11 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                         </div>
 
                         {/* Concept explanation */}
-                        {activeConcept?.sessionIdx === i && activeConcept.entry && (
+                        {activeConcept?.sessionIdx === i && (() => { const ae = findConceptEntry(activeConcept.word); return ae && (
                           <div style={{
                             marginTop: "8px",
-                            background: activeConcept?.entry ? getConceptColors(activeConcept.entry).headerBg : "#f0fdf4",
-                            border: `1.5px solid ${activeConcept?.entry ? getConceptColors(activeConcept.entry).border : "#bbf7d0"}`,
+                            background: getConceptColors(ae).headerBg,
+                            border: `1.5px solid ${getConceptColors(ae).border}`,
                             borderRadius: 12, padding: "10px 14px",
                             direction: "rtl", position: "relative",
                           }}>
@@ -335,33 +335,31 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                               fontFamily: "'Alef', sans-serif",
                               fontSize: "0.88rem", fontWeight: 700,
                               color: COLORS.secondary, marginBottom: "4px",
-                            }}>{activeConcept.entry.word}</div>
+                            }}>{ae.word}</div>
                             <div style={{
                               fontFamily: "'Alef', sans-serif",
                               fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.65,
-                            }}>{activeConcept.entry.explanation}</div>
+                            }}>{ae.explanation}</div>
                             <button onClick={() => setActiveConcept(null)} style={{
                               position: "absolute", top: 8, left: 10,
                               background: "none", border: "none", cursor: "pointer",
                               color: COLORS.muted, fontSize: "0.75rem",
                             }}>✕</button>
-                            {onSaveConcept && (() => {
-                              const alreadySaved = savedConcepts.some(sc => sc.word === activeConcept.entry.word);
+                            {(() => {
+                              const alreadySaved = savedConcepts.some(sc => sc.word === ae.word);
                               return !alreadySaved ? (
                                 <button
-                                  onClick={() => {
-                                    onSaveConcept({
-                                      word: activeConcept.entry.word,
-                                      explanation: activeConcept.entry.explanation,
-                                      category: activeConcept.entry.category,
-                                    });
-                                  }}
+                                  onClick={() => onSaveConcept?.({
+                                    word: ae.word,
+                                    explanation: ae.explanation,
+                                    category: ae.category,
+                                  })}
                                   style={{
                                     marginTop: "10px", width: "100%",
                                     padding: "6px", borderRadius: 9999,
-                                    background: getConceptColors(activeConcept.entry).bg,
-                                    border: `1.5px solid ${getConceptColors(activeConcept.entry).border}`,
-                                    color: getConceptColors(activeConcept.entry).text,
+                                    background: getConceptColors(ae).bg,
+                                    border: `1.5px solid ${getConceptColors(ae).border}`,
+                                    color: getConceptColors(ae).text,
                                     fontFamily: "'Alef', sans-serif",
                                     fontSize: "0.78rem", fontWeight: 700,
                                     cursor: "pointer",
@@ -375,7 +373,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                               );
                             })()}
                           </div>
-                        )}
+                        ); })()} 
                       </div>
                     )}
 
