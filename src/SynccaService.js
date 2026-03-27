@@ -1195,7 +1195,7 @@ export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexi
   const ANTHROPIC_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
 
   const body = JSON.stringify({
-    model:      "claude-opus-4-6",
+    model:      "claude-sonnet-4-6",
     max_tokens: 1500,
     system:     buildSystemPrompt(sessionMinutesElapsed, liveLexicon, previousConcepts, userProfile, sessionHistory),
     messages,
