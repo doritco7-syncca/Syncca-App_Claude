@@ -53,11 +53,15 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
 
   function findConceptEntry(word) {
     if (!word) return null;
-    const w = word.toLowerCase().trim();
+    const w = word.toLowerCase().trim().replace(/[\[\]]/g, "");
     return conceptLexicon.find(e =>
       e.word?.toLowerCase() === w ||
       e.englishTerm?.toLowerCase() === w ||
-      e.aliases?.some(a => a.toLowerCase().trim() === w)
+      e.aliases?.some(a => a.toLowerCase().trim() === w) ||
+      // partial match: stored word is substring of lexicon entry (e.g. "לימבית" → "מערכת לימבית")
+      (w.length >= 3 && e.word?.toLowerCase().includes(w)) ||
+      // partial match: lexicon entry is substring of stored word
+      (e.word?.length >= 3 && w.includes(e.word?.toLowerCase()))
     );
   }
   const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
@@ -288,7 +292,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           {s.concepts.map((c, ci) => {
                             const entry = findConceptEntry(c);
                             const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
-                            const displayWord = entry?.word || c.replace(/\[\[|\]\]/g, "");
+                            const displayWord = entry?.word || c.replace(/[\[\]]/g, "");
                             const alreadySaved = savedConcepts.some(sc => sc.word === displayWord);
                             return (
                               <div key={ci} style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
