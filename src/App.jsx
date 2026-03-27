@@ -653,6 +653,8 @@ export default function App() {
           username={userRecord?.Username || recordId}
           firstName={userRecord?.First_Name || ""}
           conceptLexicon={conceptLexicon}
+          savedConcepts={savedConcepts}
+          onSaveConcept={handleSaveConcept}
           onClose={() => setScreen("chat")}
         />
       )}
