@@ -1226,6 +1226,7 @@ export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexi
     const data = await response.json();
     return data.content.map(b => b.type === "text" ? b.text : "").filter(Boolean).join("\n");
   }
+}
 
 // ─────────────────────────────────────────────────────────────
 // PARSERS
