@@ -223,7 +223,7 @@ export async function fetchSessionHistory(userRecordId, limit = 5) {
     );
     return (data.records || []).map(rec => ({
       date:      rec.fields?.Created_At     || "",
-      concepts:  (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean),
+      concepts:  (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
       duration:  rec.fields?.Session_Duration_Minutes || null,
       feedback:  rec.fields?.Feedback       || "",
       language:  rec.fields?.Language_Used  || "Hebrew",
