@@ -1193,28 +1193,39 @@ ${lines}`;
 // ─────────────────────────────────────────────────────────────
 export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexicon = null, previousConcepts = [], userProfile = {}, sessionHistory = []) {
   const ANTHROPIC_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key":    ANTHROPIC_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model:      "claude-opus-4-6",
-      max_tokens: 1500,
-      system:     buildSystemPrompt(sessionMinutesElapsed, liveLexicon, previousConcepts, userProfile, sessionHistory),
-      messages,
-    }),
+
+  const body = JSON.stringify({
+    model:      "claude-opus-4-6",
+    max_tokens: 1500,
+    system:     buildSystemPrompt(sessionMinutesElapsed, liveLexicon, previousConcepts, userProfile, sessionHistory),
+    messages,
   });
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(`Claude API error: ${JSON.stringify(err)}`);
+
+  const headers = {
+    "Content-Type": "application/json",
+    "x-api-key":    ANTHROPIC_KEY,
+    "anthropic-version": "2023-06-01",
+    "anthropic-dangerous-direct-browser-access": "true",
+  };
+
+  // Retry up to 3 times on 529 overload
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers, body,
+    });
+    if (response.status === 529) {
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, attempt * 2000)); // 2s, 4s
+        continue;
+      }
+    }
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(`Claude API error: ${JSON.stringify(err)}`);
+    }
+    const data = await response.json();
+    return data.content.map(b => b.type === "text" ? b.text : "").filter(Boolean).join("\n");
   }
-  const data = await response.json();
-  return data.content.map(b => b.type === "text" ? b.text : "").filter(Boolean).join("\n");
-}
 
 // ─────────────────────────────────────────────────────────────
 // PARSERS
