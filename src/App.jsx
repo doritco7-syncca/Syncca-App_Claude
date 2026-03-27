@@ -414,7 +414,8 @@ export default function App() {
       const rawResponse = await sendToSyncca(
         apiMessages, elapsed, conceptLexicon, previousConceptsRef.current, userRecord || {}, sessionHistoryRef.current
       );
-      const { visibleText } = parseResponse(rawResponse);
+      const { visibleText, securityAlert } = parseResponse(rawResponse);
+      if (securityAlert) securityAlertRef.current = true;
 
       // ── Parse [[bracket]] concepts ────────────────────────────────
       const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon);
@@ -568,6 +569,7 @@ export default function App() {
             conceptsSurfaced: concepts,
             sessionStartTime: sessionStartTime || null,
             sessionInsight:   insight,
+            securityAlert:  securityAlertRef.current,
           }))
           .catch(e => console.warn("[handleLogout] finalize failed:", e));
       }

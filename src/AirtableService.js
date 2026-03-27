@@ -270,7 +270,7 @@ export async function saveFeedback(logRecordId, feedbackText) {
   });
 }
 
-export async function finalizeSession({ logRecordId, fullTranscript, conceptsSurfaced, sessionStartTime, sessionInsight }) {
+export async function finalizeSession({ logRecordId, fullTranscript, conceptsSurfaced, sessionStartTime, sessionInsight, securityAlert }) {
   if (!logRecordId) return;
   const mins   = sessionStartTime ? Math.round((Date.now() - new Date(sessionStartTime).getTime()) / 60000) : null;
   const fields = { Full_Transcript: fullTranscript || "" };
@@ -278,6 +278,7 @@ export async function finalizeSession({ logRecordId, fullTranscript, conceptsSur
     fields.Concepts_Surfaced = conceptsSurfaced.join(", ");
   if (mins !== null) fields.Session_Duration_Minutes = mins;
   if (sessionInsight)  fields.Session_Insight = sessionInsight;
+  if (securityAlert)   fields.Security_Alert = "YES";
   return airtableFetch(`Conversation_Logs/${logRecordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields }),
