@@ -405,14 +405,17 @@ export default function ChatScreen({
         .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; }
         .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chat-input {
-          width: 100%; height: clamp(38px, 6vh, 44px); border-radius: 9999px;
+          width: 100%; min-height: clamp(38px, 6vh, 44px); max-height: 120px;
+          border-radius: 22px;
           border: 1.5px solid ${COLORS.border};
-          padding: 0 18px 0 44px; font-size: 1.12rem;
+          padding: 10px 18px 10px 44px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
           background: white; outline: none;
           direction: rtl; text-align: right;
           transition: border-color 0.15s;
           box-sizing: border-box;
+          resize: none; overflow-y: auto;
+          line-height: 1.45;
         }
         .chat-input:focus { border-color: ${COLORS.primary}; }
         .icon-btn {
@@ -632,10 +635,15 @@ export default function ChatScreen({
                   onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
                 {/* Input + mic wrapper */}
                 <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
-                  <input className="chat-input"
+                  <textarea className="chat-input"
                     placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
                     value={input}
-                    onChange={e => setInput(e.target.value)}
+                    rows={1}
+                    onChange={e => {
+                      setInput(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                    }}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                     disabled={timedOut} />
                   {/* Mic — absolute inside input wrapper, left side */}

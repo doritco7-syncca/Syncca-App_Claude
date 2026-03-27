@@ -43,7 +43,7 @@ function formatTime(iso) {
   return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoryScreen({ username, firstName, onClose, conceptLexicon = [] }) {
+export default function HistoryScreen({ username, firstName, onClose, conceptLexicon = [], savedConcepts = [], onSaveConcept }) {
   const [sessions, setSessions] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
@@ -262,7 +262,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                         fontFamily: "'Alef', sans-serif",
                         fontSize: "0.74rem", fontWeight: 400,
                         display: "inline-block",
-                      }}>{s.concepts.length} מושגים</div>
+                      }}>{s.concepts.length} מושגים שהוזכרו בשיחה</div>
                     </div>
                   )}
                 </div>
@@ -283,26 +283,41 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           fontSize: "0.66rem", fontWeight: 700,
                           color: COLORS.secondary, marginBottom: "6px",
                           textTransform: "uppercase", letterSpacing: "0.04em",
-                        }}>✦ מושגים</div>
+                        }}>מושגים שהוזכרו בשיחה – לחיצה עליהם תשמור אותם עבורך</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {s.concepts.map((c, ci) => {
                             const entry = findConceptEntry(c);
                             const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
+                            const displayWord = entry?.word || c.replace(/\[\[|\]\]/g, "");
+                            const alreadySaved = savedConcepts.some(sc => sc.word === displayWord);
                             return (
-                              <span key={ci}
-                                onClick={() => setActiveConcept(
-                                  isActive ? null : { word: c, entry, sessionIdx: i }
+                              <div key={ci} style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                <span
+                                  onClick={() => setActiveConcept(isActive ? null : { word: c, entry, sessionIdx: i })}
+                                  style={{
+                                    padding: "3px 11px", borderRadius: 9999,
+                                    background: isActive ? getConceptColors(entry).headerBg : getConceptColors(entry).bg,
+                                    border: `1.5px solid ${getConceptColors(entry).border}`,
+                                    color: getConceptColors(entry).text,
+                                    fontFamily: "'Alef', sans-serif",
+                                    fontSize: "0.76rem", fontWeight: 600,
+                                    cursor: entry ? "pointer" : "default",
+                                    userSelect: "none",
+                                  }}>{entry ? "✦ " : ""}{displayWord}</span>
+                                {onSaveConcept && entry && !alreadySaved && (
+                                  <button
+                                    onClick={() => onSaveConcept({ word: displayWord, explanation: entry.explanation, category: entry.category })}
+                                    title="שמור מושג זה"
+                                    style={{
+                                      background: "none", border: "none", cursor: "pointer",
+                                      color: getConceptColors(entry).text,
+                                      fontSize: "0.8rem", padding: "1px 3px", opacity: 0.8,
+                                    }}>＋</button>
                                 )}
-                                style={{
-                                  padding: "3px 11px", borderRadius: 9999,
-                                  background: isActive ? getConceptColors(entry).headerBg : getConceptColors(entry).bg,
-                                  border: `1.5px solid ${getConceptColors(entry).border}`,
-                                  color: getConceptColors(entry).text,
-                                  fontFamily: "'Alef', sans-serif",
-                                  fontSize: "0.76rem", fontWeight: 600,
-                                  cursor: entry ? "pointer" : "default",
-                                  userSelect: "none",
-                                }}>{entry ? "✦ " : ""}{entry?.word || c}</span>
+                                {alreadySaved && (
+                                  <span style={{ fontSize: "0.65rem", color: "#16a34a" }}>✓</span>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
