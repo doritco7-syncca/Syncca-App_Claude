@@ -283,7 +283,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           fontSize: "0.66rem", fontWeight: 700,
                           color: COLORS.secondary, marginBottom: "6px",
                           textTransform: "uppercase", letterSpacing: "0.04em",
-                        }}>מושגים שהוזכרו בשיחה – לחיצה עליהם תשמור אותם עבורך</div>
+                        }}>מושגים שהוזכרו בשיחה – לחיצה עליהם לפירוט ושמירה</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {s.concepts.map((c, ci) => {
                             const entry = findConceptEntry(c);
@@ -345,6 +345,35 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                               background: "none", border: "none", cursor: "pointer",
                               color: COLORS.muted, fontSize: "0.75rem",
                             }}>✕</button>
+                            {onSaveConcept && (() => {
+                              const alreadySaved = savedConcepts.some(sc => sc.word === activeConcept.entry.word);
+                              return !alreadySaved ? (
+                                <button
+                                  onClick={() => {
+                                    onSaveConcept({
+                                      word: activeConcept.entry.word,
+                                      explanation: activeConcept.entry.explanation,
+                                      category: activeConcept.entry.category,
+                                    });
+                                  }}
+                                  style={{
+                                    marginTop: "10px", width: "100%",
+                                    padding: "6px", borderRadius: 9999,
+                                    background: getConceptColors(activeConcept.entry).bg,
+                                    border: `1.5px solid ${getConceptColors(activeConcept.entry).border}`,
+                                    color: getConceptColors(activeConcept.entry).text,
+                                    fontFamily: "'Alef', sans-serif",
+                                    fontSize: "0.78rem", fontWeight: 700,
+                                    cursor: "pointer",
+                                  }}>✦ שמור מושג זה בכרטיס האישי</button>
+                              ) : (
+                                <div style={{
+                                  marginTop: "8px", textAlign: "center",
+                                  color: "#16a34a", fontSize: "0.78rem",
+                                  fontFamily: "'Alef', sans-serif",
+                                }}>✓ נשמר בכרטיס האישי</div>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
