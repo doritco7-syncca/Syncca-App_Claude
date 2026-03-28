@@ -37,7 +37,6 @@ export default function PersonalCard({
   airtableRecordId,
   savedConcepts = [], conceptLexicon = [], chatLang = "he", onClose, onRecordUpdate, onDeleteConcept,
 }) {
-  console.log("[PersonalCard] render — savedConcepts:", savedConcepts, "airtableRecordId:", airtableRecordId);
   // Reverse-map: Airtable stores English values, UI shows Hebrew
   function fromAirtable(key, val) {
     if (!val) return "";
@@ -68,13 +67,15 @@ export default function PersonalCard({
   }
 
   function findEntry(c) {
-    const t = c.englishTerm || c.word || "";
-    const w = c.word || "";
+    const t = (c.englishTerm || c.word || "").toLowerCase();
+    const w = (c.word || "").toLowerCase();
     return conceptLexicon.find(e =>
       e.englishTerm === t || e.englishTerm === w ||
-      e.word === w || e.word === t ||
+      e.word?.toLowerCase() === w || e.word?.toLowerCase() === t ||
       e.aliases?.some(a => a === w || a === t ||
-        stripHe(a) === stripHe(w) || stripHe(a) === stripHe(t))
+        stripHe(a) === stripHe(w) || stripHe(a) === stripHe(t)) ||
+      (w.length >= 3 && e.word?.toLowerCase().includes(w)) ||
+      (e.word?.length >= 3 && w.includes(e.word?.toLowerCase()))
     );
   }
 
