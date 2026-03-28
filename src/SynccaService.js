@@ -1159,8 +1159,6 @@ ${lines}`;
 // MAIN API CALL
 // ─────────────────────────────────────────────────────────────
 export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexicon = null, previousConcepts = [], userProfile = {}, sessionHistory = []) {
-  const ANTHROPIC_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
-
   const body = JSON.stringify({
     model:      "claude-sonnet-4-6",
     max_tokens: 1500,
@@ -1168,21 +1166,16 @@ export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexi
     messages,
   });
 
-  const headers = {
-    "Content-Type": "application/json",
-    "x-api-key":    ANTHROPIC_KEY,
-    "anthropic-version": "2023-06-01",
-    "anthropic-dangerous-direct-browser-access": "true",
-  };
-
   // Retry up to 3 times on 529 overload
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST", headers, body,
+    const response = await fetch("/api/syncca", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
     });
     if (response.status === 529) {
       if (attempt < 3) {
-        await new Promise(r => setTimeout(r, attempt * 2000)); // 2s, 4s
+        await new Promise(r => setTimeout(r, attempt * 2000));
         continue;
       }
     }
@@ -1233,9 +1226,6 @@ export function detectConceptsFromText(text) {
 // ─────────────────────────────────────────────────────────────
 export async function generateSessionInsight(transcript, conceptsSurfaced = []) {
   if (!transcript || transcript.length < 100) return "";
-  const ANTHROPIC_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
-  if (!ANTHROPIC_KEY) return "";
-
   const conceptList = conceptsSurfaced.length
     ? `מושגים שנגעו בהם: ${conceptsSurfaced.join(", ")}.`
     : "";
@@ -1253,14 +1243,9 @@ ${conceptList}
 ${transcript.slice(-3000)}`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/syncca", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 300,
@@ -1270,7 +1255,6 @@ ${transcript.slice(-3000)}`;
     const data = await response.json();
     return data.content?.[0]?.text?.trim() || "";
   } catch (e) {
-    console.warn("[generateSessionInsight] failed:", e);
     return "";
   }
 }
