@@ -293,7 +293,6 @@ export default function LoginScreen({ onLogin, onBack }) {
                 ← שנה כתובת אימייל
               </button>
             )}
-            <div style={{ display:"none" }}</div>
 
             {onBack && (
               <div className="lr">
