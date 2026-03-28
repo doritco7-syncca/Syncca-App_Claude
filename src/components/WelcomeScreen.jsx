@@ -95,15 +95,13 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             width: "100%",
           }}>
             <div style={{
-              direction: "rtl", textAlign: "center",
+              direction: "rtl", textAlign: "justify",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "clamp(0.98rem,3.5vw,1.08rem)",
+              fontSize: "clamp(1.27rem,4vw,1.4rem)",
               color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
               maxWidth: "320px",
             }}>
-              אני סינקה AI, שמאומנת בכלי תקשורת בין אישית ייחודיים.
-              אם הגעת לכאן, סימן שחשוב לך לגלות דרך חדשה,
-              ואני איתך יד ביד.
+              אני סינקה, AI שמאומנת בכלי תקשורת בין אישית ייחודיים. הם מאפשרים להחליף את מאבקי הכוח שמכבים יום אחר יום את האהבה בתקשורת בריאה ונקייה. אם הגעת לכאן, סימן שחשוב לך לגלות דרך חדשה, ואני איתך יד ביד.
             </div>
           </div>
 

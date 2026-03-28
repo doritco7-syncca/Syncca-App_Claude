@@ -67,20 +67,51 @@ function TermsModal({ onClose }) {
 }
 
 export default function LoginScreen({ onLogin, onBack }) {
-  const [email, setEmail]       = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
-  const [btnHover, setBtnHover] = useState(false);
+  const [email, setEmail]         = useState("");
+  const [code, setCode]           = useState("");
+  const [step, setStep]           = useState("email"); // "email" | "verify"
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
+  const [btnHover, setBtnHover]   = useState(false);
   const [showTerms, setShowTerms] = useState(false);
 
-  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-  async function handleSubmit() {
-    if (!isValid) { setError("נא להזין כתובת אימייל תקינה"); return; }
+  async function handleSendCode() {
+    if (!isValidEmail) { setError("נא להזין כתובת אימייל תקינה"); return; }
     setError(""); setLoading(true);
-    try { await onLogin?.(email.trim()); }
-    catch { setError("אירעה שגיאה, נסי שוב"); }
-    finally { setLoading(false); }
+    try {
+      const { generateCode, sendVerificationCode } = await import("../emailService");
+      const { saveVerificationCode } = await import("../AirtableService");
+      const newCode = generateCode();
+      await saveVerificationCode(email.trim(), newCode);
+      const result = await sendVerificationCode(email.trim(), newCode);
+      if (!result.success) {
+        setError("שגיאה בשליחת הקוד, נסי שוב");
+      } else {
+        setStep("verify");
+      }
+    } catch (e) {
+      console.error("[handleSendCode]", e);
+      setError("אירעה שגיאה, נסי שוב");
+    } finally { setLoading(false); }
+  }
+
+  async function handleVerifyCode() {
+    if (code.length !== 4) { setError("נא להזין קוד בן 4 ספרות"); return; }
+    setError(""); setLoading(true);
+    try {
+      const { verifyCode } = await import("../AirtableService");
+      const result = await verifyCode(email.trim(), code.trim());
+      if (!result.success) {
+        setError(result.reason === "wrong_code" ? "הקוד שגוי, נסי שוב" : "משהו השתבש, נסי שוב");
+      } else {
+        await onLogin?.(email.trim());
+      }
+    } catch (e) {
+      console.error("[handleVerifyCode]", e);
+      setError("אירעה שגיאה, נסי שוב");
+    } finally { setLoading(false); }
   }
 
   return (
@@ -175,14 +206,30 @@ export default function LoginScreen({ onLogin, onBack }) {
                 color: COLORS.secondary,
                 textAlign: "center", direction: "rtl", marginBottom: "10px",
                 lineHeight: 1.6,
-              }}>כדי שסינקה תוכל לשמור עבורך על רצף השיחות והתובנות<br/>— נבקש להזדהות</div>
-              <input
-                className={`syncca-field${error ? " err" : ""}`}
-                type="email" placeholder="your@email.com" value={email}
-                onChange={e => { setEmail(e.target.value); setError(""); }}
-                onKeyDown={e => e.key === "Enter" && handleSubmit()}
-                autoComplete="email" inputMode="email"
-              />
+              }}>
+                {step === "email"
+                  ? <>כדי שסינקה תוכל לשמור עבורך על רצף השיחות והתובנות<br/>— נבקש להזדהות</>
+                  : <>שלחנו קוד בן 4 ספרות לכתובת<br/><strong>{email}</strong></>
+                }
+              </div>
+              {step === "email" ? (
+                <input
+                  className={`syncca-field${error ? " err" : ""}`}
+                  type="email" placeholder="your@email.com" value={email}
+                  onChange={e => { setEmail(e.target.value); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleSendCode()}
+                  autoComplete="email" inputMode="email"
+                />
+              ) : (
+                <input
+                  className={`syncca-field${error ? " err" : ""}`}
+                  type="text" placeholder="_ _ _ _" value={code}
+                  onChange={e => { setCode(e.target.value.replace(/\D/g,"")); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleVerifyCode()}
+                  maxLength={4} inputMode="numeric"
+                  style={{ textAlign: "center", letterSpacing: "0.4em", fontSize: "1.6rem" }}
+                />
+              )}
               {error && (
                 <div style={{
                   color: "#dc2626", fontSize: "0.76rem", textAlign: "right",
@@ -194,7 +241,7 @@ export default function LoginScreen({ onLogin, onBack }) {
 
             {/* Button — 75% width, blue */}
             <div className="lr" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-              <button onClick={handleSubmit} disabled={loading}
+              <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading}
                 onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
                 style={{
                   background: loading ? COLORS.primaryHover : (btnHover ? COLORS.primaryHover : COLORS.primary),
@@ -206,7 +253,12 @@ export default function LoginScreen({ onLogin, onBack }) {
                   transform: btnHover && !loading ? "translateY(-2px)" : "translateY(0)",
                   transition: "all 0.18s ease",
                 }}>
-                {loading ? <div className="spinner" /> : <><span>✦</span><span>שמור והתחל שיחה</span></>}
+                {loading
+                    ? <div className="spinner" />
+                    : step === "email"
+                      ? <><span>✦</span><span>שלחי לי קוד</span></>
+                      : <><span>✦</span><span>כניסה לסינקה</span></>
+                  }
               </button>
             </div>
 
@@ -233,6 +285,15 @@ export default function LoginScreen({ onLogin, onBack }) {
               letterSpacing: "0.13em", textTransform: "uppercase",
               color: COLORS.primary, textAlign: "center",
             }}>SECURE &amp; PRIVATE CONNECTION</div>
+            {step === "verify" && (
+              <button onClick={() => { setStep("email"); setCode(""); setError(""); }}
+                style={{ background:"none", border:"none", cursor:"pointer",
+                  fontFamily:"'Alef', sans-serif", fontSize:"0.78rem",
+                  color: COLORS.muted, direction:"rtl" }}>
+                ← שנה כתובת אימייל
+              </button>
+            )}
+            <div style={{ display:"none" }}</div>
 
             {onBack && (
               <div className="lr">
