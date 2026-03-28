@@ -100,6 +100,42 @@ export async function findOrCreateUser(email) {
   return (await findUserByEmail(email)) || createUser(email);
 }
 
+// ─── Email Verification ───────────────────────────────────────
+export async function saveVerificationCode(email, code) {
+  const user = await findUserByEmail(email);
+  if (user) {
+    await airtableFetch(`Users/${user.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ fields: { Verification_Code: code } }),
+    });
+    return user;
+  } else {
+    // Create user with verification code
+    const data = await airtableFetch("Users", {
+      method: "POST",
+      body: JSON.stringify({ fields: {
+        Email:             email.toLowerCase().trim(),
+        Username:          email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") + "_" + Date.now().toString(36),
+        Verification_Code: code,
+      }}),
+    });
+    return { id: data.id, fields: data.fields };
+  }
+}
+
+export async function verifyCode(email, inputCode) {
+  const user = await findUserByEmail(email);
+  if (!user) return { success: false, reason: "user_not_found" };
+  const stored = user.fields?.Verification_Code || "";
+  if (stored.trim() !== inputCode.trim()) return { success: false, reason: "wrong_code" };
+  // Clear code after use
+  await airtableFetch(`Users/${user.id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ fields: { Verification_Code: "" } }),
+  });
+  return { success: true, user };
+}
+
 export async function incrementSyncCount(recordId, currentCount) {
   const n = (currentCount || 0) + 1;
   await airtableFetch(`Users/${recordId}`, {
