@@ -1,9 +1,6 @@
 // AirtableService.js — Syncca
-// Single source of truth for ALL Airtable API calls.
-// Tables: Users, Conversation_Logs, Relationship_Lexicon
-
-const TOKEN   = process.env.REACT_APP_AIRTABLE_TOKEN;
-const BASE_ID = process.env.REACT_APP_AIRTABLE_BASE_ID;
+// All Airtable calls go through /api/airtable proxy (server-side)
+// so the API key is never exposed in the browser.
 
 export const FIELD_MAPS = {
   Marital_Status: {
@@ -21,15 +18,14 @@ export const FIELD_MAPS = {
   },
 };
 
-// ─── Core fetch wrapper ───────────────────────────────────────────
+// ─── Core fetch wrapper — via server proxy ────────────────────────
 async function airtableFetch(path, options = {}) {
-  if (!TOKEN || !BASE_ID)
-    throw new Error(`Airtable env vars missing. TOKEN:${!!TOKEN} BASE_ID:${!!BASE_ID}`);
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${path}`;
-  console.log(`[Airtable] ${options.method || "GET"} → ${path}`);
-  const res  = await fetch(url, {
-    ...options,
-    headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json", ...(options.headers || {}) },
+  const encodedPath = encodeURIComponent(path);
+  const url = `/api/airtable?path=${encodedPath}`;
+  const res = await fetch(url, {
+    method:  options.method || "GET",
+    headers: { "Content-Type": "application/json" },
+    body:    options.body || undefined,
   });
   const data = await res.json();
   if (!res.ok) {
@@ -37,7 +33,6 @@ async function airtableFetch(path, options = {}) {
     console.error(`[Airtable] ✗ ${res.status} on ${path}:`, msg, JSON.stringify(data));
     throw new Error(`Airtable (${res.status}): ${msg}`);
   }
-  console.log(`[Airtable] ✓ ${options.method || "GET"} ${path}`);
   return data;
 }
 
@@ -50,11 +45,6 @@ export async function fetchLexicon() {
     if (data.records) all = all.concat(data.records);
     offset = data.offset || null;
   } while (offset);
-  // Log the raw first record so we can verify Airtable field names match exactly
-  if (all.length > 0) {
-    console.log("[fetchLexicon] Field names in Airtable:", Object.keys(all[0].fields));
-    console.log("[fetchLexicon] First record:", JSON.stringify(all[0].fields));
-  }
 
   const result = all
     .map(r => ({
@@ -71,7 +61,6 @@ export async function fetchLexicon() {
 
   const withExpl = result.filter(c => c.explanation).length;
   const missing  = result.filter(c => !c.explanation).map(c => c.englishTerm);
-  console.log(`[fetchLexicon] ✓ ${result.length} concepts, ${withExpl} with Description_HE, ${missing.length} missing`);
   if (missing.length > 0) {
     console.warn("[fetchLexicon] Missing Description_HE for these English_Terms:", missing);
   }
@@ -174,7 +163,6 @@ export async function fetchSavedConcepts(recordId) {
     const rec = await airtableFetch(`Users/${recordId}?fields%5B%5D=Saved_Concepts`);
     const raw = rec.fields?.Saved_Concepts || "";
     const words = raw.split(",").map(s => s.trim()).filter(Boolean);
-    console.log("[fetchSavedConcepts] ✓ recordId:", recordId, "raw:", raw, "words:", words);
     return words;
   } catch (e) {
     console.warn("[fetchSavedConcepts] failed:", e);
@@ -186,7 +174,6 @@ export async function updateSavedConcepts(recordId, allConceptWords) {
   if (!recordId || !allConceptWords?.length) return;
   // allConceptWords is the FULL updated list from client — just overwrite.
   // No GET+merge needed (that was causing English+Hebrew duplicates).
-  console.log("[updateSavedConcepts] Writing:", allConceptWords);
   return airtableFetch(`Users/${recordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields: { Saved_Concepts: allConceptWords.join(", ") } }),
@@ -220,7 +207,6 @@ export async function createSessionLog(userRecordId) {
     method: "POST",
     body: JSON.stringify({ fields }),
   });
-  console.log("[createSessionLog] ✓ Created logId:", data.id);
   return data.id;
 }
 
@@ -238,7 +224,6 @@ export async function fetchPreviousConcepts(userRecordId) {
       (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean).forEach(c => all.add(c));
     });
     const result = Array.from(all);
-    console.log("[fetchPreviousConcepts] ✓ Found:", result);
     return result;
   } catch (e) {
     console.warn("[fetchPreviousConcepts] failed:", e);
@@ -287,7 +272,6 @@ export async function syncSession({ logRecordId, fullTranscript, conceptsSurface
   if (Array.isArray(conceptsSurfaced) && conceptsSurfaced.length > 0) {
     const deduped = [...new Set(conceptsSurfaced)];
     fields.Concepts_Surfaced = deduped.join(", ");
-    console.log("[syncSession] concepts:", fields.Concepts_Surfaced);
   }
 
   if (!Object.keys(fields).length) return;
@@ -331,7 +315,6 @@ export async function fetchFullHistory(username, limit = 10) {
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
   const data = await airtableFetch(url);
-  console.log("[fetchFullHistory] records found:", data.records?.length, "for username:", username);
   return (data.records || []).map(rec => ({
     id:         rec.id,
     date:       rec.fields?.Created_At || "",

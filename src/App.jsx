@@ -246,7 +246,6 @@ export default function App() {
             return fb?.explanation ? { ...entry, explanation: fb.explanation } : entry;
           });
           const withExpl = merged.filter(e => e.explanation).length;
-          console.log(`[Lexicon] ${merged.length} concepts, ${withExpl} with explanations (${merged.length - withExpl} still missing)`);
           setConceptLexicon(merged);
           // Re-hydrate saved concepts with real explanations now that lexicon is loaded
           setSavedConcepts(prev => prev.map(c => {
@@ -298,9 +297,6 @@ export default function App() {
         const username = result?.fields?.Username || recordId;
         const history = await fetchFullHistory(username, 10);
         sessionHistoryRef.current = history;
-        console.log("[Memory] Previous concepts:", prev);
-        console.log("[Memory] Session history:", history.length, "sessions");
-
         // Create fresh session log
         const logId = await createSessionLog(recordId);
         logRecordIdRef.current        = logId;
@@ -354,16 +350,11 @@ export default function App() {
     previousConceptsRef.current = prev;
     const history = await fetchFullHistory(fields.Username || rid, 10).catch(() => []);
     sessionHistoryRef.current = history;
-    console.log("[Memory] Previous concepts loaded:", prev);
-    console.log("[Memory] Session history loaded:", history.length, "sessions");
-
     // Create session log FIRST — we need logId before first message
     const logId = await createSessionLog(rid).catch(() => null);
     logRecordIdRef.current        = logId;
     fullTranscriptRef.current     = "";
     conceptsIntroducedRef.current = [];
-    console.log("[Login] logRecordId:", logId);
-
     setSessionStartTime(new Date());
     setMessages([{
       role: "syncca", concepts: [], timestamp: new Date().toISOString(),
@@ -420,8 +411,6 @@ export default function App() {
 
       // ── Parse [[bracket]] concepts ────────────────────────────────
       const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon);
-      console.log("[handleSend] parsed concepts:", concepts.map(c => c.word));
-
       // ── Accumulate concepts this session ──────────────────────────
       if (concepts.length > 0) {
         const newWords = concepts
@@ -429,8 +418,6 @@ export default function App() {
           .filter(w => w && !conceptsIntroducedRef.current.includes(w));
         if (newWords.length > 0) {
           conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
-          console.log("[handleSend] new concepts accumulated:", newWords);
-          console.log("[handleSend] total session concepts:", conceptsIntroducedRef.current);
         }
       }
 
@@ -451,7 +438,6 @@ export default function App() {
             fullTranscript,
             conceptsSurfaced: conceptsIntroducedRef.current,
           });
-          console.log("[handleSend] ✓ syncSession complete. concepts:", conceptsIntroducedRef.current);
         } catch (syncErr) {
           console.error("[handleSend] syncSession failed:", syncErr);
         }
@@ -484,7 +470,6 @@ export default function App() {
     // Write to Users.Saved_Concepts — atomic GET+merge in AirtableService
     if (recordId) {
       const words = updated.map(c => c.word || c.englishTerm).filter(Boolean); // save Hebrew word
-      console.log("[handleSaveConcept] writing to Airtable:", words, "recordId:", recordId);
       updateSavedConcepts(recordId, words)
         .then(() => console.log("[handleSaveConcept] ✓ Airtable updated:", words))
         .catch(e => console.error("[handleSaveConcept] ✗ failed:", e));
