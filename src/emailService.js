@@ -1,5 +1,4 @@
 // emailService.js — Syncca
-// קורא ל-Vercel serverless function שמדברת עם Resend
 
 export async function sendVerificationCode(toEmail, code) {
   try {
@@ -9,16 +8,19 @@ export async function sendVerificationCode(toEmail, code) {
       body: JSON.stringify({ to: toEmail, code }),
     });
 
-    const data = await res.json();
+    let data;
+    try { data = await res.json(); }
+    catch { data = { error: "non-json response" }; }
+
     if (!res.ok) {
       console.error("[emailService] error:", data);
       return { success: false, reason: "send_failed", error: data };
     }
 
-    console.log("[emailService] ✓ Email sent:", data.id);
-    return { success: true, id: data.id };
+    console.log("[emailService] ✓ sent:", data.id);
+    return { success: true };
   } catch (e) {
-    console.error("[emailService] fetch error:", e);
+    console.error("[emailService] network error:", e.message);
     return { success: false, reason: "network_error" };
   }
 }
