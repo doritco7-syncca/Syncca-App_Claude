@@ -104,13 +104,13 @@ export async function findOrCreateUser(email) {
 export async function saveVerificationCode(email, code) {
   const user = await findUserByEmail(email);
   if (user) {
-    await airtableFetch(`Users/${user.id}`, {
+    const rid = user.recordId || user.id;
+    await airtableFetch(`Users/${rid}`, {
       method: "PATCH",
       body: JSON.stringify({ fields: { Verification_Code: code } }),
     });
-    return user;
+    return { recordId: rid, fields: user.fields };
   } else {
-    // Create user with verification code
     const data = await airtableFetch("Users", {
       method: "POST",
       body: JSON.stringify({ fields: {
@@ -119,7 +119,7 @@ export async function saveVerificationCode(email, code) {
         Verification_Code: code,
       }}),
     });
-    return { id: data.id, fields: data.fields };
+    return { recordId: data.id, fields: data.fields };
   }
 }
 
@@ -128,8 +128,8 @@ export async function verifyCode(email, inputCode) {
   if (!user) return { success: false, reason: "user_not_found" };
   const stored = user.fields?.Verification_Code || "";
   if (stored.trim() !== inputCode.trim()) return { success: false, reason: "wrong_code" };
-  // Clear code after use
-  await airtableFetch(`Users/${user.id}`, {
+  const rid = user.recordId || user.id;
+  await airtableFetch(`Users/${rid}`, {
     method: "PATCH",
     body: JSON.stringify({ fields: { Verification_Code: "" } }),
   });
