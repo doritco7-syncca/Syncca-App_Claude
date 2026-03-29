@@ -234,7 +234,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
       )}
 
       {/* Feedback — only shown when triggered */}
-      {showFeedback && <div style={{
+      {showFeedback && !sent && <div style={{
         padding: "8px 16px 4px", direction: "rtl",
         fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
         color: COLORS.secondary, lineHeight: 1.6,
