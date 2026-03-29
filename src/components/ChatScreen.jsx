@@ -171,7 +171,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
 
       {/* Saved concept pills — only if something saved */}
       {savedConcepts.length > 0 && (
-        <div style={{ padding: "8px 16px 0" }}>
+        <div style={{ padding: "8px 16px 10px" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
             <span style={{
               fontFamily: "'Cormorant Garamond', serif",
@@ -530,7 +530,7 @@ export default function ChatScreen({
           {/* MESSAGES */}
           <div style={{
             flex: 1, overflowY: "auto",
-            padding: "12px 16px 4px",
+            padding: "12px 16px 0px",
             display: "flex", flexDirection: "column", gap: "10px",
           }}>
             {messages.map((msg, i) => (
@@ -684,19 +684,19 @@ export default function ChatScreen({
           {/* "סיימתי" button — hidden once feedback shown */}
           {!timedOut && !userEnded && (
             <div style={{
-              padding: "6px 16px 10px", display: "flex", justifyContent: "center",
+              padding: "6px 16px 8px", display: "flex", justifyContent: "flex-start",
               flexShrink: 0,
             }}>
               <button
                 onClick={() => setUserEnded(true)}
                 style={{
-                  background: "none",
-                  border: `1px solid ${COLORS.border}`,
+                  background: "#f3f4f6",
+                  border: "none",
                   borderRadius: "9999px",
-                  padding: "5px 18px",
+                  padding: "5px 16px",
                   fontFamily: "'Alef', sans-serif",
                   fontSize: "0.78rem",
-                  color: COLORS.muted,
+                  color: "#1a1a1a",
                   cursor: "pointer",
                   direction: "rtl",
                 }}>
