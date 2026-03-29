@@ -270,7 +270,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
           <div style={{
             flex: 1, textAlign: "center", color: "#16a34a",
             fontFamily: "'Alef', sans-serif", fontSize: "0.9rem", fontWeight: 600,
-          }}>✓ תודה! נתראה בסינק הבא.</div>
+          }}>תודה שהיית כאן 🙏</div>
         )}
       </div>
     </div>
