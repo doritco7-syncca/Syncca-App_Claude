@@ -227,7 +227,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                   onChange={e => { setCode(e.target.value.replace(/\D/g,"")); setError(""); }}
                   onKeyDown={e => e.key === "Enter" && handleVerifyCode()}
                   maxLength={4} inputMode="numeric"
-                  style={{ textAlign: "center", letterSpacing: "0.4em", fontSize: "1.6rem" }}
+                  style={{ textAlign: "center", letterSpacing: "0.5em", fontSize: "1.8rem", fontFamily: "'Courier New', monospace", fontWeight: 700 }}
                 />
               )}
               {error && (

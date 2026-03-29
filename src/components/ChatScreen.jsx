@@ -116,22 +116,24 @@ function stripHeDefiniteArticle(term) {
 }
 
 // ─── Bottom Widget: slim bar — saved concepts + feedback ─────────
-function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he", onDeleteConcept }) {
+function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he", onDeleteConcept, showFeedback = false }) {
   const [activeConcept, setActiveConcept] = useState(null);
   const [feedback, setFeedback]           = useState("");
   const [sent, setSent]                   = useState(false);
   const [sending, setSending]             = useState(false);
 
   function findEntry(concept) {
-    const t = concept.englishTerm || concept.word || "";
-    const w = concept.word || "";
+    const t = (concept.englishTerm || concept.word || "").toLowerCase();
+    const w = (concept.word || "").toLowerCase();
     return conceptLexicon.find(c =>
-      c.englishTerm === t ||
-      c.englishTerm === w ||
-      c.word === w ||
-      c.word === t ||
+      c.englishTerm?.toLowerCase() === t ||
+      c.englishTerm?.toLowerCase() === w ||
+      c.word?.toLowerCase() === w ||
+      c.word?.toLowerCase() === t ||
       c.aliases?.some(a => a === w || a === t ||
-        stripHeDefiniteArticle(a) === stripHeDefiniteArticle(w))
+        stripHeDefiniteArticle(a) === stripHeDefiniteArticle(w)) ||
+      (w.length >= 3 && c.word?.toLowerCase().includes(w)) ||
+      (c.word?.length >= 3 && w.includes(c.word?.toLowerCase()))
     );
   }
 
@@ -231,8 +233,15 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
         </div>
       )}
 
-      {/* Feedback — single input line */}
-      <div style={{ padding: "7px 16px 10px", display: "flex", gap: "7px", alignItems: "center" }}>
+      {/* Feedback — only shown when triggered */}
+      {showFeedback && <div style={{
+        padding: "8px 16px 4px", direction: "rtl",
+        fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
+        color: COLORS.secondary, lineHeight: 1.6,
+      }}>
+        תודה לך על השיתוף 🙏 נשמח למשוב: איך הרגשת עם הממשק של סינקה? נשקול כל הערה או הצעה כדי להשתפר.
+      </div>}
+      <div style={{ padding: "7px 16px 10px", display: showFeedback ? "flex" : "none", gap: "7px", alignItems: "center" }}>
         {!sent ? (
           <>
             <input
@@ -289,6 +298,7 @@ export default function ChatScreen({
     return SESSION_SECS;
   });
   const [timedOut, setTimedOut]       = useState(false);
+  const [userEnded, setUserEnded]       = useState(false);
   const [showWarning, setShowWarning] = useState(() => {
     // If rejoining a session already past 25 minutes, show warning immediately
     if (sessionStartTime) {
@@ -520,8 +530,8 @@ export default function ChatScreen({
           {/* MESSAGES */}
           <div style={{
             flex: 1, overflowY: "auto",
-            padding: "20px 16px 8px",
-            display: "flex", flexDirection: "column", gap: "12px",
+            padding: "12px 16px 4px",
+            display: "flex", flexDirection: "column", gap: "10px",
           }}>
             {messages.map((msg, i) => (
               <div key={i} className="chat-bubble-anim" style={{
@@ -671,13 +681,38 @@ export default function ChatScreen({
               </div>
             </div>
 
-          {/* BOTTOM WIDGET — saved concepts + feedback, always at very bottom */}
+          {/* "סיימתי" button — hidden once feedback shown */}
+          {!timedOut && !userEnded && (
+            <div style={{
+              padding: "6px 16px 10px", display: "flex", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <button
+                onClick={() => setUserEnded(true)}
+                style={{
+                  background: "none",
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: "9999px",
+                  padding: "5px 18px",
+                  fontFamily: "'Alef', sans-serif",
+                  fontSize: "0.78rem",
+                  color: COLORS.muted,
+                  cursor: "pointer",
+                  direction: "rtl",
+                }}>
+                סיימתי את השיחה
+              </button>
+            </div>
+          )}
+
+          {/* BOTTOM WIDGET — saved concepts + feedback */}
           <SessionEndWidget
             savedConcepts={savedConcepts}
             conceptLexicon={conceptLexicon}
             logRecordId={logRecordId}
             chatLang={chatLang}
             onDeleteConcept={onDeleteConcept}
+            showFeedback={timedOut || userEnded}
           />
           </div>
       </div>
