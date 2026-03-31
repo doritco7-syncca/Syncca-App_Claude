@@ -315,14 +315,53 @@ export async function fetchFullHistory(username, limit = 10) {
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
   const data = await airtableFetch(url);
-  return (data.records || []).map(rec => ({
-    id:         rec.id,
-    date:       rec.fields?.Created_At || "",
-    concepts:   (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean),
-    duration:   rec.fields?.Session_Duration_Minutes || null,
-    feedback:   rec.fields?.Feedback || "",
-    language:   rec.fields?.Language_Used || "Hebrew",
-    insight:    rec.fields?.Session_Insight || "",
-    transcript: rec.fields?.Full_Transcript || "",
-  }));
+  return (data.records || [])
+    .map(rec => ({
+      id:         rec.id,
+      date:       rec.fields?.Created_At || "",
+      concepts:   (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
+      duration:   rec.fields?.Session_Duration_Minutes || null,
+      feedback:   rec.fields?.Feedback || "",
+      language:   rec.fields?.Language_Used || "Hebrew",
+      insight:    rec.fields?.Session_Insight || "",
+      transcript: rec.fields?.Full_Transcript || "",
+    }))
+    // Only show sessions that had actual conversation (transcript has at least one exchange)
+    .filter(s => s.transcript && s.transcript.length > 50);
+}
+
+// ─── Session Rate Limiting ────────────────────────────────────
+// Checks if user can start a new session (max 1 per 24h unless VIP)
+// Requires Airtable fields: Last_Session_At (datetime), Is_VIP (checkbox)
+export async function checkSessionAllowed(recordId, fields) {
+  // VIP users have unlimited access
+  if (fields?.Is_VIP) return { allowed: true };
+
+  const lastSession = fields?.Last_Session_At;
+  if (!lastSession) return { allowed: true };
+
+  const last = new Date(lastSession);
+  const now  = new Date();
+  const hoursSince = (now - last) / (1000 * 60 * 60);
+
+  if (hoursSince < 24) {
+    const hoursLeft = Math.ceil(24 - hoursSince);
+    const minutesLeft = Math.ceil((24 * 60) - (hoursSince * 60));
+    const timeMsg = minutesLeft < 60
+      ? `בעוד כ-${minutesLeft} דקות`
+      : `בעוד כ-${hoursLeft} שעות`;
+    return {
+      allowed: false,
+      message: `שמחה שחזרת 🙏 כדי שהשיחות יהיו ממוקדות ואפקטיביות, סינקה פתוחה לשיחה אחת ב-24 שעות. תוכל/י לחזור ${timeMsg}. מחכה לך!`
+    };
+  }
+
+  return { allowed: true };
+}
+
+export async function markSessionStarted(recordId) {
+  return airtableFetch(`Users/${recordId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ fields: { Last_Session_At: new Date().toISOString() } }),
+  });
 }

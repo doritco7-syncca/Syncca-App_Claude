@@ -10,6 +10,7 @@ import PersonalCard  from "./components/PersonalCard";
 import HistoryScreen  from "./components/HistoryScreen";
 import {
   findOrCreateUser, findUserByEmail, incrementSyncCount,
+  checkSessionAllowed, markSessionStarted,
   updateUserProfile, updateSavedConcepts, overwriteSavedConcepts,
   createSessionLog, syncSession, saveFeedback, finalizeSession,
   fetchLexicon, fetchPreviousConcepts, fetchFullHistory,
@@ -319,6 +320,13 @@ export default function App() {
   async function handleLogin(email) {
     const { recordId: rid, fields } = await findOrCreateUser(email);
     if (!rid) throw new Error("לא ניתן למצוא או ליצור משתמש");
+
+    // Check 24h session limit (VIP users bypass)
+    const { allowed, message } = await checkSessionAllowed(rid, fields);
+    if (!allowed) throw new Error(message);
+
+    // Mark session start time
+    await markSessionStarted(rid).catch(() => {});
 
     setUserEmail(email);
     setUserRecord(fields);
