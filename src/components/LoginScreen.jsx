@@ -75,7 +75,7 @@ export default function LoginScreen({ onLogin, onBack }) {
   const isRateLimit = error.includes("שמחה שחזרת");
   const [btnHover, setBtnHover]   = useState(false);
   const [showTerms, setShowTerms]     = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem("syncca_terms_accepted") === "true");
   const [termsShake, setTermsShake]         = useState(false);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -265,7 +265,7 @@ export default function LoginScreen({ onLogin, onBack }) {
 
             {/* Button — 75% width, blue */}
             <div className="lr" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-              <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading || (step === "email" && !termsAccepted)}
+              <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading}
                 onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
                 style={{
                   background: loading ? COLORS.primaryHover : (btnHover ? COLORS.primaryHover : COLORS.primary),
@@ -304,7 +304,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                 <input
                   type="checkbox"
                   checked={termsAccepted}
-                  onChange={e => { setTermsAccepted(e.target.checked); setError(""); }}
+                  onChange={e => { setTermsAccepted(e.target.checked); if (e.target.checked) localStorage.setItem("syncca_terms_accepted", "true"); setError(""); }}
                   style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: COLORS.primary }}
                 />
                 <span>
