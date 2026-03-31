@@ -76,12 +76,17 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [btnHover, setBtnHover]   = useState(false);
   const [showTerms, setShowTerms]     = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsShake, setTermsShake]         = useState(false);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   async function handleSendCode() {
     if (!isValidEmail) { setError("נא להזין כתובת אימייל תקינה"); return; }
-    if (!termsAccepted) { setError("יש לאשר את תנאי השימוש להמשך"); return; }
+    if (!termsAccepted) {
+      setTermsShake(true);
+      setTimeout(() => setTermsShake(false), 700);
+      return;
+    }
     setError(""); setLoading(true);
     try {
       const { generateCode, sendVerificationCode } = await import("../emailService");
@@ -123,6 +128,16 @@ export default function LoginScreen({ onLogin, onBack }) {
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Alef:wght@400;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          15%       { transform: translateX(-6px); }
+          30%       { transform: translateX(6px); }
+          45%       { transform: translateX(-5px); }
+          60%       { transform: translateX(5px); }
+          75%       { transform: translateX(-3px); }
+          90%       { transform: translateX(3px); }
+        }
+        .terms-shake { animation: shake 0.6s ease; }
         @keyframes stoneRise {
           from { opacity: 0; transform: translateY(28px) scale(0.982); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -275,11 +290,12 @@ export default function LoginScreen({ onLogin, onBack }) {
             <div style={{ flex: 1 }} />
 
             {/* Disclaimer + mandatory checkbox */}
-            <div className="lr" style={{
+            <div className={`lr${termsShake ? " terms-shake" : ""}`} style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
               textAlign: "right", direction: "rtl", lineHeight: 1.7, maxWidth: "280px",
-              border: `1px solid ${termsAccepted ? "rgba(46,125,50,0.4)" : "rgba(198,40,40,0.4)"}`,
+              border: `2px solid ${termsShake ? "#C62828" : termsAccepted ? "rgba(46,125,50,0.4)" : "rgba(198,40,40,0.3)"}`,
               borderRadius: "10px", padding: "10px 14px", marginTop: "8px",
+              transition: "border-color 0.2s",
             }}>
               <div style={{ marginBottom: "8px" }}>
                 השימוש מיועד לגיל 18 ומעלה. סינקה נועדה ללמידה והתפתחות אישית ואינה מהווה תחליף לייעוץ פסיכולוגי או רפואי מקצועי.
