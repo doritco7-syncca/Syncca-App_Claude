@@ -10,11 +10,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing Airtable configuration" });
   }
 
-  // path comes as query param: /api/airtable?path=Users/rec123
-  const { path } = req.query;
-  if (!path) return res.status(400).json({ error: "Missing path" });
+  // path comes as query param — Vercel parses it, reconstruct full URL with query string
+  const rawPath = req.url.split("?path=")[1];
+  if (!rawPath) return res.status(400).json({ error: "Missing path" });
 
-  const url = `${BASE_URL}/${path}`;
+  const url = `${BASE_URL}/${rawPath}`;
 
   try {
     const response = await fetch(url, {
