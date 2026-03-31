@@ -45,7 +45,7 @@ function stripHeDefiniteArticle(term) {
   return term.split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
 }
 
-function parseBracketConcepts(text, conceptLexicon) {
+function parseBracketConcepts(text, conceptLexicon, lang = "he") {
   const concepts = [];
   const cleanText = text.replace(/\[\[([^\]]+)\]\]/g, (_, term) => {
     const t = term.trim();
@@ -70,11 +70,15 @@ function parseBracketConcepts(text, conceptLexicon) {
       );
 
     concepts.push({
-      englishTerm: entry?.englishTerm || t,
-      word:        entry?.word        || t,
-      explanation: entry?.explanation || "",
+      englishTerm:   entry?.englishTerm || t,
+      word:          entry?.word        || t,
+      explanation:   entry?.explanation || "",
+      explanationEN: entry?.explanationEN || "",
+      category:      entry?.category     || "",
     });
-    return entry?.word || t; // always show canonical Hebrew term in chat
+    // Show term in correct language
+    const displayTerm = lang === "he" ? (entry?.word || t) : (entry?.englishTerm || t);
+    return displayTerm;
   });
   return { cleanText, concepts };
 }
@@ -322,11 +326,11 @@ export default function App() {
     if (!rid) throw new Error("לא ניתן למצוא או ליצור משתמש");
 
     // Check 24h session limit (VIP users bypass)
-    const { allowed, message } = await checkSessionAllowed(rid, fields);
+    const { allowed, message, isResume } = await checkSessionAllowed(rid, fields);
     if (!allowed) throw new Error(message);
 
-    // Mark session start time
-    await markSessionStarted(rid).catch(() => {});
+    // Only mark session start for new sessions (not resumes)
+    if (!isResume) await markSessionStarted(rid).catch(() => {});
 
     setUserEmail(email);
     setUserRecord(fields);
@@ -358,16 +362,43 @@ export default function App() {
     previousConceptsRef.current = prev;
     const history = await fetchFullHistory(fields.Username || rid, 10).catch(() => []);
     sessionHistoryRef.current = history;
-    // Create session log FIRST — we need logId before first message
-    const logId = await createSessionLog(rid).catch(() => null);
-    logRecordIdRef.current        = logId;
-    fullTranscriptRef.current     = "";
-    conceptsIntroducedRef.current = [];
-    setSessionStartTime(new Date());
-    setMessages([{
-      role: "syncca", concepts: [], timestamp: new Date().toISOString(),
-      text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
-    }]);
+
+    if (isResume && history.length > 0) {
+      // Resume most recent session — restore transcript and log ID
+      const latest = history[0];
+      logRecordIdRef.current        = latest.id;
+      fullTranscriptRef.current     = latest.transcript || "";
+      conceptsIntroducedRef.current = latest.concepts || [];
+      // Rebuild messages from transcript for display
+      const resumeMessages = (latest.transcript || "")
+        .split("\n")
+        .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
+        .map(l => ({
+          role:      l.startsWith("[User]:") ? "user" : "syncca",
+          text:      l.replace(/^\[(User|Syncca)\]: /, ""),
+          concepts:  [],
+          timestamp: new Date().toISOString(),
+        }));
+      const resumeNote = {
+        role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+        text: "ברוכה השבה 🙏 ממשיכים מאיפה שהפסקנו.",
+      };
+      setMessages(resumeMessages.length > 0
+        ? [...resumeMessages, resumeNote]
+        : [resumeNote]
+      );
+    } else {
+      // New session
+      const logId = await createSessionLog(rid).catch(() => null);
+      logRecordIdRef.current        = logId;
+      fullTranscriptRef.current     = "";
+      conceptsIntroducedRef.current = [];
+      setSessionStartTime(new Date());
+      setMessages([{
+        role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+        text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
+      }]);
+    }
 
     if (shouldShowBetaModal(email)) setShowBetaModal(true);
     setScreen("chat");
@@ -418,7 +449,7 @@ export default function App() {
       if (securityAlert) securityAlertRef.current = true;
 
       // ── Parse [[bracket]] concepts ────────────────────────────────
-      const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon);
+      const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon, chatLang);
       // ── Accumulate concepts this session ──────────────────────────
       if (concepts.length > 0) {
         const newWords = concepts
