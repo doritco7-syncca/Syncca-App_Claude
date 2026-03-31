@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from:    "Syncca <noreply@syncca.app>",
         to:      [to],
-        subject: "קוד הגישה שלך לסינקה",
+        subject: `${code} — קוד הגישה שלך לסינקה`,
         html,
       }),
     });
