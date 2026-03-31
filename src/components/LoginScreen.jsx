@@ -72,13 +72,16 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [step, setStep]           = useState("email"); // "email" | "verify"
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState("");
+  const isRateLimit = error.includes("שמחה שחזרת");
   const [btnHover, setBtnHover]   = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
+  const [showTerms, setShowTerms]     = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   async function handleSendCode() {
     if (!isValidEmail) { setError("נא להזין כתובת אימייל תקינה"); return; }
+    if (!termsAccepted) { setError("יש לאשר את תנאי השימוש להמשך"); return; }
     setError(""); setLoading(true);
     try {
       const { generateCode, sendVerificationCode } = await import("../emailService");
@@ -232,16 +235,22 @@ export default function LoginScreen({ onLogin, onBack }) {
               )}
               {error && (
                 <div style={{
-                  color: "#dc2626", fontSize: "0.76rem", textAlign: "right",
-                  direction: "rtl", marginTop: "6px", paddingRight: "8px",
+                  color: isRateLimit ? "#1565C0" : "#dc2626",
+                  border: isRateLimit ? "1.5px solid #BBDEFB" : "none",
+                  background: isRateLimit ? "#E3F2FD" : "transparent",
+                  borderRadius: isRateLimit ? "12px" : "0",
+                  padding: isRateLimit ? "10px 14px" : "0 8px",
+                  fontSize: "0.82rem", textAlign: "right",
+                  direction: "rtl", marginTop: "10px",
                   fontFamily: "'Alef', sans-serif",
+                  lineHeight: 1.6,
                 }}>{error}</div>
               )}
             </div>
 
             {/* Button — 75% width, blue */}
             <div className="lr" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-              <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading}
+              <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading || (step === "email" && !termsAccepted)}
                 onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
                 style={{
                   background: loading ? COLORS.primaryHover : (btnHover ? COLORS.primaryHover : COLORS.primary),
@@ -265,19 +274,32 @@ export default function LoginScreen({ onLogin, onBack }) {
             {/* Spacer */}
             <div style={{ flex: 1 }} />
 
-            {/* Disclaimer — bottom, red border */}
+            {/* Disclaimer + mandatory checkbox */}
             <div className="lr" style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
-              textAlign: "center", direction: "rtl", lineHeight: 1.7, maxWidth: "280px",
-              border: "1px solid rgba(198,40,40,0.4)", borderRadius: "10px",
-              padding: "10px 14px", marginTop: "8px",
+              textAlign: "right", direction: "rtl", lineHeight: 1.7, maxWidth: "280px",
+              border: `1px solid ${termsAccepted ? "rgba(46,125,50,0.4)" : "rgba(198,40,40,0.4)"}`,
+              borderRadius: "10px", padding: "10px 14px", marginTop: "8px",
             }}>
-              השימוש מיועד לגיל 18 ומעלה. סינקה נועדה ללמידה והתפתחות אישית ואינה מהווה תחליף לייעוץ פסיכולוגי או רפואי מקצועי. השימוש באפליקציה מהווה הסכמה ל
-              <button onClick={() => setShowTerms(true)} style={{
-                background: "none", border: "none", cursor: "pointer",
-                color: COLORS.primary, fontFamily: "'Alef', sans-serif",
-                fontSize: "0.87rem", fontWeight: 700, textDecoration: "underline", padding: "0 2px",
-              }}>תנאי השימוש</button>
+              <div style={{ marginBottom: "8px" }}>
+                השימוש מיועד לגיל 18 ומעלה. סינקה נועדה ללמידה והתפתחות אישית ואינה מהווה תחליף לייעוץ פסיכולוגי או רפואי מקצועי.
+              </div>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", direction: "rtl" }}>
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={e => { setTermsAccepted(e.target.checked); setError(""); }}
+                  style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: COLORS.primary }}
+                />
+                <span>
+                  אני מסכים/ה ל
+                  <button onClick={() => setShowTerms(true)} style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: COLORS.primary, fontFamily: "'Alef', sans-serif",
+                    fontSize: "0.79rem", fontWeight: 700, textDecoration: "underline", padding: "0 2px",
+                  }}>תנאי השימוש</button>
+                </span>
+              </label>
             </div>
 
             <div className="lr" style={{
