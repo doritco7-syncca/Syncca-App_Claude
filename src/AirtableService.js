@@ -20,8 +20,8 @@ export const FIELD_MAPS = {
 
 // ─── Core fetch wrapper — via server proxy ────────────────────────
 async function airtableFetch(path, options = {}) {
-  const encodedPath = encodeURIComponent(path);
-  const url = `/api/airtable?path=${encodedPath}`;
+  // path may already contain query params — pass as-is, don't double-encode
+  const url = `/api/airtable?path=${path}`;
   const res = await fetch(url, {
     method:  options.method || "GET",
     headers: { "Content-Type": "application/json" },
@@ -342,14 +342,17 @@ export async function checkSessionAllowed(recordId, fields) {
 
   const last = new Date(lastSession);
   const now  = new Date();
-  const hoursSince = (now - last) / (1000 * 60 * 60);
+  const minutesSince = (now - last) / (1000 * 60);
 
-  if (hoursSince < 24) {
-    const hoursLeft = Math.ceil(24 - hoursSince);
-    const minutesLeft = Math.ceil((24 * 60) - (hoursSince * 60));
+  // Within 30 minutes — allow resume of the same session
+  if (minutesSince < 30) return { allowed: true, isResume: true };
+
+  // Within 24 hours — blocked
+  if (minutesSince < 24 * 60) {
+    const minutesLeft = Math.ceil(24 * 60 - minutesSince);
     const timeMsg = minutesLeft < 60
       ? `בעוד כ-${minutesLeft} דקות`
-      : `בעוד כ-${hoursLeft} שעות`;
+      : `בעוד כ-${Math.ceil(minutesLeft / 60)} שעות`;
     return {
       allowed: false,
       message: `שמחה שחזרת 🙏 כדי שהשיחות יהיו ממוקדות ואפקטיביות, סינקה פתוחה לשיחה אחת ב-24 שעות. תוכל/י לחזור ${timeMsg}. מחכה לך!`
