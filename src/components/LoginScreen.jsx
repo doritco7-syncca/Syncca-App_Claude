@@ -109,8 +109,8 @@ export default function LoginScreen({ onLogin, onBack }) {
         await onLogin?.(email.trim());
       }
     } catch (e) {
-      console.error("[handleVerifyCode]", e);
-      setError("אירעה שגיאה, נסי שוב");
+      // Rate limit message comes as a friendly Hebrew string
+      setError(e.message || "אירעה שגיאה, נסי שוב");
     } finally { setLoading(false); }
   }
 

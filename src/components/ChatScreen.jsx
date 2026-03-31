@@ -543,7 +543,7 @@ export default function ChatScreen({
                   color: COLORS.muted, marginBottom: "3px",
                   paddingLeft: "4px", paddingRight: "4px",
                 }}>
-                  {msg.role === "user" ? "את" : "Syncca"}
+                  {msg.role === "user" ? "אני" : "Syncca"}
                 </div>
                 <div style={msg.role === "user" ? {
                   background: COLORS.primaryLight,
