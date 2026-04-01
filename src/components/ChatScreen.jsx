@@ -92,11 +92,13 @@ function MessageText({ text, concepts = [], onConceptClick }) {
   const parts = [];
   let remaining = text;
   concepts.forEach(c => {
-    const idx = remaining.indexOf(c.word);
+    // Use displayWord (what was actually inserted into text) for matching
+    const searchWord = c.displayWord || c.englishTerm || c.word;
+    const idx = remaining.indexOf(searchWord);
     if (idx === -1) return;
     if (idx > 0) parts.push({ type: "text", value: remaining.slice(0, idx) });
-    parts.push({ type: "concept", value: c.word, concept: c });
-    remaining = remaining.slice(idx + c.word.length);
+    parts.push({ type: "concept", value: searchWord, concept: c });
+    remaining = remaining.slice(idx + searchWord.length);
   });
   if (remaining) parts.push({ type: "text", value: remaining });
   return (
