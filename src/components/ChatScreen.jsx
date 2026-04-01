@@ -35,7 +35,7 @@ function LogoSymbol({ size = 20 }) {
 }
 
 // ─── Concept Tooltip (chat bubble click) ─────────────────────────
-function ConceptTooltip({ concept, onSave, onClose }) {
+function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
   if (!concept) return null;
   return (
     <div onClick={onClose} style={{
@@ -54,24 +54,27 @@ function ConceptTooltip({ concept, onSave, onClose }) {
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: "0.65rem", fontWeight: 700,
           color: COLORS.secondary, marginBottom: "10px",
-        }}>{concept.word}</div>
+        }}>{chatLang === "he" ? concept.word : (concept.englishTerm || concept.word)}</div>
         <div style={{
           fontFamily: "'Alef', sans-serif", fontSize: "0.99rem",
           color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
-        }}>{concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה."}</div>
+        }}>{chatLang === "he"
+            ? (concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.")
+            : (concept.explanationEN || concept.explanation || "A key concept in clean relationship communication.")
+          }</div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => { onSave?.(concept); onClose(); }} style={{
             flex: 1, height: "44px", background: COLORS.primary, color: "white",
             border: "none", borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.97rem",
             cursor: "pointer",
-          }}>✦ שמור מושג זה</button>
+          }}>{chatLang === "he" ? "✦ שמור מושג זה" : "✦ Save concept"}</button>
           <button onClick={onClose} style={{
             height: "44px", padding: "0 18px",
             background: "transparent", color: COLORS.muted,
             border: `1px solid ${COLORS.border}`, borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", cursor: "pointer",
-          }}>סגור</button>
+          }}>{chatLang === "he" ? "סגור" : "Close"}</button>
         </div>
         <button onClick={onClose} style={{
           position: "absolute", top: "14px", left: "14px",
@@ -722,6 +725,7 @@ export default function ChatScreen({
         concept={activeConcept}
         onSave={onSaveConcept}
         onClose={() => setActiveConcept(null)}
+        chatLang={chatLang}
       />
     </>
   );
