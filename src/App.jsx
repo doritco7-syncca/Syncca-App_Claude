@@ -234,6 +234,25 @@ export default function App() {
   // Keep savedConceptsRef in sync with state
   useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
 
+  // Save session when browser tab is closed / navigated away
+  useEffect(() => {
+    function handleBeforeUnload() {
+      const logId     = logRecordIdRef.current;
+      const transcript = fullTranscriptRef.current;
+      const concepts  = conceptsIntroducedRef.current;
+      if (!logId || !transcript) return;
+      // Use sendBeacon for reliable delivery on tab close
+      const payload = JSON.stringify({
+        logRecordId:      logId,
+        fullTranscript:   transcript,
+        conceptsSurfaced: concepts,
+      });
+      navigator.sendBeacon("/api/airtable-finalize", payload);
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   const firstName = userRecord?.First_Name || "";
 
   // ── Fetch live lexicon on mount ──────────────────────────────
@@ -362,6 +381,20 @@ export default function App() {
     previousConceptsRef.current = prev;
     const history = await fetchFullHistory(fields.Username || rid, 10).catch(() => []);
     sessionHistoryRef.current = history;
+
+    // Retroactively generate insight for recent sessions that have transcript but no insight
+    const needsInsight = history.filter(s => s.transcript && s.transcript.length > 100 && !s.insight);
+    needsInsight.slice(0, 2).forEach(s => {
+      fetch("/api/airtable-finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          logRecordId:    s.id,
+          fullTranscript: s.transcript,
+          generateInsight: true,
+        }),
+      }).catch(() => {});
+    });
 
     if (isResume && history.length > 0) {
       // Resume most recent session — restore transcript and log ID
