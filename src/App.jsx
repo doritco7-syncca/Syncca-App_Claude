@@ -57,8 +57,9 @@ function parseBracketConcepts(text, conceptLexicon, lang = "he") {
     // 3. stripped (remove ה) Hebrew word
     // 4. alias match (exact or stripped)
     // 5. partial word match
+    const tLower = t.toLowerCase();
     const entry =
-      conceptLexicon.find(c => c.englishTerm === t) ||
+      conceptLexicon.find(c => c.englishTerm?.toLowerCase() === tLower) ||
       conceptLexicon.find(c => c.word === t) ||
       conceptLexicon.find(c => c.word === stripped) ||
       conceptLexicon.find(c =>
@@ -69,15 +70,16 @@ function parseBracketConcepts(text, conceptLexicon, lang = "he") {
         t.includes(c.word) || stripped.includes(c.word) || c.word.includes(stripped)
       );
 
+    // displayWord = the actual string inserted into cleanText (used by MessageText for highlighting)
+    const displayTerm = lang === "he" ? (entry?.word || t) : (entry?.englishTerm || t);
     concepts.push({
       englishTerm:   entry?.englishTerm || t,
       word:          entry?.word        || t,
+      displayWord:   displayTerm,
       explanation:   entry?.explanation || "",
       explanationEN: entry?.explanationEN || "",
       category:      entry?.category     || "",
     });
-    // Show term in correct language
-    const displayTerm = lang === "he" ? (entry?.word || t) : (entry?.englishTerm || t);
     return displayTerm;
   });
   return { cleanText, concepts };
