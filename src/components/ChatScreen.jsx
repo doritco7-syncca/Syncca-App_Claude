@@ -659,7 +659,7 @@ export default function ChatScreen({
                       e.target.style.height = "auto";
                       e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                     }}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
                     disabled={timedOut} />
                   {/* Mic — absolute inside input wrapper, left side */}
                   <button
