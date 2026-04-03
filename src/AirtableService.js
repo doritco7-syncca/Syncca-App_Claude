@@ -48,11 +48,15 @@ export async function fetchLexicon() {
 
   const result = all
     .map(r => ({
-      englishTerm:   r.fields.English_Term   || "",
-      word:          r.fields.Hebrew_Term    || r.fields.English_Term || "",
-      explanation:   r.fields.Description_HE || r.fields.Description_EN || "",
-      explanationEN: r.fields.Description_EN || "",
-      category:      r.fields.Category       || "",
+      englishTerm:   r.fields.English_Term    || "",
+      word:          r.fields.Hebrew_Term     || r.fields.English_Term || "",
+      explanation:   r.fields.Description_HE  || r.fields.Description_EN || "",
+      explanationEN: r.fields.Description_EN  || "",
+      // German — mapped from German_Term / Description_Ger columns in Airtable
+      germanTerm:    r.fields.German_Term     || "",
+      explanationDE: r.fields.Description_Ger || r.fields.Description_EN || "",
+      // Future languages: add frenchTerm/explanationFR, arabicTerm/explanationAR here
+      category:      r.fields.Category        || "",
       aliases:       r.fields.Aliases_Heb
                        ? r.fields.Aliases_Heb.split(",").map(a => a.trim()).filter(Boolean)
                        : [],
@@ -125,8 +129,12 @@ export async function verifyCode(email, inputCode) {
   return { success: true, user };
 }
 
-export async function incrementSyncCount(recordId, currentCount) {
-  const n = (currentCount || 0) + 1;
+export async function incrementSyncCount(recordId, _ignoredCurrentCount) {
+  // Always fetch fresh from Airtable — never trust a cached/stale currentCount from the caller.
+  // _ignoredCurrentCount is kept for backwards-compatible call sites but intentionally unused.
+  const rec     = await airtableFetch(`Users/${recordId}?fields%5B%5D=Sync_Count`);
+  const current = Number(rec.fields?.Sync_Count) || 0;
+  const n       = current + 1;
   await airtableFetch(`Users/${recordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields: { Sync_Count: n } }),
@@ -207,6 +215,17 @@ export async function createSessionLog(userRecordId) {
     method: "POST",
     body: JSON.stringify({ fields }),
   });
+
+  // Always stamp Last_Session_At on the user record when a session is created.
+  // This is the safety net — markSessionStarted may be skipped on resume flows,
+  // but a new Conversation_Log record is always created.
+  if (userRecordId) {
+    airtableFetch(`Users/${userRecordId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ fields: { Last_Session_At: new Date().toISOString() } }),
+    }).catch(e => console.warn("[createSessionLog] Failed to stamp Last_Session_At:", e));
+  }
+
   return data.id;
 }
 
