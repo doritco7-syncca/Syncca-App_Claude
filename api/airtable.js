@@ -10,12 +10,9 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing Airtable configuration" });
   }
 
-  // FIX: extract raw (still-encoded) path WITHOUT using searchParams.get()
-  // because searchParams.get() decodes %5B%5D → [] which Airtable rejects with 422.
-  const rawQuery = req.url.split("?")[1] || "";
-  const pathMatch = rawQuery.match(/(?:^|&)path=([^&]*)/);
-  const rawPath = pathMatch ? pathMatch[1] : null;
-
+  // Reconstruct the full path from the raw URL to avoid double-encoding
+  const urlObj = new URL(req.url, "http://localhost");
+  const rawPath = urlObj.searchParams.get("path");
   if (!rawPath) return res.status(400).json({ error: "Missing path" });
 
   const url = `${BASE_URL}/${rawPath}`;
