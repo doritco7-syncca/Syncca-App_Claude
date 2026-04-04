@@ -135,7 +135,7 @@ export async function verifyCode(email, inputCode) {
 export async function incrementSyncCount(recordId, _ignoredCurrentCount) {
   // Always fetch fresh from Airtable — never trust a cached/stale currentCount from the caller.
   // _ignoredCurrentCount is kept for backwards-compatible call sites but intentionally unused.
-  const rec     = await airtableFetch(`Users/${recordId}?fields%5B%5D=Sync_Count`);
+  const rec     = await airtableFetch(`Users/${recordId}`);
   const current = Number(rec.fields?.Sync_Count) || 0;
   const n       = current + 1;
   await airtableFetch(`Users/${recordId}`, {
