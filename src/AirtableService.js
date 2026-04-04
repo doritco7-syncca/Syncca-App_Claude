@@ -95,12 +95,14 @@ export async function findOrCreateUser(email) {
 
 // ─── Email Verification ───────────────────────────────────────
 export async function saveVerificationCode(email, code) {
+  // FIX: always store code as string to match Airtable Text field type
+  const codeStr = String(code);
   const user = await findUserByEmail(email);
   if (user) {
     const rid = user.recordId || user.id;
     await airtableFetch(`Users/${rid}`, {
       method: "PATCH",
-      body: JSON.stringify({ fields: { Verification_Code: code } }),
+      body: JSON.stringify({ fields: { Verification_Code: codeStr } }),
     });
     return { recordId: rid, fields: user.fields };
   } else {
@@ -109,7 +111,7 @@ export async function saveVerificationCode(email, code) {
       body: JSON.stringify({ fields: {
         Email:             email.toLowerCase().trim(),
         Username:          email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "") + "_" + Date.now().toString(36),
-        Verification_Code: code,
+        Verification_Code: codeStr,
       }}),
     });
     return { recordId: data.id, fields: data.fields };
@@ -120,11 +122,12 @@ export async function verifyCode(email, inputCode) {
   const user = await findUserByEmail(email);
   if (!user) return { success: false, reason: "user_not_found" };
   const stored = user.fields?.Verification_Code || "";
-  if (stored.trim() !== inputCode.trim()) return { success: false, reason: "wrong_code" };
+  if (stored.trim() !== String(inputCode).trim()) return { success: false, reason: "wrong_code" };
   const rid = user.recordId || user.id;
+  // FIX: use null instead of "" — empty string causes Airtable 422 on Number fields
   await airtableFetch(`Users/${rid}`, {
     method: "PATCH",
-    body: JSON.stringify({ fields: { Verification_Code: "" } }),
+    body: JSON.stringify({ fields: { Verification_Code: null } }),
   });
   return { success: true, user };
 }
