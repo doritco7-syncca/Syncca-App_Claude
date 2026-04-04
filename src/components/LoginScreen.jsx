@@ -1,5 +1,5 @@
 // LoginScreen.jsx — Syncca
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
@@ -77,6 +77,15 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [showTerms, setShowTerms]     = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem("syncca_terms_accepted") === "true");
   const [termsShake, setTermsShake]         = useState(false);
+
+  const codeRef = useRef(null);
+
+  // Focus code input as soon as the verify step appears
+  useEffect(() => {
+    if (step === "verify") {
+      setTimeout(() => codeRef.current?.focus(), 50);
+    }
+  }, [step]);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
@@ -244,7 +253,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                   onChange={e => { setCode(e.target.value.replace(/\D/g,"")); setError(""); }}
                   onKeyDown={e => e.key === "Enter" && handleVerifyCode()}
                   maxLength={4} inputMode="numeric"
-                  autoFocus
+                  ref={codeRef}
                   style={{ textAlign: "center", letterSpacing: "0.5em", fontSize: "1.8rem", fontFamily: "'Courier New', monospace", fontWeight: 700 }}
                 />
               )}
