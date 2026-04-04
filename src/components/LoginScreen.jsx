@@ -191,7 +191,7 @@ export default function LoginScreen({ onLogin, onBack }) {
           overflow: "hidden",
         }}>
 
-          {/* TOP: Logo + Syncca + heading — same structure as WelcomeScreen */}
+          {/* TOP: Logo + Syncca + heading */}
           <div className="lr" style={{
             display: "flex", flexDirection: "column",
             alignItems: "center", gap: "10px",
@@ -202,7 +202,6 @@ export default function LoginScreen({ onLogin, onBack }) {
               fontSize: "clamp(2.8rem,9vw,3.4rem)", fontWeight: 700,
               color: COLORS.primary, letterSpacing: "-0.01em", lineHeight: 1,
             }}>Syncca</div>
-            {/* ! at end = appears on LEFT in RTL */}
             <div style={{
               fontFamily: "'Alef', sans-serif",
               fontSize: "clamp(1.25rem,4.2vw,1.5rem)",
@@ -212,7 +211,7 @@ export default function LoginScreen({ onLogin, onBack }) {
             }}>טוב שהגעת!</div>
           </div>
 
-          {/* MIDDLE+BOTTOM: Input + button + footer — centered */}
+          {/* MIDDLE+BOTTOM */}
           <div style={{
             flex: 1, display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center",
@@ -245,6 +244,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                   onChange={e => { setCode(e.target.value.replace(/\D/g,"")); setError(""); }}
                   onKeyDown={e => e.key === "Enter" && handleVerifyCode()}
                   maxLength={4} inputMode="numeric"
+                  autoFocus
                   style={{ textAlign: "center", letterSpacing: "0.5em", fontSize: "1.8rem", fontFamily: "'Courier New', monospace", fontWeight: 700 }}
                 />
               )}
@@ -263,7 +263,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               )}
             </div>
 
-            {/* Button — 75% width, blue */}
+            {/* Button */}
             <div className="lr" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
               <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading}
                 onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
@@ -286,10 +286,9 @@ export default function LoginScreen({ onLogin, onBack }) {
               </button>
             </div>
 
-            {/* Spacer */}
             <div style={{ flex: 1 }} />
 
-            {/* Disclaimer + mandatory checkbox */}
+            {/* Disclaimer + checkbox */}
             <div className={`lr${termsShake ? " terms-shake" : ""}`} style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
               textAlign: "right", direction: "rtl", lineHeight: 1.7, maxWidth: "280px",
