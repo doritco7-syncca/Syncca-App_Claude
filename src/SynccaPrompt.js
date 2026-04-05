@@ -541,10 +541,10 @@ let memoryBlock;
       if (s.pattern)      parts.push(`Pattern identified: ${s.pattern}`);
       if (s.modeAtEnd)    parts.push(`Mode at end: ${s.modeAtEnd}`);
       if (s.concepts?.length) parts.push(`Concepts surfaced: ${s.concepts.join(", ")}`);
-      return parts.length
+     return parts.length
         ? `• ${label}:\n  ${parts.join("\n  ")}`
-        : `• ${label}: (no structured data yet)`;
-    }).join("\n\n");
+        : null;
+    }).filter(Boolean).join("\n\n");
 
     memoryBlock = `
 
