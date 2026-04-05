@@ -52,10 +52,8 @@ export async function fetchLexicon() {
       word:          r.fields.Hebrew_Term     || r.fields.English_Term || "",
       explanation:   r.fields.Description_HE  || r.fields.Description_EN || "",
       explanationEN: r.fields.Description_EN  || "",
-      // German — mapped from German_Term / Description_Ger columns in Airtable
       germanTerm:    r.fields.German_Term     || "",
       explanationDE: r.fields.Description_Ger || r.fields.Description_EN || "",
-      // Future languages: add frenchTerm/explanationFR, arabicTerm/explanationAR here
       category:      r.fields.Category        || "",
       aliases:       r.fields.Aliases_Heb
                        ? r.fields.Aliases_Heb.split(",").map(a => a.trim()).filter(Boolean)
@@ -63,8 +61,7 @@ export async function fetchLexicon() {
     }))
     .filter(c => c.englishTerm);
 
-  const withExpl = result.filter(c => c.explanation).length;
-  const missing  = result.filter(c => !c.explanation).map(c => c.englishTerm);
+  const missing = result.filter(c => !c.explanation).map(c => c.englishTerm);
   if (missing.length > 0) {
     console.warn("[fetchLexicon] Missing Description_HE for these English_Terms:", missing);
   }
@@ -95,7 +92,6 @@ export async function findOrCreateUser(email) {
 
 // ─── Email Verification ───────────────────────────────────────
 export async function saveVerificationCode(email, code) {
-  // FIX: always store code as string to match Airtable Text field type
   const codeStr = String(code);
   const user = await findUserByEmail(email);
   if (user) {
@@ -124,7 +120,6 @@ export async function verifyCode(email, inputCode) {
   const stored = user.fields?.Verification_Code || "";
   if (stored.trim() !== String(inputCode).trim()) return { success: false, reason: "wrong_code" };
   const rid = user.recordId || user.id;
-  // FIX: use null instead of "" — empty string causes Airtable 422 on Number fields
   await airtableFetch(`Users/${rid}`, {
     method: "PATCH",
     body: JSON.stringify({ fields: { Verification_Code: null } }),
@@ -133,8 +128,6 @@ export async function verifyCode(email, inputCode) {
 }
 
 export async function incrementSyncCount(recordId, _ignoredCurrentCount) {
-  // Always fetch fresh from Airtable — never trust a cached/stale currentCount from the caller.
-  // _ignoredCurrentCount is kept for backwards-compatible call sites but intentionally unused.
   const rec     = await airtableFetch(`Users/${recordId}`);
   const current = Number(rec.fields?.Sync_Count) || 0;
   const n       = current + 1;
@@ -165,16 +158,12 @@ export async function updateUserProfile(recordId, fields) {
   });
 }
 
-// ATOMIC wallet update: GET current list → merge → PATCH once.
-// Called by handleSaveConcept which passes the FULL updated list.
-// Fetch current saved concepts for a user — used by PersonalCard on open
 export async function fetchSavedConcepts(recordId) {
   if (!recordId) { console.warn("[fetchSavedConcepts] no recordId"); return []; }
   try {
     const rec = await airtableFetch(`Users/${recordId}?fields%5B%5D=Saved_Concepts`);
     const raw = rec.fields?.Saved_Concepts || "";
-    const words = raw.split(",").map(s => s.trim()).filter(Boolean);
-    return words;
+    return raw.split(",").map(s => s.trim()).filter(Boolean);
   } catch (e) {
     console.warn("[fetchSavedConcepts] failed:", e);
     return [];
@@ -183,15 +172,12 @@ export async function fetchSavedConcepts(recordId) {
 
 export async function updateSavedConcepts(recordId, allConceptWords) {
   if (!recordId || !allConceptWords?.length) return;
-  // allConceptWords is the FULL updated list from client — just overwrite.
-  // No GET+merge needed (that was causing English+Hebrew duplicates).
   return airtableFetch(`Users/${recordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields: { Saved_Concepts: allConceptWords.join(", ") } }),
   });
 }
 
-// Overwrite (used for delete): writes exactly the list given, no merge.
 export async function overwriteSavedConcepts(recordId, allConceptWords) {
   if (!recordId) return;
   const value = (allConceptWords || []).join(", ");
@@ -211,17 +197,12 @@ export async function createSessionLog(userRecordId) {
     Feedback:        "",
     Language_Used:   "Hebrew",
   };
-  // NOTE: Concepts_Surfaced is intentionally omitted at creation.
-  // It is only written when there are actual concepts to record (non-empty).
   if (userRecordId) fields.User_Link = [userRecordId];
   const data = await airtableFetch("Conversation_Logs", {
     method: "POST",
     body: JSON.stringify({ fields }),
   });
 
-  // Always stamp Last_Session_At on the user record when a session is created.
-  // This is the safety net — markSessionStarted may be skipped on resume flows,
-  // but a new Conversation_Log record is always created.
   if (userRecordId) {
     airtableFetch(`Users/${userRecordId}`, {
       method: "PATCH",
@@ -232,8 +213,6 @@ export async function createSessionLog(userRecordId) {
   return data.id;
 }
 
-// Fetch all concept names surfaced in previous sessions for this user.
-// Used to inject memory into the AI system prompt.
 export async function fetchPreviousConcepts(userRecordId) {
   if (!userRecordId) return [];
   try {
@@ -245,31 +224,50 @@ export async function fetchPreviousConcepts(userRecordId) {
     (data.records || []).forEach(rec => {
       (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim()).filter(Boolean).forEach(c => all.add(c));
     });
-    const result = Array.from(all);
-    return result;
+    return Array.from(all);
   } catch (e) {
     console.warn("[fetchPreviousConcepts] failed:", e);
     return [];
   }
 }
 
-// Fetches last N session summaries for memory injection.
-// Returns array of { date, concepts, duration, feedback } — most recent first.
+// Fetches last N session summaries for memory injection into the AI system prompt.
+// Returns most recent first. All structured fields included so Syncca can
+// pick up exactly where the previous session left off.
 export async function fetchSessionHistory(userRecordId, limit = 5) {
   if (!userRecordId) return [];
   try {
     const f = `FIND("${userRecordId}", ARRAYJOIN({User_Link}))`;
-    const fields = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used"];
-    const qs = fields.map(f => `fields%5B%5D=${encodeURIComponent(f)}`).join("&");
+    const fieldNames = [
+      "Created_At",
+      "Concepts_Surfaced",
+      "Session_Duration_Minutes",
+      "Feedback",
+      "Language_Used",
+      "Session_Insight",       // narrative summary in Hebrew
+      "Ladder_Step_Reached",   // integer 1-6
+      "Emotional_Arc",         // e.g. "flooded → reflective"
+      "Pattern_Identified",    // Compliance | War | Both | Unclear
+      "Mode_At_End",           // mirror | coach
+      "Core_Theme",            // short English phrase
+    ];
+    const qs = fieldNames.map(f => `fields%5B%5D=${encodeURIComponent(f)}`).join("&");
     const data = await airtableFetch(
       `Conversation_Logs?filterByFormula=${encodeURIComponent(f)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${qs}`
     );
     return (data.records || []).map(rec => ({
-      date:      rec.fields?.Created_At     || "",
-      concepts:  (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
-      duration:  rec.fields?.Session_Duration_Minutes || null,
-      feedback:  rec.fields?.Feedback       || "",
-      language:  rec.fields?.Language_Used  || "Hebrew",
+      date:         rec.fields?.Created_At                || "",
+      concepts:     (rec.fields?.Concepts_Surfaced || "")
+                      .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
+      duration:     rec.fields?.Session_Duration_Minutes  || null,
+      feedback:     rec.fields?.Feedback                  || "",
+      language:     rec.fields?.Language_Used             || "Hebrew",
+      insight:      rec.fields?.Session_Insight           || "",
+      ladderStep:   rec.fields?.Ladder_Step_Reached       || null,
+      emotionalArc: rec.fields?.Emotional_Arc             || "",
+      pattern:      rec.fields?.Pattern_Identified        || "",
+      modeAtEnd:    rec.fields?.Mode_At_End               || "",
+      coreTheme:    rec.fields?.Core_Theme                || "",
     }));
   } catch (e) {
     console.warn("[fetchSessionHistory] failed:", e);
@@ -277,27 +275,18 @@ export async function fetchSessionHistory(userRecordId, limit = 5) {
   }
 }
 
-// syncSession — called ONCE per exchange after AI responds.
-// ONLY writes Concepts_Surfaced when array is non-empty — never sends empty string.
 export async function syncSession({ logRecordId, fullTranscript, conceptsSurfaced, languageUsed }) {
   if (!logRecordId) {
     console.error("[syncSession] ✗ logRecordId is null — skipped");
     return;
   }
-
   const fields = {};
   if (fullTranscript !== undefined) fields.Full_Transcript = fullTranscript;
   if (languageUsed   !== undefined) fields.Language_Used   = languageUsed;
-
-  // CRITICAL: only write Concepts_Surfaced when we have actual concepts.
-  // Never send empty string — Airtable may reject or it corrupts future fetches.
   if (Array.isArray(conceptsSurfaced) && conceptsSurfaced.length > 0) {
-    const deduped = [...new Set(conceptsSurfaced)];
-    fields.Concepts_Surfaced = deduped.join(", ");
+    fields.Concepts_Surfaced = [...new Set(conceptsSurfaced)].join(", ");
   }
-
   if (!Object.keys(fields).length) return;
-
   return airtableFetch(`Conversation_Logs/${logRecordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields }),
@@ -318,7 +307,7 @@ export async function finalizeSession({ logRecordId, fullTranscript, conceptsSur
   const fields = { Full_Transcript: fullTranscript || "" };
   if (Array.isArray(conceptsSurfaced) && conceptsSurfaced.length > 0)
     fields.Concepts_Surfaced = conceptsSurfaced.join(", ");
-  if (mins !== null) fields.Session_Duration_Minutes = mins;
+  if (mins !== null)   fields.Session_Duration_Minutes = mins;
   if (sessionInsight)  fields.Session_Insight = sessionInsight;
   if (securityAlert)   fields.Security_Alert = "YES";
   return airtableFetch(`Conversation_Logs/${logRecordId}`, {
@@ -327,49 +316,47 @@ export async function finalizeSession({ logRecordId, fullTranscript, conceptsSur
   });
 }
 
-// Fetch last N sessions with full data for History screen
 export async function fetchFullHistory(username, limit = 10) {
   if (!username) return [];
-  // In Airtable formulas, {User_Link} returns primary field values (Username), not record IDs.
-  // ARRAYJOIN({User_Link}) produces "USER_17..." strings — search by Username.
   const formula = `FIND("${username}", ARRAYJOIN({User_Link}))`;
-  const fieldList = ["Created_At", "Concepts_Surfaced", "Session_Duration_Minutes", "Feedback", "Language_Used", "Session_Insight", "Full_Transcript"];
+  const fieldList = [
+    "Created_At", "Concepts_Surfaced", "Session_Duration_Minutes",
+    "Feedback", "Language_Used", "Session_Insight", "Full_Transcript",
+    "Ladder_Step_Reached", "Emotional_Arc", "Pattern_Identified",
+    "Mode_At_End", "Core_Theme",
+  ];
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
   const data = await airtableFetch(url);
   return (data.records || [])
     .map(rec => ({
-      id:         rec.id,
-      date:       rec.fields?.Created_At || "",
-      concepts:   (rec.fields?.Concepts_Surfaced || "").split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
-      duration:   rec.fields?.Session_Duration_Minutes || null,
-      feedback:   rec.fields?.Feedback || "",
-      language:   rec.fields?.Language_Used || "Hebrew",
-      insight:    rec.fields?.Session_Insight || "",
-      transcript: rec.fields?.Full_Transcript || "",
+      id:           rec.id,
+      date:         rec.fields?.Created_At                || "",
+      concepts:     (rec.fields?.Concepts_Surfaced || "")
+                      .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
+      duration:     rec.fields?.Session_Duration_Minutes  || null,
+      feedback:     rec.fields?.Feedback                  || "",
+      language:     rec.fields?.Language_Used             || "Hebrew",
+      insight:      rec.fields?.Session_Insight           || "",
+      transcript:   rec.fields?.Full_Transcript           || "",
+      ladderStep:   rec.fields?.Ladder_Step_Reached       || null,
+      emotionalArc: rec.fields?.Emotional_Arc             || "",
+      pattern:      rec.fields?.Pattern_Identified        || "",
+      modeAtEnd:    rec.fields?.Mode_At_End               || "",
+      coreTheme:    rec.fields?.Core_Theme                || "",
     }))
-    // Only show sessions that had actual conversation (transcript has at least one exchange)
     .filter(s => s.transcript && s.transcript.length > 50);
 }
 
 // ─── Session Rate Limiting ────────────────────────────────────
-// Checks if user can start a new session (max 1 per 24h unless VIP)
-// Requires Airtable fields: Last_Session_At (datetime), Is_VIP (checkbox)
 export async function checkSessionAllowed(recordId, fields) {
-  // VIP users have unlimited access
   if (fields?.Is_VIP) return { allowed: true };
-
   const lastSession = fields?.Last_Session_At;
   if (!lastSession) return { allowed: true };
-
   const last = new Date(lastSession);
   const now  = new Date();
   const minutesSince = (now - last) / (1000 * 60);
-
-  // Within 30 minutes — allow resume of the same session
   if (minutesSince < 30) return { allowed: true, isResume: true };
-
-  // Within 24 hours — blocked
   if (minutesSince < 24 * 60) {
     const minutesLeft = Math.ceil(24 * 60 - minutesSince);
     const timeMsg = minutesLeft < 60
@@ -380,7 +367,6 @@ export async function checkSessionAllowed(recordId, fields) {
       message: `שמחה שחזרת 🙏 כדי שהשיחות יהיו ממוקדות ואפקטיביות, סינקה פתוחה לשיחה אחת ב-24 שעות. תוכל/י לחזור ${timeMsg}. מחכה לך!`
     };
   }
-
   return { allowed: true };
 }
 
