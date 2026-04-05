@@ -255,20 +255,22 @@ export async function fetchSessionHistory(userRecordId, limit = 5) {
     const data = await airtableFetch(
       `Conversation_Logs?filterByFormula=${encodeURIComponent(f)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${qs}`
     );
-    return (data.records || []).map(rec => ({
-      date:         rec.fields?.Created_At                || "",
-      concepts:     (rec.fields?.Concepts_Surfaced || "")
-                      .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
-      duration:     rec.fields?.Session_Duration_Minutes  || null,
-      feedback:     rec.fields?.Feedback                  || "",
-      language:     rec.fields?.Language_Used             || "Hebrew",
-      insight:      rec.fields?.Session_Insight           || "",
-      ladderStep:   rec.fields?.Ladder_Step_Reached       || null,
-      emotionalArc: rec.fields?.Emotional_Arc             || "",
-      pattern:      rec.fields?.Pattern_Identified        || "",
-      modeAtEnd:    rec.fields?.Mode_At_End               || "",
-      coreTheme:    rec.fields?.Core_Theme                || "",
-    }));
+ return (data.records || [])
+      .map(rec => ({
+        date:         rec.fields?.Created_At                || "",
+        concepts:     (rec.fields?.Concepts_Surfaced || "")
+                        .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
+        duration:     rec.fields?.Session_Duration_Minutes  || null,
+        feedback:     rec.fields?.Feedback                  || "",
+        language:     rec.fields?.Language_Used             || "Hebrew",
+        insight:      rec.fields?.Session_Insight           || "",
+        ladderStep:   rec.fields?.Ladder_Step_Reached       || null,
+        emotionalArc: rec.fields?.Emotional_Arc             || "",
+        pattern:      rec.fields?.Pattern_Identified        || "",
+        modeAtEnd:    rec.fields?.Mode_At_End               || "",
+        coreTheme:    rec.fields?.Core_Theme                || "",
+      }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch (e) {
     console.warn("[fetchSessionHistory] failed:", e);
     return [];
@@ -345,7 +347,7 @@ export async function fetchFullHistory(username, limit = 10) {
       modeAtEnd:    rec.fields?.Mode_At_End               || "",
       coreTheme:    rec.fields?.Core_Theme                || "",
     }))
-    .filter(s => s.transcript && s.transcript.length > 50);
+    .filter(s => s.transcript && s.transcript.length > 300);
 }
 
 // ─── Session Rate Limiting ────────────────────────────────────
