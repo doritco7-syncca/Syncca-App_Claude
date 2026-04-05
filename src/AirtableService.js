@@ -347,6 +347,7 @@ export async function fetchFullHistory(username, limit = 10) {
       modeAtEnd:    rec.fields?.Mode_At_End               || "",
       coreTheme:    rec.fields?.Core_Theme                || "",
     }))
+.sort((a, b) => new Date(b.date) - new Date(a.date))
     .filter(s => s.transcript && s.transcript.length > 300);
 }
 
