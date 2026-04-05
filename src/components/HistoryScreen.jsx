@@ -91,7 +91,14 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
         const withContent = data.filter(s =>
           s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
         );
-        setSessions(withContent.filter(s => !deletedIds.includes(s.id)));
+        // FIX: Sort newest-first client-side as a safety net.
+        // The Airtable sort query can silently break when passed through the /api/airtable proxy
+        // because the proxy URL-encodes the full path — causing sort params to be misinterpreted.
+        // Client-side sort guarantees correct order regardless of proxy behavior.
+        const sorted = [...withContent].sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+        setSessions(sorted.filter(s => !deletedIds.includes(s.id)));
         setLoading(false);
       })
       .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
@@ -220,7 +227,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
 
                   {/* Top row: number + date + delete + chevron */}
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    {/* Session circle */}
+                    {/* Session circle — newest session gets highest number and red highlight */}
                     <div style={{
                       width: 34, height: 34, borderRadius: "50%",
                       background: i === 0 ? COLORS.primary : COLORS.frame,
