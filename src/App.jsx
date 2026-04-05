@@ -61,15 +61,21 @@ function parseBracketConcepts(text, conceptLexicon, lang = "he") {
       conceptLexicon.find(c =>
         t.includes(c.word) || stripped.includes(c.word) || c.word.includes(stripped)
       );
-    const displayTerm = lang === "he" ? (entry?.word || t) : (entry?.englishTerm || t);
-    concepts.push({
-      englishTerm:   entry?.englishTerm || t,
-      word:          entry?.word        || t,
-      displayWord:   displayTerm,
-      explanation:   entry?.explanation || "",
-      explanationEN: entry?.explanationEN || "",
-      category:      entry?.category     || "",
-    });
+   const displayTerm = lang === "he"
+  ? (entry?.word || t)
+  : lang === "de"
+    ? (entry?.germanTerm || entry?.englishTerm || t)
+    : (entry?.englishTerm || t);
+concepts.push({
+  englishTerm:   entry?.englishTerm  || t,
+  word:          entry?.word         || t,
+  germanTerm:    entry?.germanTerm   || "",
+  displayWord:   displayTerm,
+  explanation:   entry?.explanation  || "",
+  explanationEN: entry?.explanationEN || "",
+  explanationDE: entry?.explanationDE || "",
+  category:      entry?.category      || "",
+});
     return displayTerm;
   });
   return { cleanText, concepts };
@@ -434,8 +440,9 @@ export default function App() {
     setMessages(updatedMessages);
 
     if (messages.filter(m => m.role === "user").length === 0) {
-      const isHebrew = /[\u05D0-\u05EA]/.test(text);
-      setChatLang(isHebrew ? "he" : "en");
+     const isHebrew = /[\u05D0-\u05EA]/.test(text);
+const isGerman = !isHebrew && /[äöüÄÖÜß]|(\b(ich|du|ist|das|die|der|und|nicht|mit|wie)\b)/i.test(text);
+setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
     }
 
     setIsLoading(true);
