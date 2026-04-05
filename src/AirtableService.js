@@ -234,10 +234,10 @@ export async function fetchPreviousConcepts(userRecordId) {
 // Fetches last N session summaries for memory injection into the AI system prompt.
 // Returns most recent first. All structured fields included so Syncca can
 // pick up exactly where the previous session left off.
-export async function fetchSessionHistory(userRecordId, limit = 5) {
-  if (!userRecordId) return [];
+export async function fetchSessionHistory(username, limit = 5) {
+  if (!username) return [];
   try {
-    const f = `FIND("${userRecordId}", ARRAYJOIN({User_Link}))`;
+    const f = `FIND("${username}", ARRAYJOIN({User_Link}))`;
     const fieldNames = [
       "Created_At",
       "Concepts_Surfaced",
