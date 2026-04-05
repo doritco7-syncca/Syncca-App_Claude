@@ -297,7 +297,7 @@ export default function App() {
         const prev = await fetchPreviousConcepts(recordId);
         previousConceptsRef.current = prev;
         const username = result?.fields?.Username || recordId;
-        const history  = await fetchFullHistory(username, 10);
+        const history  = await fetchFullHistory(username, 50);
         sessionHistoryRef.current = history;
 
         // Retroactively generate insight for sessions missing it
@@ -368,7 +368,7 @@ export default function App() {
 
     const prev = await fetchPreviousConcepts(rid).catch(() => []);
     previousConceptsRef.current = prev;
-    const history = await fetchFullHistory(fields.Username || rid, 10).catch(() => []);
+    const history = await fetchFullHistory(fields.Username || rid, 50).catch(() => []);
     sessionHistoryRef.current = history;
 
     // Retroactively generate insight for sessions missing it
