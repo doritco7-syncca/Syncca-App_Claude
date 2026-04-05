@@ -1,6 +1,7 @@
 // ChatScreen.jsx — Syncca
 // Changes from previous version:
 //   - Added onSessionEnd prop (called when user clicks "סיימתי")
+//   - Added German (de) language support for concept tooltip and saved concepts widget
 
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
@@ -51,27 +52,41 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: "0.65rem", fontWeight: 700,
           color: COLORS.secondary, marginBottom: "10px",
-        }}>{chatLang === "he" ? concept.word : (concept.englishTerm || concept.word)}</div>
+        }}>
+          {chatLang === "he"
+            ? concept.word
+            : chatLang === "de"
+              ? (concept.germanTerm || concept.englishTerm || concept.word)
+              : (concept.englishTerm || concept.word)}
+        </div>
         <div style={{
           fontFamily: "'Alef', sans-serif", fontSize: "0.99rem",
           color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
-        }}>{chatLang === "he"
+        }}>
+          {chatLang === "he"
             ? (concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.")
-            : (concept.explanationEN || concept.explanation || "A key concept in clean relationship communication.")
-          }</div>
+            : chatLang === "de"
+              ? (concept.explanationDE || concept.explanationEN || concept.explanation || "Ein zentrales Konzept in der liebevollen Kommunikation.")
+              : (concept.explanationEN || concept.explanation || "A key concept in clean relationship communication.")
+          }
+        </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => { onSave?.(concept); onClose(); }} style={{
             flex: 1, height: "44px", background: COLORS.primary, color: "white",
             border: "none", borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.97rem",
             cursor: "pointer",
-          }}>{chatLang === "he" ? "✦ שמור מושג זה" : "✦ Save concept"}</button>
+          }}>
+            {chatLang === "he" ? "✦ שמור מושג זה" : chatLang === "de" ? "✦ Konzept speichern" : "✦ Save concept"}
+          </button>
           <button onClick={onClose} style={{
             height: "44px", padding: "0 18px",
             background: "transparent", color: COLORS.muted,
             border: `1px solid ${COLORS.border}`, borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", cursor: "pointer",
-          }}>{chatLang === "he" ? "סגור" : "Close"}</button>
+          }}>
+            {chatLang === "he" ? "סגור" : chatLang === "de" ? "Schließen" : "Close"}
+          </button>
         </div>
         <button onClick={onClose} style={{
           position: "absolute", top: "14px", left: "14px",
@@ -139,12 +154,14 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   function resolveWord(concept) {
     const entry = findEntry(concept);
     if (chatLang === "en") return entry?.englishTerm || concept.englishTerm || concept.word;
+    if (chatLang === "de") return entry?.germanTerm || concept.germanTerm || entry?.englishTerm || concept.englishTerm || concept.word;
     return entry?.word || concept.word || concept.englishTerm;
   }
 
   function resolveExplanation(concept) {
     const entry = findEntry(concept);
     if (chatLang === "en") return entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
+    if (chatLang === "de") return entry?.explanationDE || concept.explanationDE || entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
     return entry?.explanation || concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
   }
 
