@@ -529,29 +529,34 @@ ${isMale   ? "Gender: MALE — address as \"אתה\", \"ספר\", \"תרצה\". 
   const allPrevConcepts = previousConcepts.length ? previousConcepts.join(", ") : "";
   const isReturning = sessionHistory.length > 0 || previousConcepts.length > 0;
 
-  let memoryBlock;
+let memoryBlock;
   if (isReturning) {
-    const insightsFromHistory = sessionHistory
-      .filter(s => s.insight)
-      .map((s, i) => {
-        const label = i === 0 ? "השיחה האחרונה" : `לפני ${i + 1} שיחות`;
-        return `• ${label}: ${s.insight}`;
-      }).join("\n");
-
-    const fallbackHistory = !insightsFromHistory && sessionHistory.length > 0
-      ? sessionHistory.map((s, i) => {
-          const label = i === 0 ? "השיחה האחרונה" : `לפני ${i + 1} שיחות`;
-          const concepts = s.concepts?.length ? ` | מושגים: ${s.concepts.join(", ")}` : "";
-          return `• ${label}${concepts}`;
-        }).join("\n")
-      : "";
+    const sessionLines = sessionHistory.map((s, i) => {
+      const label = i === 0 ? "LAST SESSION" : `${i + 1} SESSIONS AGO`;
+      const parts = [];
+      if (s.insight)      parts.push(`Summary: ${s.insight}`);
+      if (s.coreTheme)    parts.push(`Core theme: ${s.coreTheme}`);
+      if (s.ladderStep)   parts.push(`Ladder step reached: ${s.ladderStep}/6`);
+      if (s.emotionalArc) parts.push(`Emotional arc: ${s.emotionalArc}`);
+      if (s.pattern)      parts.push(`Pattern identified: ${s.pattern}`);
+      if (s.modeAtEnd)    parts.push(`Mode at end: ${s.modeAtEnd}`);
+      if (s.concepts?.length) parts.push(`Concepts surfaced: ${s.concepts.join(", ")}`);
+      return parts.length
+        ? `• ${label}:\n  ${parts.join("\n  ")}`
+        : `• ${label}: (no structured data yet)`;
+    }).join("\n\n");
 
     memoryBlock = `
 
 MEMORY — RETURNING USER:
 Do NOT greet as a stranger. Do NOT re-introduce known concepts.
-${insightsFromHistory ? `SESSION INSIGHTS:\n${insightsFromHistory}` : fallbackHistory ? `SESSION HISTORY:\n${fallbackHistory}` : ""}
-${allPrevConcepts ? `\nCONCEPTS ENCOUNTERED: ${allPrevConcepts}` : ""}
+Use the structured session data below to pick up where you left off.
+If ladderStep is known — continue from there, do not restart.
+If pattern is known — do not re-diagnose, build on it.
+If modeAtEnd was "coach" — user may be ready to continue in Coach mode sooner.
+
+${sessionLines || "(no previous session data available)"}
+${allPrevConcepts ? `\nALL CONCEPTS EVER ENCOUNTERED: ${allPrevConcepts}` : ""}
 FORBIDDEN: ✗ "אין לי גישה למידע" ✗ "כל שיחה מתחילה מחדש"
 `;
   } else {
