@@ -132,7 +132,7 @@ function TimeoutModal({ onClose, logRecordId }) {
             </div>
             <p style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
                         lineHeight:1.7, marginBottom:"18px", textAlign:"center" }}>
-              30 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך. נשמח לשמוע מה עלה בשיחה.
+              45 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך. נשמח לשמוע מה עלה בשיחה.
             </p>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
               placeholder="מה עזר? מה אפשר לשפר?"
@@ -240,7 +240,7 @@ export default function App() {
         conceptsSurfaced: concepts,
         generateInsight:  shouldGenerateInsight,
       });
-      navigator.sendBeacon("/api/airtable-finalize", payload);
+      navigator.sendBeacon("/api/airtable-finalize", new Blob([payload], { type: "application/json" }));
       if (shouldGenerateInsight) insightSavedRef.current = true;
     }
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -399,6 +399,7 @@ export default function App() {
       fullTranscriptRef.current     = latest.transcript || "";
       conceptsIntroducedRef.current = latest.concepts || [];
       insightSavedRef.current       = false;
+      setSessionStartTime(new Date());
       const resumeMessages = (latest.transcript || "")
         .split("\n")
         .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
