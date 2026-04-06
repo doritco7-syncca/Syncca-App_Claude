@@ -550,8 +550,8 @@ HIDDEN METADATA — append to EVERY response:
 `;
 
 export function buildSystemPrompt(sessionMinutesElapsed = 0, liveLexicon = null, previousConcepts = [], userProfile = {}, sessionHistory = []) {
-  const timerAlert = sessionMinutesElapsed >= 25
-    ? "\n\nTIMER ALERT: Session is at 25 minutes. ACTIVATE THE CLOSING PIVOT NOW — as described in Layer 3. Do NOT continue the conversation thread. Do NOT ask a new question. Pivot to closing mode immediately."
+  const timerAlert = sessionMinutesElapsed >= 40
+    ? "\n\nTIMER ALERT: Session is at 40 minutes. ACTIVATE THE CLOSING PIVOT NOW — as described in Layer 3. Do NOT continue the conversation thread. Do NOT ask a new question. Pivot to closing mode immediately."
     : "";
 
   const gender = userProfile.Gender || "";
