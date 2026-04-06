@@ -310,17 +310,18 @@ export default function App() {
         const needsInsight = history.filter(
           s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
         );
-        needsInsight.slice(0, 2).forEach(s => {
-          fetch("/api/airtable-finalize", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              logRecordId:     s.id,
-              fullTranscript:  s.transcript,
-              generateInsight: true,
-            }),
-          }).catch(() => {});
-        });
+       needsInsight.slice(0, 3).forEach(s => {
+  fetch("/api/airtable-finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      logRecordId:      s.id,
+      fullTranscript:   s.transcript,
+      conceptsSurfaced: s.concepts || [],
+      generateInsight:  true,
+    }),
+  }).catch(() => {});
+});
 
         const logId = await createSessionLog(recordId);
         logRecordIdRef.current        = logId;
@@ -381,17 +382,18 @@ export default function App() {
     const needsInsight = history.filter(
       s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
     );
-    needsInsight.slice(0, 2).forEach(s => {
-      fetch("/api/airtable-finalize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          logRecordId:    s.id,
-          fullTranscript: s.transcript,
-          generateInsight: true,
-        }),
-      }).catch(() => {});
-    });
+    needsInsight.slice(0, 3).forEach(s => {
+  fetch("/api/airtable-finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      logRecordId:      s.id,
+      fullTranscript:   s.transcript,
+      conceptsSurfaced: s.concepts || [],
+      generateInsight:  true,
+    }),
+  }).catch(() => {});
+});
 
     if (isResume && history.length > 0) {
       const latest = history[0];
