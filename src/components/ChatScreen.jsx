@@ -8,7 +8,7 @@ import { saveFeedback } from "../AirtableService";
 import { getConceptColors } from "../conceptColors";
 import VOICE_DICTIONARY from "../dictionary.json";
 
-const SESSION_SECS = 30 * 60;
+const SESSION_SECS = 45 * 60;
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
