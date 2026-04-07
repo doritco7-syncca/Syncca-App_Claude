@@ -34,7 +34,6 @@ function getOpeningMessage(syncCount, firstName, gender) {
   return `היי${name}, טוב לראות אותך שוב 🙏\nעל מה ${action} לעבוד היום?`;
 }
 
-// Count [User]: lines in transcript — used for 3-message minimum check
 function countUserMessages(transcript) {
   if (!transcript) return 0;
   return (transcript.match(/\[User\]:/g) || []).length;
@@ -61,21 +60,21 @@ function parseBracketConcepts(text, conceptLexicon, lang = "he") {
       conceptLexicon.find(c =>
         t.includes(c.word) || stripped.includes(c.word) || c.word.includes(stripped)
       );
-   const displayTerm = lang === "he"
-  ? (entry?.word || t)
-  : lang === "de"
-    ? (entry?.germanTerm || entry?.englishTerm || t)
-    : (entry?.englishTerm || t);
-concepts.push({
-  englishTerm:   entry?.englishTerm  || t,
-  word:          entry?.word         || t,
-  germanTerm:    entry?.germanTerm   || "",
-  displayWord:   displayTerm,
-  explanation:   entry?.explanation  || "",
-  explanationEN: entry?.explanationEN || "",
-  explanationDE: entry?.explanationDE || "",
-  category:      entry?.category      || "",
-});
+    const displayTerm = lang === "he"
+      ? (entry?.word || t)
+      : lang === "de"
+        ? (entry?.germanTerm || entry?.englishTerm || t)
+        : (entry?.englishTerm || t);
+    concepts.push({
+      englishTerm:   entry?.englishTerm   || t,
+      word:          entry?.word          || t,
+      germanTerm:    entry?.germanTerm    || "",
+      displayWord:   displayTerm,
+      explanation:   entry?.explanation   || "",
+      explanationEN: entry?.explanationEN || "",
+      explanationDE: entry?.explanationDE || "",
+      category:      entry?.category      || "",
+    });
     return displayTerm;
   });
   return { cleanText, concepts };
@@ -196,6 +195,19 @@ function BetaModal({ onClose }) {
   );
 }
 
+// ─── Resume helper ────────────────────────────────────────────────
+// Returns the latest session if resumable: not complete + within 50 min
+function getResumableSession(history) {
+  if (!history || history.length === 0) return null;
+  const latest = history[0];
+  if (latest.sessionComplete === "YES") return null;
+  const minutesSince = latest.date
+    ? (Date.now() - new Date(latest.date).getTime()) / 60000
+    : 999;
+  if (minutesSince >= 50) return null;
+  return latest;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────────────────────────
@@ -222,33 +234,29 @@ export default function App() {
   const savedConceptsRef       = useRef([]);
   const securityAlertRef       = useRef(false);
   const insightSavedRef        = useRef(false);
-  const sessionStartTimeRef    = useRef(null); // mirrors sessionStartTime for use in beforeUnload
+  const sessionStartTimeRef    = useRef(null);
 
   useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
 
-  // ── Save session on tab close ────────────────────────────────
+  // ── Save session on tab close ─────────────────────────────────
+  // Beacon ONLY saves transcript + title. Never generates insight.
+  // Session is NOT marked complete — user may return and resume.
+  // Insight is generated only on: timer end, logout, or retroactively on next login.
   useEffect(() => {
     function handleBeforeUnload() {
       const logId      = logRecordIdRef.current;
       const transcript = fullTranscriptRef.current;
       const concepts   = conceptsIntroducedRef.current;
       if (!logId || !transcript) return;
-      // Don't finalize if session is still within the 45-min window — user may return
-      const elapsedMins = sessionStartTimeRef.current
-        ? (Date.now() - new Date(sessionStartTimeRef.current).getTime()) / 60000
-        : 999;
-      const sessionStillActive = elapsedMins < 45;
-      const shouldGenerateInsight = !sessionStillActive && countUserMessages(transcript) >= 3 && !insightSavedRef.current;
       const payload = JSON.stringify({
         logRecordId:      logId,
         fullTranscript:   transcript,
         conceptsSurfaced: concepts,
-        generateInsight:  shouldGenerateInsight,
+        generateInsight:  false,
         chatLang,
         sessionStartTime: sessionStartTimeRef.current?.toISOString() || null,
       });
       navigator.sendBeacon("/api/airtable-finalize", new Blob([payload], { type: "application/json" }));
-      if (shouldGenerateInsight) insightSavedRef.current = true;
     }
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -313,9 +321,9 @@ export default function App() {
         const history  = await fetchFullHistory(username, 50);
         sessionHistoryRef.current = history;
 
-        // Retroactively generate insight for sessions missing it
+        // Retroactively generate insight for completed sessions missing it
         const needsInsight = history.filter(
-          s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
+          s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight && s.sessionComplete === "YES"
         );
         needsInsight.slice(0, 3).forEach(s => {
           fetch("/api/airtable-finalize", {
@@ -330,17 +338,49 @@ export default function App() {
           }).catch(() => {});
         });
 
+        const syncCount = result?.fields?.Sync_Count || 2;
+
+        // ── Check for resumable session ──────────────────────
+        const resumable = getResumableSession(history);
+        if (resumable) {
+          logRecordIdRef.current        = resumable.id;
+          fullTranscriptRef.current     = resumable.transcript || "";
+          conceptsIntroducedRef.current = resumable.concepts || [];
+          insightSavedRef.current       = false;
+          const originalStart = resumable.date ? new Date(resumable.date) : new Date();
+          setSessionStartTime(originalStart);
+          sessionStartTimeRef.current = originalStart;
+          const resumeMessages = (resumable.transcript || "")
+            .split("\n")
+            .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
+            .map(l => ({
+              role:      l.startsWith("[User]:") ? "user" : "syncca",
+              text:      l.replace(/^\[(User|Syncca)\]: /, ""),
+              concepts:  [],
+              timestamp: new Date().toISOString(),
+            }));
+          const resumeNote = {
+            role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+            text: "ברוכה השבה 🙏 ממשיכים מאיפה שהפסקנו.",
+          };
+          setMessages(resumeMessages.length > 0
+            ? [...resumeMessages, resumeNote]
+            : [{ role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+                 text: getOpeningMessage(syncCount, result?.fields?.First_Name || "", result?.fields?.Gender || "") }]
+          );
+          setScreen("chat");
+          return;
+        }
+
+        // ── No resumable session — create fresh ──────────────
         const logId = await createSessionLog(recordId);
         logRecordIdRef.current        = logId;
         fullTranscriptRef.current     = "";
         conceptsIntroducedRef.current = [];
         insightSavedRef.current       = false;
-
         const now = new Date();
         setSessionStartTime(now);
         sessionStartTimeRef.current = now;
-
-        const syncCount = result?.fields?.Sync_Count || 2;
         setMessages([{
           role: "syncca", concepts: [], timestamp: new Date().toISOString(),
           text: getOpeningMessage(syncCount, result?.fields?.First_Name || "", result?.fields?.Gender || ""),
@@ -388,9 +428,9 @@ export default function App() {
     const history = await fetchFullHistory(fields.Username || rid, 50).catch(() => []);
     sessionHistoryRef.current = history;
 
-    // Retroactively generate insight for sessions missing it
+    // Retroactively generate insight for completed sessions missing it
     const needsInsight = history.filter(
-      s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
+      s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight && s.sessionComplete === "YES"
     );
     needsInsight.slice(0, 3).forEach(s => {
       fetch("/api/airtable-finalize", {
@@ -405,17 +445,17 @@ export default function App() {
       }).catch(() => {});
     });
 
-    if (isResume && history.length > 0) {
-      const latest = history[0];
-      logRecordIdRef.current        = latest.id;
-      fullTranscriptRef.current     = latest.transcript || "";
-      conceptsIntroducedRef.current = latest.concepts || [];
+    // ── Check for resumable session ──────────────────────────
+    const resumable = getResumableSession(history);
+    if (resumable) {
+      logRecordIdRef.current        = resumable.id;
+      fullTranscriptRef.current     = resumable.transcript || "";
+      conceptsIntroducedRef.current = resumable.concepts || [];
       insightSavedRef.current       = false;
-      // Restore original start time so the timer resumes from the correct position
-      const originalStart = latest.date ? new Date(latest.date) : new Date();
+      const originalStart = resumable.date ? new Date(resumable.date) : new Date();
       setSessionStartTime(originalStart);
       sessionStartTimeRef.current = originalStart;
-      const resumeMessages = (latest.transcript || "")
+      const resumeMessages = (resumable.transcript || "")
         .split("\n")
         .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
         .map(l => ({
@@ -428,26 +468,29 @@ export default function App() {
         role: "syncca", concepts: [], timestamp: new Date().toISOString(),
         text: "ברוכה השבה 🙏 ממשיכים מאיפה שהפסקנו.",
       };
-      // If no messages existed (user never typed), show fresh opening instead
       setMessages(resumeMessages.length > 0
         ? [...resumeMessages, resumeNote]
         : [{ role: "syncca", concepts: [], timestamp: new Date().toISOString(),
              text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || "") }]
       );
-    } else {
-      const logId = await createSessionLog(rid).catch(() => null);
-      logRecordIdRef.current        = logId;
-      fullTranscriptRef.current     = "";
-      conceptsIntroducedRef.current = [];
-      insightSavedRef.current       = false;
-      const now = new Date();
-      setSessionStartTime(now);
-      sessionStartTimeRef.current = now;
-      setMessages([{
-        role: "syncca", concepts: [], timestamp: new Date().toISOString(),
-        text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
-      }]);
+      if (shouldShowBetaModal(email)) setShowBetaModal(true);
+      setScreen("chat");
+      return;
     }
+
+    // ── No resumable session — create fresh ─────────────────
+    const logId = await createSessionLog(rid).catch(() => null);
+    logRecordIdRef.current        = logId;
+    fullTranscriptRef.current     = "";
+    conceptsIntroducedRef.current = [];
+    insightSavedRef.current       = false;
+    const now = new Date();
+    setSessionStartTime(now);
+    sessionStartTimeRef.current = now;
+    setMessages([{
+      role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+      text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
+    }]);
 
     if (shouldShowBetaModal(email)) setShowBetaModal(true);
     setScreen("chat");
@@ -543,7 +586,7 @@ export default function App() {
     if (recordId) {
       const words = updated.map(c => c.word || c.englishTerm).filter(Boolean);
       updateSavedConcepts(recordId, words)
-        .catch(e => console.error("[handleSaveConcept] ✗ failed:", e));
+        .catch(e => console.error("[handleSaveConcept] failed:", e));
     }
   }
 
@@ -553,11 +596,13 @@ export default function App() {
     if (recordId) {
       const words = updated.map(c => c.word || c.englishTerm).filter(Boolean);
       overwriteSavedConcepts(recordId, words)
-        .catch(e => console.error("[handleDeleteConcept] ✗ failed:", e));
+        .catch(e => console.error("[handleDeleteConcept] failed:", e));
     }
   }
 
   // ── FINALIZE SESSION ──────────────────────────────────────────
+  // Called on timer end and logout only.
+  // Marks Session_Complete: YES + generates insight + title.
   async function handleFinalizeSession() {
     const logId    = logRecordIdRef.current;
     const concepts = conceptsIntroducedRef.current;
@@ -570,14 +615,16 @@ export default function App() {
         .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
         .join("\n");
     }
-    if (!transcript || countUserMessages(transcript) < 3) return;
 
     insightSavedRef.current = true;
     try {
-      const [insight, title] = await Promise.all([
-        generateSessionInsight(transcript, concepts),
-        generateSessionTitle(transcript, chatLang),
-      ]);
+      const hasEnough = countUserMessages(transcript) >= 3;
+      const [insight, title] = hasEnough
+        ? await Promise.all([
+            generateSessionInsight(transcript, concepts),
+            generateSessionTitle(transcript, chatLang),
+          ])
+        : ["", ""];
       await finalizeSession({
         logRecordId:      logId,
         fullTranscript:   transcript,
@@ -585,6 +632,7 @@ export default function App() {
         sessionStartTime: sessionStartTime || null,
         sessionInsight:   insight,
         title,
+        sessionComplete:  true,
       });
     } catch (e) {
       insightSavedRef.current = false;
@@ -594,10 +642,10 @@ export default function App() {
 
   // ── LOGOUT ────────────────────────────────────────────────────
   function handleLogout() {
-    const logId      = logRecordIdRef.current;
-    const transcript = fullTranscriptRef.current;
-    const concepts   = conceptsIntroducedRef.current;
-    const msgsCopy   = [...messages];
+    const logId        = logRecordIdRef.current;
+    const transcript   = fullTranscriptRef.current;
+    const concepts     = conceptsIntroducedRef.current;
+    const msgsCopy     = [...messages];
     const alreadySaved = insightSavedRef.current;
 
     localStorage.removeItem("syncca_email");
@@ -621,7 +669,8 @@ export default function App() {
           .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
           .join("\n");
       }
-      if (finalTranscript && countUserMessages(finalTranscript) >= 3) {
+      const hasEnough = finalTranscript && countUserMessages(finalTranscript) >= 3;
+      if (hasEnough) {
         Promise.all([
           generateSessionInsight(finalTranscript, concepts),
           generateSessionTitle(finalTranscript, chatLang),
@@ -633,6 +682,7 @@ export default function App() {
           sessionInsight:   insight,
           securityAlert:    securityAlertRef.current,
           title,
+          sessionComplete:  true,
         })).catch(e => console.warn("[handleLogout] finalize failed:", e));
       } else if (finalTranscript) {
         finalizeSession({
@@ -640,6 +690,7 @@ export default function App() {
           fullTranscript:   finalTranscript,
           conceptsSurfaced: concepts,
           sessionStartTime: sessionStartTime || null,
+          sessionComplete:  true,
         }).catch(e => console.warn("[handleLogout] short session save failed:", e));
       }
     }
@@ -700,10 +751,19 @@ export default function App() {
                   sessionStartTime: sessionStartTime || null,
                   sessionInsight:   insight,
                   title,
+                  sessionComplete:  true,
                 })).catch(e => {
                   insightSavedRef.current = false;
                   console.warn("[timeout] finalize failed:", e);
                 });
+              } else if (finalTranscript) {
+                finalizeSession({
+                  logRecordId:      logId,
+                  fullTranscript:   finalTranscript,
+                  conceptsSurfaced: concepts,
+                  sessionStartTime: sessionStartTime || null,
+                  sessionComplete:  true,
+                }).catch(() => {});
               }
             }
           }}

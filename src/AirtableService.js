@@ -20,7 +20,6 @@ export const FIELD_MAPS = {
 
 // ─── Core fetch wrapper — via server proxy ────────────────────────
 async function airtableFetch(path, options = {}) {
-  // path may already contain query params — pass as-is, don't double-encode
   const url = `/api/airtable?path=${path}`;
   const res = await fetch(url, {
     method:  options.method || "GET",
@@ -231,9 +230,6 @@ export async function fetchPreviousConcepts(userRecordId) {
   }
 }
 
-// Fetches last N session summaries for memory injection into the AI system prompt.
-// Returns most recent first. All structured fields included so Syncca can
-// pick up exactly where the previous session left off.
 export async function fetchSessionHistory(username, limit = 5) {
   if (!username) return [];
   try {
@@ -244,31 +240,33 @@ export async function fetchSessionHistory(username, limit = 5) {
       "Session_Duration_Minutes",
       "Feedback",
       "Language_Used",
-      "Session_Insight",       // narrative summary in Hebrew
-      "Ladder_Step_Reached",   // integer 1-6
-      "Emotional_Arc",         // e.g. "flooded → reflective"
-      "Pattern_Identified",    // Compliance | War | Both | Unclear
-      "Mode_At_End",           // mirror | coach
-      "Core_Theme",            // short English phrase
+      "Session_Insight",
+      "Ladder_Step_Reached",
+      "Emotional_Arc",
+      "Pattern_Identified",
+      "Mode_At_End",
+      "Core_Theme",
+      "Session_Complete",
     ];
     const qs = fieldNames.map(f => `fields%5B%5D=${encodeURIComponent(f)}`).join("&");
     const data = await airtableFetch(
       `Conversation_Logs?filterByFormula=${encodeURIComponent(f)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${qs}`
     );
- return (data.records || [])
+    return (data.records || [])
       .map(rec => ({
-        date:         rec.fields?.Created_At                || "",
-        concepts:     (rec.fields?.Concepts_Surfaced || "")
-                        .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
-        duration:     rec.fields?.Session_Duration_Minutes  || null,
-        feedback:     rec.fields?.Feedback                  || "",
-        language:     rec.fields?.Language_Used             || "Hebrew",
-        insight:      rec.fields?.Session_Insight           || "",
-        ladderStep:   rec.fields?.Ladder_Step_Reached       || null,
-        emotionalArc: rec.fields?.Emotional_Arc             || "",
-        pattern:      rec.fields?.Pattern_Identified        || "",
-        modeAtEnd:    rec.fields?.Mode_At_End               || "",
-        coreTheme:    rec.fields?.Core_Theme                || "",
+        date:            rec.fields?.Created_At                || "",
+        concepts:        (rec.fields?.Concepts_Surfaced || "")
+                           .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
+        duration:        rec.fields?.Session_Duration_Minutes  || null,
+        feedback:        rec.fields?.Feedback                  || "",
+        language:        rec.fields?.Language_Used             || "Hebrew",
+        insight:         rec.fields?.Session_Insight           || "",
+        ladderStep:      rec.fields?.Ladder_Step_Reached       || null,
+        emotionalArc:    rec.fields?.Emotional_Arc             || "",
+        pattern:         rec.fields?.Pattern_Identified        || "",
+        modeAtEnd:       rec.fields?.Mode_At_End               || "",
+        coreTheme:       rec.fields?.Core_Theme                || "",
+        sessionComplete: rec.fields?.Session_Complete          || "",
       }))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch (e) {
@@ -303,16 +301,21 @@ export async function saveFeedback(logRecordId, feedbackText) {
   });
 }
 
-export async function finalizeSession({ logRecordId, fullTranscript, conceptsSurfaced, sessionStartTime, sessionInsight, securityAlert, title }) {
+export async function finalizeSession({
+  logRecordId, fullTranscript, conceptsSurfaced,
+  sessionStartTime, sessionInsight, securityAlert,
+  title, sessionComplete,
+}) {
   if (!logRecordId) return;
   const mins   = sessionStartTime ? Math.round((Date.now() - new Date(sessionStartTime).getTime()) / 60000) : null;
   const fields = { Full_Transcript: fullTranscript || "" };
   if (Array.isArray(conceptsSurfaced) && conceptsSurfaced.length > 0)
     fields.Concepts_Surfaced = conceptsSurfaced.join(", ");
-  if (mins !== null)   fields.Session_Duration_Minutes = mins;
-  if (sessionInsight)  fields.Session_Insight = sessionInsight;
-  if (securityAlert)   fields.Security_Alert = "YES";
-    if (title)          fields.Title = title;
+  if (mins !== null)       fields.Session_Duration_Minutes = mins;
+  if (sessionInsight)      fields.Session_Insight          = sessionInsight;
+  if (securityAlert)       fields.Security_Alert           = "YES";
+  if (title)               fields.Title                    = title;
+  if (sessionComplete)     fields.Session_Complete         = "YES";
   return airtableFetch(`Conversation_Logs/${logRecordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields }),
@@ -326,31 +329,32 @@ export async function fetchFullHistory(username, limit = 10) {
     "Created_At", "Concepts_Surfaced", "Session_Duration_Minutes",
     "Feedback", "Language_Used", "Session_Insight", "Full_Transcript",
     "Ladder_Step_Reached", "Emotional_Arc", "Pattern_Identified",
-    "Mode_At_End", "Core_Theme","Title",
+    "Mode_At_End", "Core_Theme", "Title", "Session_Complete",
   ];
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
   const data = await airtableFetch(url);
   return (data.records || [])
     .map(rec => ({
-      id:           rec.id,
-      date:         rec.fields?.Created_At                || "",
-      concepts:     (rec.fields?.Concepts_Surfaced || "")
-                      .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
-      duration:     rec.fields?.Session_Duration_Minutes  || null,
-      feedback:     rec.fields?.Feedback                  || "",
-      language:     rec.fields?.Language_Used             || "Hebrew",
-      insight:      rec.fields?.Session_Insight           || "",
-      transcript:   rec.fields?.Full_Transcript           || "",
-      ladderStep:   rec.fields?.Ladder_Step_Reached       || null,
-      emotionalArc: rec.fields?.Emotional_Arc             || "",
-      pattern:      rec.fields?.Pattern_Identified        || "",
-      modeAtEnd:    rec.fields?.Mode_At_End               || "",
-      coreTheme:    rec.fields?.Core_Theme                || "",
-      title:        rec.fields?.Title                     || "",
+      id:              rec.id,
+      date:            rec.fields?.Created_At                || "",
+      concepts:        (rec.fields?.Concepts_Surfaced || "")
+                         .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
+      duration:        rec.fields?.Session_Duration_Minutes  || null,
+      feedback:        rec.fields?.Feedback                  || "",
+      language:        rec.fields?.Language_Used             || "Hebrew",
+      insight:         rec.fields?.Session_Insight           || "",
+      transcript:      rec.fields?.Full_Transcript           || "",
+      ladderStep:      rec.fields?.Ladder_Step_Reached       || null,
+      emotionalArc:    rec.fields?.Emotional_Arc             || "",
+      pattern:         rec.fields?.Pattern_Identified        || "",
+      modeAtEnd:       rec.fields?.Mode_At_End               || "",
+      coreTheme:       rec.fields?.Core_Theme                || "",
+      title:           rec.fields?.Title                     || "",
+      sessionComplete: rec.fields?.Session_Complete          || "",
     }))
-.sort((a, b) => new Date(b.date) - new Date(a.date))
-    .filter(s => s.transcript && s.transcript.length > 300);
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .filter(s => s.transcript && s.transcript.length > 50);
 }
 
 // ─── Session Rate Limiting ────────────────────────────────────
