@@ -9,10 +9,44 @@ const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY;
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { logRecordId, fullTranscript, conceptsSurfaced, generateInsight } = req.body || {};
+  const { logRecordId, fullTranscript, conceptsSurfaced, generateInsight, chatLang, sessionStartTime } = req.body || {};
   if (!logRecordId) return res.status(400).json({ error: "Missing logRecordId" });
 
   const fields = {};
+   if (sessionStartTime) {
+    const mins = Math.round((Date.now() - new Date(sessionStartTime).getTime()) / 60000);
+    if (mins > 0) fields.Session_Duration_Minutes = mins;
+  }
+
+  // Generate title for tab-close saves
+  if (fullTranscript && fullTranscript.length > 50 && ANTHROPIC_KEY) {
+    try {
+      const langInstructions = {
+        he: "כתוב כותרת קצרה בעברית (3-5 מילים) שמתארת את המסע הרגשי של השיחה — פואטית, לא קלינית. רק הכותרת, ללא גרשיים.",
+        en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
+        de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter) für die emotionale Reise — poetisch, nicht klinisch. Nur den Titel, keine Anführungszeichen.",
+      };
+      const titleInstruction = langInstructions[chatLang] || langInstructions.en;
+      const titleRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type":      "application/json",
+          "x-api-key":         ANTHROPIC_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model:      "claude-sonnet-4-6",
+          max_tokens: 30,
+          messages: [{ role: "user", content: `${titleInstruction}\n\nתמליל:\n${fullTranscript.slice(-2000)}` }],
+        }),
+      });
+      const titleData = await titleRes.json();
+      const titleText = titleData.content?.[0]?.text?.trim();
+      if (titleText) fields.Title = titleText;
+    } catch (e) {
+      console.warn("[airtable-finalize] title generation failed:", e);
+    }
+  }
   if (fullTranscript) fields.Full_Transcript = fullTranscript;
   if (Array.isArray(conceptsSurfaced) && conceptsSurfaced.length > 0)
     fields.Concepts_Surfaced = conceptsSurfaced.join(", ");
