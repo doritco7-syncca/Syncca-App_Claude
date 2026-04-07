@@ -262,13 +262,13 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     }}>▼</span>
                   </div>
 
-                  {/* Title — visible in collapsed state */}
+                {/* Title — visible in collapsed state */}
                   {s.title && (
                     <div style={{
                       marginTop: "6px",
-                      fontFamily: "'Cormorant Garamond', serif",
+                      fontFamily: "'Alef', sans-serif",
                       fontSize: "1rem", fontWeight: 700,
-                      color: COLORS.primary,
+                      color: COLORS.success,
                       direction: "rtl",
                     }}>{s.title}</div>
                   )}
