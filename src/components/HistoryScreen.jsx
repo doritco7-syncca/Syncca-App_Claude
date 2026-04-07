@@ -285,7 +285,16 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     padding: "clamp(8px,2vh,14px) 16px clamp(8px,2vh,16px)",
                     display: "flex", flexDirection: "column", gap: "12px",
                   }}>
-
+                    {(s.title || s.coreTheme) && (
+                      <div style={{
+                        width: "100%",
+                        marginTop: "6px",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "1rem", fontWeight: 700,
+                        color: COLORS.primary,
+                        direction: "rtl",
+                      }}>{s.title || s.coreTheme}</div>
+                    )}
                     {/* Concepts */}
                     {hasConcepts && (
                       <div>
