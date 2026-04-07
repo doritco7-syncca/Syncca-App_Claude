@@ -291,7 +291,6 @@ export default function ChatScreen({
   onSend, onSaveConcept, onDeleteConcept, savedConcepts = [],
   conceptLexicon = [],
   onOpenPersonalCard, onOpenHistory, onLogout, onTimeout,
-  onSessionEnd,        // ← NEW: called when user clicks "סיימתי"
   sessionStartTime, logRecordId, chatLang = "he",
 }) {
   const [input, setInput]                 = useState("");
@@ -306,7 +305,6 @@ export default function ChatScreen({
     return SESSION_SECS;
   });
   const [timedOut, setTimedOut]   = useState(false);
-  const [userEnded, setUserEnded] = useState(false);
   const [showWarning, setShowWarning] = useState(() => {
     if (sessionStartTime) {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
@@ -504,7 +502,13 @@ export default function ChatScreen({
             </div>
 
             <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-              <button className="icon-btn" onClick={onOpenHistory} title="היסטוריית שיחות" style={{ fontSize: "1.3rem" }}>📋</button>
+<button className="icon-btn" onClick={onOpenHistory} title="היסטוריית שיחות" style={{ padding: "6px" }}>
+  <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+    <rect width="18" height="2" rx="1" fill="currentColor"/>
+    <rect y="6" width="18" height="2" rx="1" fill="currentColor"/>
+    <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+  </svg>
+</button>
               <button className="icon-btn" onClick={onOpenPersonalCard} title="כרטיס אישי" style={{ fontSize: "1.3rem" }}>👤</button>
             </div>
           </div>
@@ -644,36 +648,14 @@ export default function ChatScreen({
               </div>
             </div>
           </div>
-
-          {/* "סיימתי" button — calls onSessionEnd to save insight */}
-          {!timedOut && !userEnded && (
-            <div style={{
-              padding: "6px 16px 8px", display: "flex", justifyContent: "flex-start",
-              flexShrink: 0,
-            }}>
-              <button
-                onClick={() => {
-                  setUserEnded(true);
-                  onSessionEnd?.();   // ← triggers insight generation in App.jsx
-                }}
-                style={{
-                  background: "#f3f4f6", border: "none", borderRadius: "9999px",
-                  padding: "5px 16px", fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.78rem", color: "#1a1a1a", cursor: "pointer", direction: "rtl",
-                }}>
-                סיימתי את השיחה
-              </button>
-            </div>
-          )}
-
-          {/* BOTTOM WIDGET */}
+{/* BOTTOM WIDGET */}
           <SessionEndWidget
             savedConcepts={savedConcepts}
             conceptLexicon={conceptLexicon}
             logRecordId={logRecordId}
             chatLang={chatLang}
             onDeleteConcept={onDeleteConcept}
-            showFeedback={timedOut || userEnded}
+            showFeedback={timedOut}
           />
         </div>
       </div>
@@ -687,3 +669,4 @@ export default function ChatScreen({
     </>
   );
 }
+       
