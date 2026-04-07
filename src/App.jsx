@@ -15,7 +15,7 @@ import {
   fetchLexicon, fetchPreviousConcepts, fetchFullHistory,
 } from "./AirtableService";
 import { SYNCCA_OPENING_MESSAGE } from "./SynccaPrompt";
-import { sendToSyncca, generateSessionInsight } from "./SynccaAPI";
+import { sendToSyncca, generateSessionInsight, generateSessionTitle } from "./SynccaAPI";
 import { parseResponse } from "./SynccaParsers";
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -221,7 +221,8 @@ export default function App() {
   const sessionHistoryRef      = useRef([]);
   const savedConceptsRef       = useRef([]);
   const securityAlertRef       = useRef(false);
-  const insightSavedRef        = useRef(false); // prevents double insight generation
+  const insightSavedRef        = useRef(false);
+  const sessionStartTimeRef    = useRef(null); // mirrors sessionStartTime for use in beforeUnload
 
   useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
 
@@ -232,13 +233,19 @@ export default function App() {
       const transcript = fullTranscriptRef.current;
       const concepts   = conceptsIntroducedRef.current;
       if (!logId || !transcript) return;
-      // Only generate insight if session was substantial (3+ user messages)
-      const shouldGenerateInsight = countUserMessages(transcript) >= 3 && !insightSavedRef.current;
+      // Don't finalize if session is still within the 45-min window — user may return
+      const elapsedMins = sessionStartTimeRef.current
+        ? (Date.now() - new Date(sessionStartTimeRef.current).getTime()) / 60000
+        : 999;
+      const sessionStillActive = elapsedMins < 45;
+      const shouldGenerateInsight = !sessionStillActive && countUserMessages(transcript) >= 3 && !insightSavedRef.current;
       const payload = JSON.stringify({
         logRecordId:      logId,
         fullTranscript:   transcript,
         conceptsSurfaced: concepts,
         generateInsight:  shouldGenerateInsight,
+        chatLang,
+        sessionStartTime: sessionStartTimeRef.current?.toISOString() || null,
       });
       navigator.sendBeacon("/api/airtable-finalize", new Blob([payload], { type: "application/json" }));
       if (shouldGenerateInsight) insightSavedRef.current = true;
@@ -310,18 +317,18 @@ export default function App() {
         const needsInsight = history.filter(
           s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
         );
-       needsInsight.slice(0, 3).forEach(s => {
-  fetch("/api/airtable-finalize", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      logRecordId:      s.id,
-      fullTranscript:   s.transcript,
-      conceptsSurfaced: s.concepts || [],
-      generateInsight:  true,
-    }),
-  }).catch(() => {});
-});
+        needsInsight.slice(0, 3).forEach(s => {
+          fetch("/api/airtable-finalize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              logRecordId:      s.id,
+              fullTranscript:   s.transcript,
+              conceptsSurfaced: s.concepts || [],
+              generateInsight:  true,
+            }),
+          }).catch(() => {});
+        });
 
         const logId = await createSessionLog(recordId);
         logRecordIdRef.current        = logId;
@@ -329,7 +336,10 @@ export default function App() {
         conceptsIntroducedRef.current = [];
         insightSavedRef.current       = false;
 
-        setSessionStartTime(new Date());
+        const now = new Date();
+        setSessionStartTime(now);
+        sessionStartTimeRef.current = now;
+
         const syncCount = result?.fields?.Sync_Count || 2;
         setMessages([{
           role: "syncca", concepts: [], timestamp: new Date().toISOString(),
@@ -383,17 +393,17 @@ export default function App() {
       s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
     );
     needsInsight.slice(0, 3).forEach(s => {
-  fetch("/api/airtable-finalize", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      logRecordId:      s.id,
-      fullTranscript:   s.transcript,
-      conceptsSurfaced: s.concepts || [],
-      generateInsight:  true,
-    }),
-  }).catch(() => {});
-});
+      fetch("/api/airtable-finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          logRecordId:      s.id,
+          fullTranscript:   s.transcript,
+          conceptsSurfaced: s.concepts || [],
+          generateInsight:  true,
+        }),
+      }).catch(() => {});
+    });
 
     if (isResume && history.length > 0) {
       const latest = history[0];
@@ -401,7 +411,10 @@ export default function App() {
       fullTranscriptRef.current     = latest.transcript || "";
       conceptsIntroducedRef.current = latest.concepts || [];
       insightSavedRef.current       = false;
-      setSessionStartTime(new Date());
+      // Restore original start time so the timer resumes from the correct position
+      const originalStart = latest.date ? new Date(latest.date) : new Date();
+      setSessionStartTime(originalStart);
+      sessionStartTimeRef.current = originalStart;
       const resumeMessages = (latest.transcript || "")
         .split("\n")
         .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
@@ -415,14 +428,21 @@ export default function App() {
         role: "syncca", concepts: [], timestamp: new Date().toISOString(),
         text: "ברוכה השבה 🙏 ממשיכים מאיפה שהפסקנו.",
       };
-      setMessages(resumeMessages.length > 0 ? [...resumeMessages, resumeNote] : [resumeNote]);
+      // If no messages existed (user never typed), show fresh opening instead
+      setMessages(resumeMessages.length > 0
+        ? [...resumeMessages, resumeNote]
+        : [{ role: "syncca", concepts: [], timestamp: new Date().toISOString(),
+             text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || "") }]
+      );
     } else {
       const logId = await createSessionLog(rid).catch(() => null);
       logRecordIdRef.current        = logId;
       fullTranscriptRef.current     = "";
       conceptsIntroducedRef.current = [];
       insightSavedRef.current       = false;
-      setSessionStartTime(new Date());
+      const now = new Date();
+      setSessionStartTime(now);
+      sessionStartTimeRef.current = now;
       setMessages([{
         role: "syncca", concepts: [], timestamp: new Date().toISOString(),
         text: getOpeningMessage(newSyncCount, fields.First_Name || "", fields.Gender || ""),
@@ -443,9 +463,9 @@ export default function App() {
     setMessages(updatedMessages);
 
     if (messages.filter(m => m.role === "user").length === 0) {
-     const isHebrew = /[\u05D0-\u05EA]/.test(text);
-const isGerman = !isHebrew && /[äöüÄÖÜß]|(\b(ich|du|ist|das|die|der|und|nicht|mit|wie)\b)/i.test(text);
-setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
+      const isHebrew = /[\u05D0-\u05EA]/.test(text);
+      const isGerman = !isHebrew && /[äöüÄÖÜß]|(\b(ich|du|ist|das|die|der|und|nicht|mit|wie)\b)/i.test(text);
+      setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
     }
 
     setIsLoading(true);
@@ -538,8 +558,6 @@ setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
   }
 
   // ── FINALIZE SESSION ──────────────────────────────────────────
-  // Called by "סיימתי" button, logout, and timeout.
-  // Minimum 3 user messages required. Skips if already saved this session.
   async function handleFinalizeSession() {
     const logId    = logRecordIdRef.current;
     const concepts = conceptsIntroducedRef.current;
@@ -554,18 +572,22 @@ setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
     }
     if (!transcript || countUserMessages(transcript) < 3) return;
 
-    insightSavedRef.current = true; // mark before async to prevent double-call
+    insightSavedRef.current = true;
     try {
-      const insight = await generateSessionInsight(transcript, concepts);
+      const [insight, title] = await Promise.all([
+        generateSessionInsight(transcript, concepts),
+        generateSessionTitle(transcript, chatLang),
+      ]);
       await finalizeSession({
         logRecordId:      logId,
         fullTranscript:   transcript,
         conceptsSurfaced: concepts,
         sessionStartTime: sessionStartTime || null,
         sessionInsight:   insight,
+        title,
       });
     } catch (e) {
-      insightSavedRef.current = false; // allow retry on error
+      insightSavedRef.current = false;
       console.warn("[handleFinalizeSession] failed:", e);
     }
   }
@@ -588,6 +610,7 @@ setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
     previousConceptsRef.current   = [];
     sessionHistoryRef.current     = [];
     insightSavedRef.current       = false;
+    sessionStartTimeRef.current   = null;
     setScreen("welcome");
 
     if (logId && !alreadySaved) {
@@ -599,18 +622,19 @@ setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
           .join("\n");
       }
       if (finalTranscript && countUserMessages(finalTranscript) >= 3) {
-        generateSessionInsight(finalTranscript, concepts)
-          .then(insight => finalizeSession({
-            logRecordId:      logId,
-            fullTranscript:   finalTranscript,
-            conceptsSurfaced: concepts,
-            sessionStartTime: sessionStartTime || null,
-            sessionInsight:   insight,
-            securityAlert:    securityAlertRef.current,
-          }))
-          .catch(e => console.warn("[handleLogout] finalize failed:", e));
+        Promise.all([
+          generateSessionInsight(finalTranscript, concepts),
+          generateSessionTitle(finalTranscript, chatLang),
+        ]).then(([insight, title]) => finalizeSession({
+          logRecordId:      logId,
+          fullTranscript:   finalTranscript,
+          conceptsSurfaced: concepts,
+          sessionStartTime: sessionStartTime || null,
+          sessionInsight:   insight,
+          securityAlert:    securityAlertRef.current,
+          title,
+        })).catch(e => console.warn("[handleLogout] finalize failed:", e));
       } else if (finalTranscript) {
-        // Short session — save transcript/concepts but no insight
         finalizeSession({
           logRecordId:      logId,
           fullTranscript:   finalTranscript,
@@ -650,10 +674,10 @@ setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
           onLogout={handleLogout}
           onSessionEnd={handleFinalizeSession}
           onTimeout={() => {
-            const logId      = logRecordIdRef.current;
-            const transcript = fullTranscriptRef.current;
-            const concepts   = conceptsIntroducedRef.current;
-            const msgsCopy   = [...messages];
+            const logId        = logRecordIdRef.current;
+            const transcript   = fullTranscriptRef.current;
+            const concepts     = conceptsIntroducedRef.current;
+            const msgsCopy     = [...messages];
             const alreadySaved = insightSavedRef.current;
             setShowTimeoutModal(true);
             if (logId && !alreadySaved) {
@@ -666,18 +690,20 @@ setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
               }
               if (finalTranscript && countUserMessages(finalTranscript) >= 3) {
                 insightSavedRef.current = true;
-                generateSessionInsight(finalTranscript, concepts)
-                  .then(insight => finalizeSession({
-                    logRecordId:      logId,
-                    fullTranscript:   finalTranscript,
-                    conceptsSurfaced: concepts,
-                    sessionStartTime: sessionStartTime || null,
-                    sessionInsight:   insight,
-                  }))
-                  .catch(e => {
-                    insightSavedRef.current = false;
-                    console.warn("[timeout] finalize failed:", e);
-                  });
+                Promise.all([
+                  generateSessionInsight(finalTranscript, concepts),
+                  generateSessionTitle(finalTranscript, chatLang),
+                ]).then(([insight, title]) => finalizeSession({
+                  logRecordId:      logId,
+                  fullTranscript:   finalTranscript,
+                  conceptsSurfaced: concepts,
+                  sessionStartTime: sessionStartTime || null,
+                  sessionInsight:   insight,
+                  title,
+                })).catch(e => {
+                  insightSavedRef.current = false;
+                  console.warn("[timeout] finalize failed:", e);
+                });
               }
             }
           }}
