@@ -89,8 +89,3 @@ ${transcript.slice(-3000)}`;
     return data.content?.[0]?.text?.trim() || "";
   } catch (e) { return ""; }
 }
-    return data.content?.[0]?.text?.trim() || "";
-  } catch (e) {
-    return "";
-  }
-}
