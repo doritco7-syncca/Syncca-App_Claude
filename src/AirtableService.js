@@ -303,7 +303,7 @@ export async function saveFeedback(logRecordId, feedbackText) {
   });
 }
 
-export async function finalizeSession({ logRecordId, fullTranscript, conceptsSurfaced, sessionStartTime, sessionInsight, securityAlert }) {
+export async function finalizeSession({ logRecordId, fullTranscript, conceptsSurfaced, sessionStartTime, sessionInsight, securityAlert, title }) {
   if (!logRecordId) return;
   const mins   = sessionStartTime ? Math.round((Date.now() - new Date(sessionStartTime).getTime()) / 60000) : null;
   const fields = { Full_Transcript: fullTranscript || "" };
@@ -312,6 +312,7 @@ export async function finalizeSession({ logRecordId, fullTranscript, conceptsSur
   if (mins !== null)   fields.Session_Duration_Minutes = mins;
   if (sessionInsight)  fields.Session_Insight = sessionInsight;
   if (securityAlert)   fields.Security_Alert = "YES";
+    if (title)          fields.Title = title;
   return airtableFetch(`Conversation_Logs/${logRecordId}`, {
     method: "PATCH",
     body: JSON.stringify({ fields }),
@@ -325,7 +326,7 @@ export async function fetchFullHistory(username, limit = 10) {
     "Created_At", "Concepts_Surfaced", "Session_Duration_Minutes",
     "Feedback", "Language_Used", "Session_Insight", "Full_Transcript",
     "Ladder_Step_Reached", "Emotional_Arc", "Pattern_Identified",
-    "Mode_At_End", "Core_Theme",
+    "Mode_At_End", "Core_Theme","Title",
   ];
   const fieldQs = fieldList.map(name => `fields%5B%5D=${encodeURIComponent(name)}`).join("&");
   const url = `Conversation_Logs?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Created_At&sort%5B0%5D%5Bdirection%5D=desc&maxRecords=${limit}&${fieldQs}`;
@@ -346,6 +347,7 @@ export async function fetchFullHistory(username, limit = 10) {
       pattern:      rec.fields?.Pattern_Identified        || "",
       modeAtEnd:    rec.fields?.Mode_At_End               || "",
       coreTheme:    rec.fields?.Core_Theme                || "",
+      title:        rec.fields?.Title                     || "",
     }))
 .sort((a, b) => new Date(b.date) - new Date(a.date))
     .filter(s => s.transcript && s.transcript.length > 300);
@@ -359,7 +361,7 @@ export async function checkSessionAllowed(recordId, fields) {
   const last = new Date(lastSession);
   const now  = new Date();
   const minutesSince = (now - last) / (1000 * 60);
-  if (minutesSince < 30) return { allowed: true, isResume: true };
+  if (minutesSince < 50) return { allowed: true, isResume: true };
   if (minutesSince < 24 * 60) {
     const minutesLeft = Math.ceil(24 * 60 - minutesSince);
     const timeMsg = minutesLeft < 60
