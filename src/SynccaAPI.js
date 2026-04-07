@@ -62,6 +62,28 @@ ${transcript.slice(-3000)}`;
       }),
     });
     const data = await response.json();
+    export async function generateSessionTitle(transcript, chatLang = "he") {
+  if (!transcript || transcript.length < 50) return "";
+  const instructions = {
+    he: "כתוב כותרת קצרה בעברית (3-5 מילים) שמתארת את המסע הרגשי של השיחה — פואטית, לא קלינית. רק הכותרת, ללא גרשיים.",
+    en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
+    de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter) für die emotionale Reise — poetisch, nicht klinisch. Nur den Titel, keine Anführungszeichen.",
+  };
+  const instruction = instructions[chatLang] || instructions.en;
+  try {
+    const response = await fetch("/api/syncca", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 30,
+        messages: [{ role: "user", content: `${instruction}\n\nתמליל:\n${transcript.slice(-2000)}` }],
+      }),
+    });
+    const data = await response.json();
+    return data.content?.[0]?.text?.trim() || "";
+  } catch (e) { return ""; }
+}
     return data.content?.[0]?.text?.trim() || "";
   } catch (e) {
     return "";
