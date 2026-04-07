@@ -19,8 +19,8 @@ export default async function handler(req, res) {
   }
 
   // Generate title for tab-close saves
-  if (fullTranscript && fullTranscript.length > 50 && ANTHROPIC_KEY) {
-    try {
+const userMsgCount = (fullTranscript.match(/\[User\]:/g) || []).length;
+if (fullTranscript && userMsgCount >= 3 && ANTHROPIC_KEY) {    try {
       const langInstructions = {
         he: "כתוב כותרת קצרה בעברית (3-5 מילים) שמתארת את המסע הרגשי של השיחה — פואטית, לא קלינית. רק הכותרת, ללא גרשיים.",
         en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
