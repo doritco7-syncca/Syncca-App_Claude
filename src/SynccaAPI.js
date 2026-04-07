@@ -62,6 +62,11 @@ ${transcript.slice(-3000)}`;
       }),
     });
     const data = await response.json();
+    return data.content?.[0]?.text?.trim() || "";
+  } catch (e) {
+    return "";
+  }
+}
     export async function generateSessionTitle(transcript, chatLang = "he") {
   if (!transcript || transcript.length < 50) return "";
   const instructions = {
