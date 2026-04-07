@@ -262,6 +262,17 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     }}>▼</span>
                   </div>
 
+                  {/* Title — visible in collapsed state */}
+                  {s.title && (
+                    <div style={{
+                      marginTop: "6px",
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "1rem", fontWeight: 700,
+                      color: COLORS.primary,
+                      direction: "rtl",
+                    }}>{s.title}</div>
+                  )}
+
                   {/* Preview row: concept count only */}
                   {hasConcepts && (
                     <div style={{ marginTop: "8px" }}>
