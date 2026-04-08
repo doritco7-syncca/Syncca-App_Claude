@@ -140,7 +140,7 @@ function TimeoutModal({ onClose, logRecordId }) {
                        fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
                        direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"34px",
-              background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
+              background:"#0891b2", color:"white", border:"none", borderRadius:"9999px",
               fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"0.95rem", cursor:"pointer" }}>
               שליחת פידבק וסיום
             </button>
@@ -155,7 +155,7 @@ function TimeoutModal({ onClose, logRecordId }) {
           </div>
         )}
         <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"30px",
-          background:"transparent", color:"#6b7280", border:"1px solid #E5E0D8",
+          background:"transparent", color:"#6b7280", border:"1px solid  #7dd3fc",
           borderRadius:"9999px", fontFamily:"'Alef',sans-serif", fontSize:"0.9rem", cursor:"pointer" }}>
           סגירה
         </button>
