@@ -252,7 +252,7 @@ export default function App() {
         logRecordId:      logId,
         fullTranscript:   transcript,
         conceptsSurfaced: concepts,
-        generateInsight:  false,
+        generateInsight:  countUserMessages(fullTranscriptRef.current) >= 3,
         chatLang,
         sessionStartTime: sessionStartTimeRef.current?.toISOString() || null,
       });
@@ -323,7 +323,7 @@ export default function App() {
 
         // Retroactively generate insight for completed sessions missing it
         const needsInsight = history.filter(
-          s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight && s.sessionComplete === "YES"
+          s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
         );
         needsInsight.slice(0, 3).forEach(s => {
           fetch("/api/airtable-finalize", {
@@ -430,7 +430,7 @@ export default function App() {
 
     // Retroactively generate insight for completed sessions missing it
     const needsInsight = history.filter(
-      s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight && s.sessionComplete === "YES"
+      s => s.transcript && countUserMessages(s.transcript) >= 3 && !s.insight
     );
     needsInsight.slice(0, 3).forEach(s => {
       fetch("/api/airtable-finalize", {
