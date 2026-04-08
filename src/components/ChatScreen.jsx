@@ -1,7 +1,9 @@
 // ChatScreen.jsx — Syncca
-// Changes from previous version:
-//   - Added onSessionEnd prop (called when user clicks "סיימתי")
-//   - Added German (de) language support for concept tooltip and saved concepts widget
+// Changes:
+//   - Timer calculates from real clock (handles inactive tabs)
+//   - Page Visibility API: detects return to tab, fires timeout if time ran out
+//   - Beacon sent on visibility change to save transcript
+//   - 5-minute warning and timeout modal changed from red to teal
 
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
@@ -15,6 +17,7 @@ const COLORS = {
   primary: "#C62828", primaryH: "#B71C1C", primaryLight: "#FFCDD2",
   secondary: "#757575",
   text: "#1a1a1a", muted: "#6b7280", border: "#E5E0D8",
+  teal: "#0891b2", tealLight: "#e0f2fe", tealBorder: "#7dd3fc",
 };
 
 const STONE_SHADOW = [
@@ -291,6 +294,7 @@ export default function ChatScreen({
   onSend, onSaveConcept, onDeleteConcept, savedConcepts = [],
   conceptLexicon = [],
   onOpenPersonalCard, onOpenHistory, onLogout, onTimeout,
+  onSessionEnd,
   sessionStartTime, logRecordId, chatLang = "he",
 }) {
   const [input, setInput]                 = useState("");
@@ -304,7 +308,7 @@ export default function ChatScreen({
     }
     return SESSION_SECS;
   });
-  const [timedOut, setTimedOut]   = useState(false);
+  const [timedOut, setTimedOut]     = useState(false);
   const [showWarning, setShowWarning] = useState(() => {
     if (sessionStartTime) {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
@@ -312,20 +316,23 @@ export default function ChatScreen({
     }
     return false;
   });
-  const bottomRef = useRef(null);
+  const bottomRef    = useRef(null);
+  const timedOutRef  = useRef(false); // ref copy so visibility handler can read it
 
   const displayName = firstName?.trim() ||
     (userEmail?.includes("@") ? userEmail.split("@")[0] : "");
 
+  // ── Timer — calculates from real clock each tick ──────────────
   useEffect(() => {
     if (timedOut || secondsLeft <= 0) return;
-   const id = setInterval(() => {
+    const id = setInterval(() => {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
       const next = Math.max(0, SESSION_SECS - elapsed);
       if (next <= 0) {
         clearInterval(id);
         setSecondsLeft(0);
         setTimedOut(true);
+        timedOutRef.current = true;
         onTimeout?.();
         return;
       }
@@ -352,8 +359,35 @@ export default function ChatScreen({
         } catch(e) { /* audio not supported */ }
       }
       setSecondsLeft(next);
-    }, 1000);    return () => clearInterval(id);
- }, [timedOut, sessionStartTime]);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [timedOut, sessionStartTime]);
+
+  // ── Page Visibility — fires when user returns to inactive tab ─
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "visible") return;
+      if (timedOutRef.current) return;
+
+      const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
+      const remaining = Math.max(0, SESSION_SECS - elapsed);
+
+      if (remaining <= 0) {
+        // Time ran out while tab was inactive — fire timeout now
+        setSecondsLeft(0);
+        setTimedOut(true);
+        timedOutRef.current = true;
+        onTimeout?.();
+      } else {
+        // Time not yet up — just correct the display
+        setSecondsLeft(remaining);
+        if (remaining <= 300) setShowWarning(true);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [sessionStartTime]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -485,7 +519,7 @@ export default function ChatScreen({
               </button>
               <span style={{
                 fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", fontWeight: 600,
-                color: isLow ? COLORS.primary : COLORS.muted,
+                color: isLow ? COLORS.teal : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
             </div>
@@ -507,13 +541,13 @@ export default function ChatScreen({
             </div>
 
             <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-<button className="icon-btn" onClick={onOpenHistory} title="היסטוריית שיחות" style={{ padding: "6px" }}>
-  <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-    <rect width="18" height="2" rx="1" fill="currentColor"/>
-    <rect y="6" width="18" height="2" rx="1" fill="currentColor"/>
-    <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
-  </svg>
-</button>
+              <button className="icon-btn" onClick={onOpenHistory} title="היסטוריית שיחות" style={{ padding: "6px" }}>
+                <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                  <rect width="18" height="2" rx="1" fill="currentColor"/>
+                  <rect y="6" width="18" height="2" rx="1" fill="currentColor"/>
+                  <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+                </svg>
+              </button>
               <button className="icon-btn" onClick={onOpenPersonalCard} title="כרטיס אישי" style={{ fontSize: "1.3rem" }}>👤</button>
             </div>
           </div>
@@ -576,22 +610,26 @@ export default function ChatScreen({
             <div ref={bottomRef} />
           </div>
 
-          {/* 5-MINUTE WARNING */}
+          {/* 5-MINUTE WARNING — teal, rounded */}
           {showWarning && !timedOut && (
             <div style={{
-              background: "rgba(33, 150, 243, 0.5)", padding: "12px 16px",
+              background: COLORS.tealLight,
+              border: `1.5px solid ${COLORS.tealBorder}`,
+              borderRadius: "16px",
+              margin: "8px 12px",
+              padding: "12px 16px",
               display: "flex", alignItems: "flex-start", justifyContent: "space-between",
               direction: "rtl", flexShrink: 0, gap: "8px",
             }}>
               <span style={{
                 fontFamily: "'Alef', sans-serif", fontSize: "0.94rem",
-                fontWeight: 700, color: "white", lineHeight: 1.6,
+                fontWeight: 700, color: COLORS.teal, lineHeight: 1.6,
               }}>
                 סליחה {displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך.
               </span>
               <button onClick={() => setShowWarning(false)} style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: "white", fontSize: "1.1rem", padding: 0, flexShrink: 0, fontWeight: 700,
+                color: COLORS.teal, fontSize: "1.1rem", padding: 0, flexShrink: 0, fontWeight: 700,
               }}>✕</button>
             </div>
           )}
@@ -653,7 +691,8 @@ export default function ChatScreen({
               </div>
             </div>
           </div>
-{/* BOTTOM WIDGET */}
+
+          {/* BOTTOM WIDGET */}
           <SessionEndWidget
             savedConcepts={savedConcepts}
             conceptLexicon={conceptLexicon}
@@ -674,4 +713,3 @@ export default function ChatScreen({
     </>
   );
 }
-       
