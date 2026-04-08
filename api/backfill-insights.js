@@ -45,27 +45,12 @@ async function fetchRecordsNeedingInsight() {
 async function generateInsight(transcript) {
   const prompt = `You are analyzing a therapy-style conversation between Syncca (an AI relationship communication guide) and a user.
 
-Read the transcript below and respond with ONLY a valid JSON object — no explanation, no markdown, no backticks.
+Write 2-3 sentences in Hebrew (third person) summarizing:
+- What topic the user brought
+- What emerged during the conversation
+- Where they ended up emotionally
 
-The JSON must have exactly these keys:
-
-{
-  "insight": "2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, what emerged in the conversation, and where they ended up.",
-  "ladder_step": <integer 1-6, the highest ladder step reached: 1=Holding, 2=Diagnostic, 3=Biological Bridge, 4=Poison Identification, 5=Separateness, 6=Clean Request>,
-  "emotional_arc": "<starting state> → <ending state>, using only these values: flooded, reflective, cortical",
-  "pattern_identified": "<exactly one of: Compliance, War, Both, Unclear>",
-  "mode_at_end": "<exactly one of: mirror, coach>",
-  "core_theme": "one short phrase in English describing the core issue (e.g. 'unmet need for appreciation', 'fear of abandonment', 'control vs autonomy')"
-}
-
-Rules:
-- insight must be in Hebrew
-- ladder_step must be a number between 1 and 6
-- emotional_arc must use only the allowed state values
-- pattern_identified must be exactly one of: Compliance, War, Both, Unclear
-- mode_at_end must be exactly one of: mirror, coach
-- core_theme must be in English, one short phrase
-- Return ONLY the JSON object. Nothing else.
+Return only the Hebrew summary. No titles, no quotes, no extra text.
 
 Transcript (last 3000 characters):
 ${transcript.slice(-3000)}`;
@@ -79,38 +64,18 @@ ${transcript.slice(-3000)}`;
     },
     body: JSON.stringify({
       model:      "claude-sonnet-4-20250514",
-      max_tokens: 400,
+      max_tokens: 200,
       messages:   [{ role: "user", content: prompt }],
     }),
   });
 
   const data = await res.json();
-  const raw  = data.content?.[0]?.text?.trim();
-  if (!raw) throw new Error("Empty response from Claude");
-
-  const clean  = raw.replace(/^```json?\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(clean);
+  const text = data.content?.[0]?.text?.trim();
+  if (!text) throw new Error("Empty response from Claude");
+  return text;
 }
 
-async function patchInsight(recordId, parsed) {
-  const fields = {};
-
-  if (parsed.insight)       fields.Session_Insight = parsed.insight;
-  if (parsed.core_theme)    fields.Core_Theme       = parsed.core_theme;
-  if (parsed.emotional_arc) fields.Emotional_Arc    = parsed.emotional_arc;
-
-  const step = parseInt(parsed.ladder_step, 10);
-  if (!isNaN(step) && step >= 1 && step <= 6)
-    fields.Ladder_Step_Reached = step;
-
-  if (["Compliance", "War", "Both", "Unclear"].includes(parsed.pattern_identified))
-    fields.Pattern_Identified = parsed.pattern_identified;
-
-  if (["mirror", "coach"].includes(parsed.mode_at_end))
-    fields.Mode_At_End = parsed.mode_at_end;
-
-  if (!Object.keys(fields).length) return;
-
+async function patchInsight(recordId, insight) {
   const res = await fetch(
     `https://api.airtable.com/v0/${AIRTABLE_BASE}/${TABLE}/${recordId}`,
     {
@@ -119,7 +84,7 @@ async function patchInsight(recordId, parsed) {
         Authorization:  `Bearer ${AIRTABLE_TOKEN}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ fields }),
+      body: JSON.stringify({ fields: { Session_Insight: insight } }),
     }
   );
   if (!res.ok) throw new Error(`Airtable PATCH failed: ${res.status}`);
@@ -146,10 +111,10 @@ module.exports = async function handler(req, res) {
 
     for (const rec of batch) {
       try {
-        const parsed = await generateInsight(rec.fields.Full_Transcript);
-        await patchInsight(rec.id, parsed);
+        const insight = await generateInsight(rec.fields.Full_Transcript);
+        await patchInsight(rec.id, insight);
         results.succeeded++;
-        results.details.push({ id: rec.id, insight: parsed.insight?.slice(0, 80) + "…" });
+        results.details.push({ id: rec.id, insight: insight.slice(0, 80) + "…" });
         await sleep(300);
       } catch (err) {
         results.failed++;
