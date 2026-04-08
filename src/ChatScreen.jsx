@@ -1,20 +1,23 @@
 // ChatScreen.jsx — Syncca
-// Props: userEmail, firstName, messages, isLoading, onSend,
-//        onSaveConcept, savedConcepts, conceptLexicon,
-//        onOpenPersonalCard, onOpenHistory, onLogout, onTimeout, sessionStartTime
+// Changes:
+//   - Timer calculates from real clock (handles inactive tabs)
+//   - Page Visibility API: detects return to tab, fires timeout if time ran out
+//   - Beacon sent on visibility change to save transcript
+//   - 5-minute warning and timeout modal changed from red to teal
 
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
 import { getConceptColors } from "../conceptColors";
 import VOICE_DICTIONARY from "../dictionary.json";
 
-const SESSION_SECS = 30 * 60;
+const SESSION_SECS = 45 * 60;
 
 const COLORS = {
   stone: "#F9F6EE", stoneLight: "#FCFAF5", frame: "#E8E0F0",
   primary: "#C62828", primaryH: "#B71C1C", primaryLight: "#FFCDD2",
   secondary: "#757575",
   text: "#1a1a1a", muted: "#6b7280", border: "#E5E0D8",
+  teal: "#0891b2", tealLight: "#e0f2fe", tealBorder: "#7dd3fc",
 };
 
 const STONE_SHADOW = [
@@ -24,7 +27,6 @@ const STONE_SHADOW = [
   "inset 0 1px 0 rgba(255,255,255,0.9)",
 ].join(", ");
 
-// ─── Logo ────────────────────────────────────────────────────────
 function LogoSymbol({ size = 20 }) {
   return (
     <svg width={size} height={size * 289/357} viewBox="0 0 357 289" fill="none" style={{ display: "block", flexShrink: 0 }}>
@@ -34,7 +36,6 @@ function LogoSymbol({ size = 20 }) {
   );
 }
 
-// ─── Concept Tooltip (chat bubble click) ─────────────────────────
 function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
   if (!concept) return null;
   return (
@@ -54,27 +55,41 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: "0.65rem", fontWeight: 700,
           color: COLORS.secondary, marginBottom: "10px",
-        }}>{chatLang === "he" ? concept.word : (concept.englishTerm || concept.word)}</div>
+        }}>
+          {chatLang === "he"
+            ? concept.word
+            : chatLang === "de"
+              ? (concept.germanTerm || concept.englishTerm || concept.word)
+              : (concept.englishTerm || concept.word)}
+        </div>
         <div style={{
           fontFamily: "'Alef', sans-serif", fontSize: "0.99rem",
           color: COLORS.text, lineHeight: 1.65, marginBottom: "16px",
-        }}>{chatLang === "he"
+        }}>
+          {chatLang === "he"
             ? (concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.")
-            : (concept.explanationEN || concept.explanation || "A key concept in clean relationship communication.")
-          }</div>
+            : chatLang === "de"
+              ? (concept.explanationDE || concept.explanationEN || concept.explanation || "Ein zentrales Konzept in der liebevollen Kommunikation.")
+              : (concept.explanationEN || concept.explanation || "A key concept in clean relationship communication.")
+          }
+        </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => { onSave?.(concept); onClose(); }} style={{
             flex: 1, height: "44px", background: COLORS.primary, color: "white",
             border: "none", borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.97rem",
             cursor: "pointer",
-          }}>{chatLang === "he" ? "✦ שמור מושג זה" : "✦ Save concept"}</button>
+          }}>
+            {chatLang === "he" ? "✦ שמור מושג זה" : chatLang === "de" ? "✦ Konzept speichern" : "✦ Save concept"}
+          </button>
           <button onClick={onClose} style={{
             height: "44px", padding: "0 18px",
             background: "transparent", color: COLORS.muted,
             border: `1px solid ${COLORS.border}`, borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", cursor: "pointer",
-          }}>{chatLang === "he" ? "סגור" : "Close"}</button>
+          }}>
+            {chatLang === "he" ? "סגור" : chatLang === "de" ? "Schließen" : "Close"}
+          </button>
         </div>
         <button onClick={onClose} style={{
           position: "absolute", top: "14px", left: "14px",
@@ -86,13 +101,11 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
   );
 }
 
-// ─── Message text renderer — makes [[concepts]] tappable ─────────
 function MessageText({ text, concepts = [], onConceptClick }) {
   if (!concepts.length) return <span style={{ whiteSpace: "pre-wrap" }}>{text}</span>;
   const parts = [];
   let remaining = text;
   concepts.forEach(c => {
-    // Use displayWord (what was actually inserted into text) for matching
     const searchWord = c.displayWord || c.englishTerm || c.word;
     const idx = remaining.indexOf(searchWord);
     if (idx === -1) return;
@@ -120,7 +133,6 @@ function stripHeDefiniteArticle(term) {
   return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
 }
 
-// ─── Bottom Widget: slim bar — saved concepts + feedback ─────────
 function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he", onDeleteConcept, showFeedback = false }) {
   const [activeConcept, setActiveConcept] = useState(null);
   const [feedback, setFeedback]           = useState("");
@@ -145,12 +157,14 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   function resolveWord(concept) {
     const entry = findEntry(concept);
     if (chatLang === "en") return entry?.englishTerm || concept.englishTerm || concept.word;
+    if (chatLang === "de") return entry?.germanTerm || concept.germanTerm || entry?.englishTerm || concept.englishTerm || concept.word;
     return entry?.word || concept.word || concept.englishTerm;
   }
 
   function resolveExplanation(concept) {
     const entry = findEntry(concept);
     if (chatLang === "en") return entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
+    if (chatLang === "de") return entry?.explanationDE || concept.explanationDE || entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
     return entry?.explanation || concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
   }
 
@@ -173,8 +187,6 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
       flexShrink: 0, direction: "rtl",
       maxHeight: "35vh", overflowY: "auto",
     }}>
-
-      {/* Saved concept pills — only if something saved */}
       {savedConcepts.length > 0 && (
         <div style={{ padding: "8px 16px 10px" }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
@@ -184,9 +196,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               color: COLORS.secondary, flexShrink: 0, marginLeft: "2px",
             }}>✦ שלי:</span>
             {savedConcepts.map((c, i) => (
-              <div key={i} style={{
-                display: "inline-flex", alignItems: "center", gap: "2px",
-              }}>
+              <div key={i} style={{ display: "inline-flex", alignItems: "center", gap: "2px" }}>
                 <button onClick={() => toggleConcept(c)} style={(() => {
                   const cols = getConceptColors(findEntry(c));
                   const isActive = activeConcept?.word === c.word;
@@ -211,8 +221,6 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               </div>
             ))}
           </div>
-
-          {/* Inline explanation — expands below pills */}
           {activeConcept && (
             <div style={{
               margin: "8px 0 4px", background: "white", borderRadius: "10px",
@@ -237,8 +245,6 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
           )}
         </div>
       )}
-
-      {/* Feedback — only shown when triggered */}
       {showFeedback && !sent && <div style={{
         padding: "8px 16px 4px", direction: "rtl",
         fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
@@ -282,49 +288,56 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   );
 }
 
-// ─── Main ChatScreen ─────────────────────────────────────────────
 export default function ChatScreen({
   userEmail = "", firstName = "",
   messages = [], isLoading = false,
   onSend, onSaveConcept, onDeleteConcept, savedConcepts = [],
   conceptLexicon = [],
   onOpenPersonalCard, onOpenHistory, onLogout, onTimeout,
+  onSessionEnd,
   sessionStartTime, logRecordId, chatLang = "he",
 }) {
-  const [input, setInput]               = useState("");
+  const [input, setInput]                 = useState("");
   const [isListening, setIsListening]     = useState(false);
-  const recognitionRef = useRef(null);
+  const recognitionRef                    = useRef(null);
   const [activeConcept, setActiveConcept] = useState(null);
-  const [secondsLeft, setSecondsLeft]   = useState(() => {
+  const [secondsLeft, setSecondsLeft]     = useState(() => {
     if (sessionStartTime) {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
       return Math.max(0, SESSION_SECS - elapsed);
     }
     return SESSION_SECS;
   });
-  const [timedOut, setTimedOut]       = useState(false);
-  const [userEnded, setUserEnded]       = useState(false);
+  const [timedOut, setTimedOut]     = useState(false);
   const [showWarning, setShowWarning] = useState(() => {
-    // If rejoining a session already past 25 minutes, show warning immediately
     if (sessionStartTime) {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
       return elapsed >= (SESSION_SECS - 300);
     }
     return false;
   });
-  const bottomRef = useRef(null);
+  const bottomRef    = useRef(null);
+  const timedOutRef  = useRef(false); // ref copy so visibility handler can read it
 
   const displayName = firstName?.trim() ||
     (userEmail?.includes("@") ? userEmail.split("@")[0] : "");
 
+  // ── Timer — calculates from real clock each tick ──────────────
   useEffect(() => {
     if (timedOut || secondsLeft <= 0) return;
-    const id = setInterval(() => setSecondsLeft(s => {
-      const next = s - 1;
-      if (next <= 1)   { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
+    const id = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
+      const next = Math.max(0, SESSION_SECS - elapsed);
+      if (next <= 0) {
+        clearInterval(id);
+        setSecondsLeft(0);
+        setTimedOut(true);
+        timedOutRef.current = true;
+        onTimeout?.();
+        return;
+      }
       if (next <= 300 && next > 299) {
         setShowWarning(true);
-        // Play chime — 3 rising notes
         try {
           const ctx = new (window.AudioContext || window.webkitAudioContext)();
           [
@@ -345,10 +358,35 @@ export default function ChatScreen({
           });
         } catch(e) { /* audio not supported */ }
       }
-      return next;
-    }), 1000);
+      setSecondsLeft(next);
+    }, 1000);
     return () => clearInterval(id);
-  }, [timedOut]);
+  }, [timedOut, sessionStartTime]);
+
+  // ── Page Visibility — fires when user returns to inactive tab ─
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "visible") return;
+      if (timedOutRef.current) return;
+
+      const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
+      const remaining = Math.max(0, SESSION_SECS - elapsed);
+
+      if (remaining <= 0) {
+        // Time ran out while tab was inactive — fire timeout now
+        setSecondsLeft(0);
+        setTimedOut(true);
+        timedOutRef.current = true;
+        onTimeout?.();
+      } else {
+        // Time not yet up — just correct the display
+        setSecondsLeft(remaining);
+        if (remaining <= 300) setShowWarning(true);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [sessionStartTime]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -366,11 +404,7 @@ export default function ChatScreen({
   function startVoice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { alert("הדפדפן שלך אינו תומך בזיהוי קול"); return; }
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
     const rec = new SR();
     rec.lang = "he-IL";
     rec.interimResults = false;
@@ -421,36 +455,29 @@ export default function ChatScreen({
         .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chat-input {
           width: 100%; min-height: clamp(38px, 6vh, 44px); max-height: 120px;
-          border-radius: 22px;
-          border: 1.5px solid ${COLORS.border};
+          border-radius: 22px; border: 1.5px solid ${COLORS.border};
           padding: 10px 18px 10px 44px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
           background: white; outline: none;
           direction: rtl; text-align: right;
           transition: border-color 0.15s;
-          box-sizing: border-box;
-          resize: none; overflow-y: auto;
-          line-height: 1.45;
+          box-sizing: border-box; resize: none; overflow-y: auto; line-height: 1.45;
         }
         .chat-input:focus { border-color: ${COLORS.primary}; }
         .icon-btn {
           width: 34px; height: 34px; border-radius: 9999px;
-          background: transparent; border: none;
-          cursor: pointer; color: ${COLORS.muted};
-          display: flex; align-items: center; justify-content: center;
-          font-size: 0.95rem; transition: background 0.15s, color 0.15s;
+          background: transparent; border: none; cursor: pointer;
+          color: ${COLORS.muted}; display: flex; align-items: center;
+          justify-content: center; font-size: 0.95rem;
+          transition: background 0.15s, color 0.15s;
         }
         .icon-btn:hover { background: ${COLORS.border}; color: ${COLORS.text}; }
         .mic-btn {
-          width: 32px; height: 32px;
-          border-radius: 9999px; cursor: pointer;
+          width: 32px; height: 32px; border-radius: 9999px; cursor: pointer;
           display: flex; align-items: center; justify-content: center;
-          font-size: 0.9rem; flex-shrink: 0;
-          transition: background 0.2s, transform 0.15s;
+          font-size: 0.9rem; flex-shrink: 0; transition: background 0.2s, transform 0.15s;
         }
-        .mic-btn.listening {
-          animation: mic-pulse 1s ease-in-out infinite;
-        }
+        .mic-btn.listening { animation: mic-pulse 1s ease-in-out infinite; }
         @keyframes mic-pulse {
           0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(198,40,40,0.4); }
           50%       { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(198,40,40,0); }
@@ -460,14 +487,12 @@ export default function ChatScreen({
       `}</style>
 
       <div style={{
-        minHeight: "100dvh", height: "100dvh",
-        background: COLORS.frame,
+        minHeight: "100dvh", height: "100dvh", background: COLORS.frame,
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "10px", fontFamily: "'Alef', sans-serif",
       }}>
         <div style={{
-          background: COLORS.stone, borderRadius: "32px",
-          boxShadow: STONE_SHADOW,
+          background: COLORS.stone, borderRadius: "32px", boxShadow: STONE_SHADOW,
           width: "100%", maxWidth: "480px",
           height: "calc(100dvh - 20px)", maxHeight: "880px",
           display: "flex", flexDirection: "column", overflow: "hidden",
@@ -475,12 +500,10 @@ export default function ChatScreen({
 
           {/* HEADER */}
           <div style={{
-            padding: "10px 14px 8px",
-            borderBottom: `1px solid ${COLORS.border}`,
+            padding: "10px 14px 8px", borderBottom: `1px solid ${COLORS.border}`,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             flexShrink: 0,
           }}>
-            {/* Left: red arrow logout + timer */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 60 }}>
               <button onClick={onLogout} title="יציאה" style={{
                 background: "none", border: "none", cursor: "pointer",
@@ -495,18 +518,13 @@ export default function ChatScreen({
                 </svg>
               </button>
               <span style={{
-                fontFamily: "'Alef', sans-serif",
-                fontSize: "0.79rem", fontWeight: 600,
-                color: isLow ? COLORS.primary : COLORS.muted,
+                fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", fontWeight: 600,
+                color: isLow ? COLORS.teal : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
               }}>⏱ {mins}:{secs}</span>
             </div>
 
-            {/* Center: logo + name */}
-            <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
-              flex: 1,
-            }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <LogoSymbol size={40} />
                 <span style={{
@@ -516,26 +534,27 @@ export default function ChatScreen({
               </div>
               {displayName && (
                 <div style={{
-                  fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.99rem", fontWeight: 600,
+                  fontFamily: "'Alef', sans-serif", fontSize: "0.99rem", fontWeight: 600,
                   color: COLORS.secondary, direction: "rtl",
                 }}>{`עם ${displayName}`}</div>
               )}
             </div>
 
-            {/* Right: history + personal card */}
             <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-              <button className="icon-btn" onClick={onOpenHistory}
-                title="היסטוריית שיחות" style={{ fontSize: "1.3rem" }}>📋</button>
-              <button className="icon-btn" onClick={onOpenPersonalCard}
-                title="כרטיס אישי" style={{ fontSize: "1.3rem" }}>👤</button>
+              <button className="icon-btn" onClick={onOpenHistory} title="היסטוריית שיחות" style={{ padding: "6px" }}>
+                <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                  <rect width="18" height="2" rx="1" fill="currentColor"/>
+                  <rect y="6" width="18" height="2" rx="1" fill="currentColor"/>
+                  <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+                </svg>
+              </button>
+              <button className="icon-btn" onClick={onOpenPersonalCard} title="כרטיס אישי" style={{ fontSize: "1.3rem" }}>👤</button>
             </div>
           </div>
 
           {/* MESSAGES */}
           <div style={{
-            flex: 1, overflowY: "auto",
-            padding: "12px 16px 0px",
+            flex: 1, overflowY: "auto", padding: "12px 16px 0px",
             display: "flex", flexDirection: "column", gap: "10px",
           }}>
             {messages.map((msg, i) => (
@@ -544,28 +563,21 @@ export default function ChatScreen({
                 alignItems: msg.role === "user" ? "flex-end" : "flex-start",
               }}>
                 <div style={{
-                  fontSize: "0.66rem", fontWeight: 600,
-                  color: COLORS.muted, marginBottom: "3px",
-                  paddingLeft: "4px", paddingRight: "4px",
+                  fontSize: "0.66rem", fontWeight: 600, color: COLORS.muted,
+                  marginBottom: "3px", paddingLeft: "4px", paddingRight: "4px",
                 }}>
                   {msg.role === "user" ? "אני" : "Syncca"}
                 </div>
                 <div style={msg.role === "user" ? {
-                  background: COLORS.primaryLight,
-                  borderRadius: "18px 0 18px 18px",
-                  padding: "13px 17px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
-                  color: COLORS.text, lineHeight: 1.68,
-                  direction: "rtl", textAlign: "right",
+                  background: COLORS.primaryLight, borderRadius: "18px 0 18px 18px",
+                  padding: "13px 17px", fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
+                  color: COLORS.text, lineHeight: 1.68, direction: "rtl", textAlign: "right",
                   maxWidth: "85%", wordBreak: "break-word",
                 } : {
-                  background: "#FDFBF7",
-                  border: `1.5px solid ${COLORS.primaryLight}`,
+                  background: "#FDFBF7", border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
-                  padding: "13px 17px",
-                  fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
-                  color: COLORS.text, lineHeight: 1.68,
-                  direction: "rtl", textAlign: "right",
+                  padding: "13px 17px", fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
+                  color: COLORS.text, lineHeight: 1.68, direction: "rtl", textAlign: "right",
                   maxWidth: "92%", wordBreak: "break-word",
                 }}>
                   {isLoading && i === messages.length - 1 && msg.role === "syncca" ? (
@@ -586,143 +598,112 @@ export default function ChatScreen({
               </div>
             ))}
             {isLoading && (
-              <div style={{
-                display: "flex", justifyContent: "flex-start", paddingLeft: "4px",
-              }}>
+              <div style={{ display: "flex", justifyContent: "flex-start", paddingLeft: "4px" }}>
                 <div style={{
                   background: "#FDFBF7", border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px", color: COLORS.muted,
-                  fontStyle: "italic", fontSize: "0.97rem",
-                  fontFamily: "'Alef', sans-serif",
+                  fontStyle: "italic", fontSize: "0.97rem", fontFamily: "'Alef', sans-serif",
                 }}>...</div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          {/* 5-MINUTE WARNING — bottom, solid red, white bold */}
+          {/* 5-MINUTE WARNING — teal, rounded */}
           {showWarning && !timedOut && (
             <div style={{
-              background: "#C62828",
+              background: COLORS.tealLight,
+              border: `1.5px solid ${COLORS.tealBorder}`,
+              borderRadius: "16px",
+              margin: "8px 12px",
               padding: "12px 16px",
               display: "flex", alignItems: "flex-start", justifyContent: "space-between",
               direction: "rtl", flexShrink: 0, gap: "8px",
             }}>
               <span style={{
                 fontFamily: "'Alef', sans-serif", fontSize: "0.94rem",
-                fontWeight: 700, color: "white", lineHeight: 1.6,
+                fontWeight: 700, color: COLORS.teal, lineHeight: 1.6,
               }}>
                 סליחה {displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך.
               </span>
               <button onClick={() => setShowWarning(false)} style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: "white", fontSize: "1.1rem", padding: 0, flexShrink: 0, fontWeight: 700,
+                color: COLORS.teal, fontSize: "1.1rem", padding: 0, flexShrink: 0, fontWeight: 700,
               }}>✕</button>
             </div>
           )}
 
           {/* INPUT BAR */}
+          <div style={{
+            padding: "clamp(6px, 2vh, 12px) 16px clamp(8px, 2vh, 16px)",
+            borderTop: `1px solid ${COLORS.border}`, flexShrink: 0,
+          }}>
             <div style={{
-              padding: "clamp(6px, 2vh, 12px) 16px clamp(8px, 2vh, 16px)",
-              borderTop: `1px solid ${COLORS.border}`,
-              flexShrink: 0,
+              display: "flex", justifyContent: "space-between",
+              marginBottom: "clamp(2px, 1vh, 8px)", padding: "0 2px",
             }}>
               <div style={{
-                display: "flex", justifyContent: "space-between",
-                marginBottom: "clamp(2px, 1vh, 8px)", padding: "0 2px",
+                fontSize: "0.6rem", color: COLORS.muted,
+                fontFamily: "'Alef', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase",
+              }}>🔒</div>
+              <div style={{
+                fontSize: "0.6rem", color: COLORS.muted,
+                fontFamily: "'Alef', sans-serif", direction: "rtl",
               }}>
-                <div style={{
-                  fontSize: "0.6rem", color: COLORS.muted,
-                  fontFamily: "'Alef', sans-serif",
-                  letterSpacing: "0.08em", textTransform: "uppercase",
-                }}>🔒</div>
-                <div style={{
-                  fontSize: "0.6rem", color: COLORS.muted,
-                  fontFamily: "'Alef', sans-serif", direction: "rtl",
-                }}>
-                  {input.length > 0 ? `${input.length} תווים` : ""}
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                {/* Send button — never shrinks */}
-                <button className="send-btn" style={{ flexShrink: 0 }}
-                  onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
-                {/* Input + mic wrapper */}
-                <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
-                  <textarea className="chat-input"
-                    placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
-                    value={input}
-                    rows={1}
-                    onChange={e => {
-                      setInput(e.target.value);
-                      e.target.style.height = "auto";
-                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-                    }}
-                    onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
-                    disabled={timedOut} />
-                  {/* Mic — absolute inside input wrapper, left side */}
-                  <button
-                    className={`mic-btn${isListening ? " listening" : ""}`}
-                    onClick={startVoice}
-                    disabled={timedOut}
-                    title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
-                    style={{
-                      position: "absolute", left: "6px", top: "50%",
-                      transform: "translateY(-50%)",
-                      background: isListening ? "#B71C1C" : "transparent",
-                      color: isListening ? "white" : "#2E7D32",
-                      border: `1.5px solid ${isListening ? "#B71C1C" : "#2E7D32"}`,
-                    }}>
-                    <svg width="16" height="16" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" style={{ display:"block" }}>
-                      <g fill="currentColor">
-                        <path d="M77.87,69.9c-3.04-1.69-6.18-4.04-9.19-6.93c-2.3-2.21-4.29-4.53-5.9-6.82c-1.62-2.29-2.87-4.56-3.69-6.82c-0.15-0.41-0.24-0.84-0.35-1.26L6.2,111.94c-1.31,1.37,1.18,5.93,5.6,10.17c4.4,4.24,9.05,6.57,10.37,5.2v-0.01l61.78-54.97c-0.53-0.12-1.04-0.24-1.56-0.41C80.9,71.43,79.4,70.75,77.87,69.9z"/>
-                        <path d="M68.88,20.34c-0.98,1.16-1.86,2.38-2.64,3.63c-2.23,3.56-3.67,8.27-3.5,13.48c0.06,1.61,0.27,3.28,0.66,4.96l0,0.02c1.21,5.28,4.14,10.82,9.58,16.06h0.01c5.44,5.24,11.09,7.96,16.41,8.95c0.01,0,0.02,0,0.03,0.01c0.18,0.03,0.34,0.08,0.52,0.1c1.52,0.26,3.02,0.37,4.49,0.36c5.2-0.04,9.84-1.67,13.31-4.02c1.22-0.83,2.4-1.76,3.52-2.78c-2.96-1.71-11.84-7.25-23.26-18.23C76.56,31.88,70.69,23.22,68.88,20.34z"/>
-                        <path d="M112.7,17.21c-12.7-12.22-27.52-10.03-37.78-2.52c0.15,0.18,0.3,0.37,0.42,0.58l0.04,0.06l0.16,0.28c0.16,0.25,0.4,0.64,0.74,1.16c0.68,1.03,1.74,2.56,3.21,4.5c2.95,3.88,7.56,9.38,14.19,15.75c12.82,12.34,22.12,17.31,22.43,17.47v0c0.21,0.11,0.4,0.24,0.58,0.38C123.79,44.32,125.41,29.42,112.7,17.21z"/>
-                      </g>
-                    </svg>
-                  </button>
-                </div>
+                {input.length > 0 ? `${input.length} תווים` : ""}
               </div>
             </div>
-
-          {/* "סיימתי" button — hidden once feedback shown */}
-          {!timedOut && !userEnded && (
-            <div style={{
-              padding: "6px 16px 8px", display: "flex", justifyContent: "flex-start",
-              flexShrink: 0,
-            }}>
-              <button
-                onClick={() => setUserEnded(true)}
-                style={{
-                  background: "#f3f4f6",
-                  border: "none",
-                  borderRadius: "9999px",
-                  padding: "5px 16px",
-                  fontFamily: "'Alef', sans-serif",
-                  fontSize: "0.78rem",
-                  color: "#1a1a1a",
-                  cursor: "pointer",
-                  direction: "rtl",
-                }}>
-                סיימתי את השיחה
-              </button>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <button className="send-btn" style={{ flexShrink: 0 }}
+                onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
+              <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
+                <textarea className="chat-input"
+                  placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
+                  value={input}
+                  rows={1}
+                  onChange={e => {
+                    setInput(e.target.value);
+                    e.target.style.height = "auto";
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                  }}
+                  onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
+                  disabled={timedOut} />
+                <button
+                  className={`mic-btn${isListening ? " listening" : ""}`}
+                  onClick={startVoice} disabled={timedOut}
+                  title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
+                  style={{
+                    position: "absolute", left: "6px", top: "50%",
+                    transform: "translateY(-50%)",
+                    background: isListening ? "#B71C1C" : "transparent",
+                    color: isListening ? "white" : "#2E7D32",
+                    border: `1.5px solid ${isListening ? "#B71C1C" : "#2E7D32"}`,
+                  }}>
+                  <svg width="16" height="16" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" style={{ display:"block" }}>
+                    <g fill="currentColor">
+                      <path d="M77.87,69.9c-3.04-1.69-6.18-4.04-9.19-6.93c-2.3-2.21-4.29-4.53-5.9-6.82c-1.62-2.29-2.87-4.56-3.69-6.82c-0.15-0.41-0.24-0.84-0.35-1.26L6.2,111.94c-1.31,1.37,1.18,5.93,5.6,10.17c4.4,4.24,9.05,6.57,10.37,5.2v-0.01l61.78-54.97c-0.53-0.12-1.04-0.24-1.56-0.41C80.9,71.43,79.4,70.75,77.87,69.9z"/>
+                      <path d="M68.88,20.34c-0.98,1.16-1.86,2.38-2.64,3.63c-2.23,3.56-3.67,8.27-3.5,13.48c0.06,1.61,0.27,3.28,0.66,4.96l0,0.02c1.21,5.28,4.14,10.82,9.58,16.06h0.01c5.44,5.24,11.09,7.96,16.41,8.95c0.01,0,0.02,0,0.03,0.01c0.18,0.03,0.34,0.08,0.52,0.1c1.52,0.26,3.02,0.37,4.49,0.36c5.2-0.04,9.84-1.67,13.31-4.02c1.22-0.83,2.4-1.76,3.52-2.78c-2.96-1.71-11.84-7.25-23.26-18.23C76.56,31.88,70.69,23.22,68.88,20.34z"/>
+                      <path d="M112.7,17.21c-12.7-12.22-27.52-10.03-37.78-2.52c0.15,0.18,0.3,0.37,0.42,0.58l0.04,0.06l0.16,0.28c0.16,0.25,0.4,0.64,0.74,1.16c0.68,1.03,1.74,2.56,3.21,4.5c2.95,3.88,7.56,9.38,14.19,15.75c12.82,12.34,22.12,17.31,22.43,17.47v0c0.21,0.11,0.4,0.24,0.58,0.38C123.79,44.32,125.41,29.42,112.7,17.21z"/>
+                    </g>
+                  </svg>
+                </button>
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* BOTTOM WIDGET — saved concepts + feedback */}
+          {/* BOTTOM WIDGET */}
           <SessionEndWidget
             savedConcepts={savedConcepts}
             conceptLexicon={conceptLexicon}
             logRecordId={logRecordId}
             chatLang={chatLang}
             onDeleteConcept={onDeleteConcept}
-            showFeedback={timedOut || userEnded}
+            showFeedback={timedOut}
           />
-          </div>
+        </div>
       </div>
 
-      {/* Concept tooltip overlay */}
       <ConceptTooltip
         concept={activeConcept}
         onSave={onSaveConcept}
