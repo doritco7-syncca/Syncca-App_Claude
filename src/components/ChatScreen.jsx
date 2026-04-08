@@ -579,7 +579,7 @@ export default function ChatScreen({
           {/* 5-MINUTE WARNING */}
           {showWarning && !timedOut && (
             <div style={{
-              background: "#C62828", padding: "12px 16px",
+              background: "rgba(33, 150, 243, 0.5)", padding: "12px 16px",
               display: "flex", alignItems: "flex-start", justifyContent: "space-between",
               direction: "rtl", flexShrink: 0, gap: "8px",
             }}>
