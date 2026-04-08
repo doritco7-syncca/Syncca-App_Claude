@@ -319,9 +319,16 @@ export default function ChatScreen({
 
   useEffect(() => {
     if (timedOut || secondsLeft <= 0) return;
-    const id = setInterval(() => setSecondsLeft(s => {
-      const next = s - 1;
-      if (next <= 1) { clearInterval(id); setTimedOut(true); onTimeout?.(); return 0; }
+   const id = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
+      const next = Math.max(0, SESSION_SECS - elapsed);
+      if (next <= 0) {
+        clearInterval(id);
+        setSecondsLeft(0);
+        setTimedOut(true);
+        onTimeout?.();
+        return;
+      }
       if (next <= 300 && next > 299) {
         setShowWarning(true);
         try {
@@ -344,11 +351,9 @@ export default function ChatScreen({
           });
         } catch(e) { /* audio not supported */ }
       }
-      return next;
-    }), 1000);
-    return () => clearInterval(id);
-  }, [timedOut]);
-
+      setSecondsLeft(next);
+    }, 1000);    return () => clearInterval(id);
+ }, [timedOut, sessionStartTime]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
