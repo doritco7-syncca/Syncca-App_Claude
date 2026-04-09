@@ -265,7 +265,19 @@ return () => {
   window.removeEventListener("pagehide", handleBeforeUnload);
 };
   }, []);
-
+useEffect(() => {
+  function handleVisibilityChange() {
+    if (document.visibilityState !== "visible") return;
+    if (!sessionStartTimeRef.current || insightSavedRef.current) return;
+    const elapsed = Date.now() - sessionStartTimeRef.current.getTime();
+    if (elapsed >= 45 * 60 * 1000) {
+      handleFinalizeSession();
+      setShowTimeoutModal(true);
+    }
+  }
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+}, []);
   const firstName = userRecord?.First_Name || "";
 
   // ── Fetch live lexicon on mount ──────────────────────────────
