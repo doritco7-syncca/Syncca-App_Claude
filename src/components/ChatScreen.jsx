@@ -664,7 +664,7 @@ export default function ChatScreen({
                   rows={1}
                   onChange={e => {
                     setInput(e.target.value);
-                    e.target.style.height = "auto";
+                    e.target.style.height = "38px";
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
                   onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
