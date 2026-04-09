@@ -258,8 +258,12 @@ export default function App() {
       });
       navigator.sendBeacon("/api/airtable-finalize", new Blob([payload], { type: "application/json" }));
     }
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+   window.addEventListener("beforeunload", handleBeforeUnload);
+window.addEventListener("pagehide", handleBeforeUnload);
+return () => {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
+  window.removeEventListener("pagehide", handleBeforeUnload);
+};
   }, []);
 
   const firstName = userRecord?.First_Name || "";
