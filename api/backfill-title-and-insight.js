@@ -97,7 +97,7 @@ module.exports = async function handler(req, res) {
       const langCode   = detectLangCode(rec.fields?.Language_Used);
       try {
         const title   = await callClaude(`${TITLE_INSTRUCTIONS[langCode] || TITLE_INSTRUCTIONS.en}\n\nתמליל:\n${transcript.slice(-2000)}`, 30);
-        const insight = await callClaude(`You are analyzing a therapy-style conversation between Syncca and a user.\nWrite 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, what emerged, and where they ended up emotionally.\nReturn only the Hebrew summary, no quotes, no titles.\n\nTranscript:\n${transcript.slice(-3000)}`, 200);
+        const insight = await callClaude(`You are analyzing a therapy-style conversation between Syncca and a user.\nWrite 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, what emerged, and where they ended up emotionally.\nReturn only the Hebrew summary, no quotes, no titles.\n\nTranscript:\n${transcript.slice(-3000)}`, 300);
 
         await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${TABLE}/${rec.id}`, {
           method: "PATCH",
