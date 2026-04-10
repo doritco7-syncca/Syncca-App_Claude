@@ -740,49 +740,10 @@ useEffect(() => {
           onOpenHistory={() => setScreen("history")}
           onLogout={handleLogout}
           onSessionEnd={handleFinalizeSession}
-          onTimeout={() => {
-            const logId        = logRecordIdRef.current;
-            const transcript   = fullTranscriptRef.current;
-            const concepts     = conceptsIntroducedRef.current;
-            const msgsCopy     = [...messages];
-            const alreadySaved = insightSavedRef.current;
-            setShowTimeoutModal(true);
-            if (logId && !alreadySaved) {
-              let finalTranscript = transcript;
-              if (!finalTranscript && msgsCopy.length > 1) {
-                finalTranscript = msgsCopy
-                  .filter(m => m.role === "user" || m.role === "syncca")
-                  .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
-                  .join("\n");
-              }
-              if (finalTranscript && countUserMessages(finalTranscript) >= 3) {
-                insightSavedRef.current = true;
-                Promise.all([
-                  generateSessionInsight(finalTranscript, concepts),
-                  generateSessionTitle(finalTranscript, chatLang),
-                ]).then(([insight, title]) => finalizeSession({
-                  logRecordId:      logId,
-                  fullTranscript:   finalTranscript,
-                  conceptsSurfaced: concepts,
-                  sessionStartTime: sessionStartTime || null,
-                  sessionInsight:   insight,
-                  title,
-                  sessionComplete:  true,
-                })).catch(e => {
-                  insightSavedRef.current = false;
-                  console.warn("[timeout] finalize failed:", e);
-                });
-              } else if (finalTranscript) {
-                finalizeSession({
-                  logRecordId:      logId,
-                  fullTranscript:   finalTranscript,
-                  conceptsSurfaced: concepts,
-                  sessionStartTime: sessionStartTime || null,
-                  sessionComplete:  true,
-                }).catch(() => {});
-              }
-            }
-          }}
+        onTimeout={() => {
+  setShowTimeoutModal(true);
+  handleFinalizeSession();
+}}
           sessionStartTime={sessionStartTime}
           logRecordId={logRecordIdRef.current}
           chatLang={chatLang}
