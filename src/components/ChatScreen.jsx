@@ -454,7 +454,7 @@ export default function ChatScreen({
         .send-btn:hover:not(:disabled) { background: ${COLORS.primaryH}; }
         .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .chat-input {
-          width: 100%; min-height: clamp(38px, 6vh, 44px); max-height: 120px;
+          width: 100%; min-height: clamp(38px, 6vh, 44px); max-height: 160px;
           border-radius: 22px; border: 1.5px solid ${COLORS.border};
           padding: 10px 18px 10px 44px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
@@ -658,16 +658,25 @@ export default function ChatScreen({
               <button className="send-btn" style={{ flexShrink: 0 }}
                 onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
               <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
-                <textarea className="chat-input"
-                  placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
-                  value={input}
-                  rows={1}
-                  onChange={e => {
-                  setInput(e.target.value);
-                 }}
-                  onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
-                  disabled={timedOut} />
-                <button
+  {/* Mirror div — drives height, invisible */}
+  <div aria-hidden="true" style={{
+    visibility: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word",
+    padding: "10px 18px 10px 44px", fontSize: "1.12rem",
+    fontFamily: "'Alef', sans-serif", lineHeight: 1.45,
+    minHeight: "clamp(38px, 6vh, 44px)", maxHeight: "160px",
+    overflowY: "hidden", boxSizing: "border-box", borderRadius: "22px",
+  }}>
+    {input || " "}
+  </div>
+  <textarea className="chat-input"
+    placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
+    value={input}
+    rows={1}
+    style={{ position: "absolute", inset: 0, height: "100%" }}
+    onChange={e => setInput(e.target.value)}
+    onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
+    disabled={timedOut} />
+  <button
                   className={`mic-btn${isListening ? " listening" : ""}`}
                   onClick={startVoice} disabled={timedOut}
                   title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
