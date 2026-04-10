@@ -663,10 +663,8 @@ export default function ChatScreen({
                   value={input}
                   rows={1}
                   onChange={e => {
-                    setInput(e.target.value);
-                    e.target.style.height = "38px";
-                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-                  }}
+                  setInput(e.target.value);
+                 }}
                   onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
                   disabled={timedOut} />
                 <button
