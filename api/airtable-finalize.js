@@ -9,7 +9,7 @@ const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY;
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { logRecordId, fullTranscript, conceptsSurfaced, generateInsight, chatLang, sessionStartTime } = req.body || {};
+const { logRecordId, fullTranscript, conceptsSurfaced, generateInsight, chatLang, sessionStartTime, sessionComplete } = req.body || {};
   if (!logRecordId) return res.status(400).json({ error: "Missing logRecordId" });
 
   const fields = {};
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 const userMsgCount = (fullTranscript.match(/\[User\]:/g) || []).length;
 if (fullTranscript && userMsgCount >= 3 && ANTHROPIC_KEY) {    try {
       const langInstructions = {
-        he: "כתוב כותרת קצרה בעברית (3-5 מילים) שמתארת את המסע הרגשי של השיחה — פואטית, לא קלינית. רק הכותרת, ללא גרשיים.",
+        he: "כתוב כותרת קצרה בעברית (3-5 מילים) שנותנת את תמצית השיחה. רק הכותרת, ללא גרשיים.",
         en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
         de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter) für die emotionale Reise — poetisch, nicht klinisch. Nur den Titel, keine Anführungszeichen.",
       };
@@ -47,6 +47,7 @@ if (fullTranscript && userMsgCount >= 3 && ANTHROPIC_KEY) {    try {
       console.warn("[airtable-finalize] title generation failed:", e);
     }
   }
+  if (sessionComplete) fields.Session_Complete = "YES";
   if (fullTranscript) fields.Full_Transcript = fullTranscript;
   if (Array.isArray(conceptsSurfaced) && conceptsSurfaced.length > 0)
     fields.Concepts_Surfaced = conceptsSurfaced.join(", ");
