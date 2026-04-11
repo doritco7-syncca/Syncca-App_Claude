@@ -28,7 +28,7 @@ function detectLangCode(languageUsed = "") {
 }
 
 const TITLE_INSTRUCTIONS = {
-  he: "כתוב כותרת קצרה בעברית (3-5 מילים) שמתארת את המסע הרגשי של השיחה — פואטית, לא קלינית. רק הכותרת, ללא גרשיים.",
+  he: "כתוב כותרת קצרה בעברית (3-5 מילים)שנותנת את תמצית השיחה. רק הכותרת, ללא גרשיים.",
   en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
   de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter) für die emotionale Reise — poetisch, nicht klinisch. Nur den Titel, keine Anführungszeichen.",
   fr: "Écris un titre court en français (3 à 5 mots) capturant le voyage émotionnel — poétique, pas clinique. Renvoie uniquement le titre, sans guillemets.",
