@@ -619,41 +619,31 @@ useEffect(() => {
   // ── FINALIZE SESSION ──────────────────────────────────────────
   // Called on timer end and logout only.
   // Marks Session_Complete: YES + generates insight + title.
-  async function handleFinalizeSession() {
-    const logId    = logRecordIdRef.current;
-    const concepts = conceptsIntroducedRef.current;
-    if (!logId || insightSavedRef.current) return;
+ async function handleFinalizeSession() {
+  const logId = logRecordIdRef.current;
+  const transcript = fullTranscriptRef.current;
+  if (!logId || !transcript || insightSavedRef.current) return;
+  insightSavedRef.current = true;
 
-    let transcript = fullTranscriptRef.current;
-    if (!transcript && messages.length > 1) {
-      transcript = messages
-        .filter(m => m.role === "user" || m.role === "syncca")
-        .map(m => `[${m.role === "user" ? "User" : "Syncca"}]: ${m.text}`)
-        .join("\n");
-    }
-
-    insightSavedRef.current = true;
-    try {
-      const hasEnough = countUserMessages(transcript) >= 3;
-      const [insight, title] = hasEnough
-        ? await Promise.all([
-            generateSessionInsight(transcript, concepts),
-            generateSessionTitle(transcript, chatLang),
-          ])
-        : ["", ""];
-      await finalizeSession({
+  try {
+    await fetch("/api/airtable-finalize", {
+      method:    "POST",
+      headers:   { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
         logRecordId:      logId,
         fullTranscript:   transcript,
-        conceptsSurfaced: concepts,
-        sessionStartTime: sessionStartTime || null,
-        sessionInsight:   insight,
-        title,
+        conceptsSurfaced: conceptsIntroducedRef.current,
+        generateInsight:  countUserMessages(transcript) >= 3,
+        chatLang,
+        sessionStartTime: sessionStartTimeRef.current?.toISOString() || null,
         sessionComplete:  true,
-      });
-    } catch (e) {
-      insightSavedRef.current = false;
-      console.warn("[handleFinalizeSession] failed:", e);
-    }
+      }),
+    });
+  } catch (e) {
+    insightSavedRef.current = false;
+    console.warn("[handleFinalizeSession] failed:", e);
+  }
   }
 
   // ── LOGOUT ────────────────────────────────────────────────────
