@@ -70,7 +70,7 @@ ${transcript.slice(-3000)}`;
     export async function generateSessionTitle(transcript, chatLang = "he") {
   if (!transcript || transcript.length < 50) return "";
   const instructions = {
-    he: "כתוב כותרת קצרה בעברית (3-5 מילים) שמתארת את המסע הרגשי של השיחה — פואטית, לא קלינית. רק הכותרת, ללא גרשיים.",
+    he: "כתוב כותרת קצרה בעברית (3-5 מילים) שנותנת את התמצית של השיחה. רק הכותרת, ללא גרשיים.",
     en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
     de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter) für die emotionale Reise — poetisch, nicht klinisch. Nur den Titel, keine Anführungszeichen.",
   };
