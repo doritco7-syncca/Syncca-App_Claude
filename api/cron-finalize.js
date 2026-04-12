@@ -1,17 +1,17 @@
 // api/cron-finalize.js — Syncca
 // ─────────────────────────────────────────────────────────────
 // Vercel Cron Job — runs every hour.
-// Finds sessions with a transcript but no Title that are older
-// than 45 minutes, then writes Title, Session_Insight, and
-// Session_Complete to Airtable.
+// Finds sessions with a transcript older than 45 minutes where
+// at least one of Title / Session_Insight / Session_Complete is missing,
+// then fills only what's missing — never overwrites existing data.
 //
 // Cron schedule: "0 * * * *" (top of every hour)
-// Manual trigger: GET /api/cron-finalize  (with CRON_SECRET header)
+// Manual trigger: GET /api/cron-finalize  (with Authorization header)
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const AIRTABLE_BASE  = process.env.AIRTABLE_BASE_ID;
 const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY;
-const CRON_SECRET    = process.env.CRON_SECRET; // set this in Vercel env vars
+const CRON_SECRET    = process.env.CRON_SECRET;
 const TABLE          = "Conversation_Logs";
 const BATCH_SIZE     = 15;
 const MIN_TRANSCRIPT = 300;
@@ -30,10 +30,10 @@ function detectLangCode(languageUsed = "") {
 
 const TITLE_INSTRUCTIONS = {
   he: "כתוב כותרת קצרה בעברית (3-5 מילים) שנותנת את תמצית השיחה. רק הכותרת, ללא גרשיים.",
-  en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
-  de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter) für die emotionale Reise — poetisch, nicht klinisch. Nur den Titel, keine Anführungszeichen.",
-  fr: "Écris un titre court en français (3 à 5 mots) capturant le voyage émotionnel — poétique, pas clinique. Renvoie uniquement le titre, sans guillemets.",
-  ar: "اكتب عنوانًا قصيرًا بالعربية (3-5 كلمات) يعبّر عن الرحلة العاطفية — شعري، غير سريري. أعد العنوان فقط، بدون علامات اقتباس.",
+  en: "Write a short title in English (3–5 words) that captures the essence of the conversation — clear and specific, so the user can easily find this session later. Return only the title, no quotes.",
+  de: "Schreibe einen kurzen Titel auf Deutsch (3–5 Wörter), der den Kern des Gesprächs zusammenfasst — klar und konkret, damit der Nutzer diese Sitzung leicht wiederfinden kann. Nur den Titel, keine Anführungszeichen.",
+  fr: "Écris un titre court en français (3 à 5 mots) qui capture l'essentiel de la conversation — clair et précis, pour que l'utilisateur puisse retrouver facilement cette session. Renvoie uniquement le titre, sans guillemets.",
+  ar: "اكتب عنوانًا قصيرًا بالعربية (3-5 كلمات) يعبّر عن جوهر المحادثة — واضح ومحدد، حتى يتمكن المستخدم من العثور على هذه الجلسة بسهولة. أعد العنوان فقط، بدون علامات اقتباس.",
 };
 
 async function callClaude(prompt, maxTokens) {
@@ -57,21 +57,24 @@ async function callClaude(prompt, maxTokens) {
 }
 
 async function fetchStaleRecords() {
-  // Airtable formula:
+  // Fetch sessions where:
   // - Has a transcript
-  // - Title is empty (not yet processed)
-  // - Session_Insight is empty (double-check)
-  // - Created_At is older than STALE_MINUTES minutes
+  // - Older than STALE_MINUTES
+  // - At least one of Title / Session_Insight / Session_Complete is missing
   const formula = encodeURIComponent(
     `AND(
       LEN({Full_Transcript}) > 0,
-      {Title} = "",
-      {Session_Insight} = "",
-      DATETIME_DIFF(NOW(), {Created_At}, 'minutes') > ${STALE_MINUTES}
+      DATETIME_DIFF(NOW(), {Created_At}, 'minutes') > ${STALE_MINUTES},
+      OR(
+        {Title} = "",
+        {Session_Insight} = "",
+        {Session_Complete} != "yes"
+      )
     )`
   );
 
-  const fields = ["Full_Transcript", "Language_Used", "Created_At"];
+  // Include Title and Session_Insight so we can check what's already there
+  const fields = ["Full_Transcript", "Language_Used", "Created_At", "Title", "Session_Insight"];
   const fieldQs = fields.map(f => `fields%5B%5D=${encodeURIComponent(f)}`).join("&");
 
   let all = [], offset = null;
@@ -96,8 +99,6 @@ async function fetchStaleRecords() {
 
 module.exports = async function handler(req, res) {
   // ── Security: validate cron secret ──────────────────────────
-  // Vercel sends: Authorization: Bearer <CRON_SECRET>
-  // Also allow manual GET if the same header is present.
   if (CRON_SECRET) {
     const authHeader = req.headers["authorization"] || "";
     if (authHeader !== `Bearer ${CRON_SECRET}`) {
@@ -134,23 +135,33 @@ module.exports = async function handler(req, res) {
       const langCode   = detectLangCode(rec.fields?.Language_Used);
 
       try {
-        // Generate Title
-        const title = await callClaude(
-          `${TITLE_INSTRUCTIONS[langCode] || TITLE_INSTRUCTIONS.en}\n\nתמליל:\n${transcript.slice(-2000)}`,
-          30
-        );
+        const fieldsToWrite = {};
 
-        // Generate Session_Insight
-        const insight = await callClaude(
-          `You are analyzing a therapy-style conversation between Syncca and a user.\n` +
-          `Write 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, ` +
-          `what emerged, and where they ended up emotionally.\n` +
-          `Return only the Hebrew summary, no quotes, no titles.\n\n` +
-          `Transcript:\n${transcript.slice(-3000)}`,
-          300
-        );
+        // Generate Title only if missing
+        const existingTitle = rec.fields?.Title || "";
+        if (!existingTitle) {
+          fieldsToWrite.Title = await callClaude(
+            `${TITLE_INSTRUCTIONS[langCode] || TITLE_INSTRUCTIONS.en}\n\nתמליל:\n${transcript.slice(-2000)}`,
+            30
+          );
+        }
 
-        // Write Title + Session_Insight + Session_Complete to Airtable
+        // Generate Session_Insight only if missing
+        const existingInsight = rec.fields?.Session_Insight || "";
+        if (!existingInsight) {
+          fieldsToWrite.Session_Insight = await callClaude(
+            `You are analyzing a therapy-style conversation between Syncca and a user.\n` +
+            `Write 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, ` +
+            `what emerged, and where they ended up emotionally.\n` +
+            `Return only the Hebrew summary, no quotes, no titles.\n\n` +
+            `Transcript:\n${transcript.slice(-3000)}`,
+            300
+          );
+        }
+
+        // Always ensure Session_Complete is "yes"
+        fieldsToWrite.Session_Complete = "yes";
+
         const patchRes = await fetch(
           `https://api.airtable.com/v0/${AIRTABLE_BASE}/${TABLE}/${rec.id}`,
           {
@@ -159,13 +170,7 @@ module.exports = async function handler(req, res) {
               Authorization:  `Bearer ${AIRTABLE_TOKEN}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              fields: {
-                Title:            title,
-                Session_Insight:  insight,
-                Session_Complete: "yes",   // ← new: marks session as fully closed
-              },
-            }),
+            body: JSON.stringify({ fields: fieldsToWrite }),
           }
         );
 
@@ -176,9 +181,10 @@ module.exports = async function handler(req, res) {
 
         results.succeeded++;
         results.details.push({
-          id:      rec.id,
-          title,
-          insight: insight.slice(0, 80) + "…",
+          id:     rec.id,
+          filled: Object.keys(fieldsToWrite),
+          title:  fieldsToWrite.Title || existingTitle,
+          insight: (fieldsToWrite.Session_Insight || existingInsight).slice(0, 80) + "…",
         });
 
         await sleep(300); // stay within Airtable rate limits
@@ -190,12 +196,4 @@ module.exports = async function handler(req, res) {
     }
 
     const doneMsg = results.remaining > 0
-      ? `✅ סבב הושלם. נותרו עוד ${results.remaining} שיחות לסבב הבא.`
-      : "✅ כל השיחות הישנות טופלו.";
-
-    return res.status(200).json({ message: doneMsg, ...results });
-
-  } catch (err) {
-    return res.status(500).json({ error: err.message, ...results });
-  }
-};
+      ? `✅ סבב הושלם. נותרו עוד ${results.remaining} שיחות לסב
