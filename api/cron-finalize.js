@@ -55,10 +55,13 @@ async function callClaude(prompt, maxTokens) {
     }),
   });
   var data = await res.json();
-  var text = data.content && data.content[0] && data.content[0].text
+var text = data.content && data.content[0] && data.content[0].text
     ? data.content[0].text.trim()
     : null;
-  if (!text) throw new Error("Empty response from Claude");
+  if (!text) {
+    console.log("[CLAUDE ERROR]", JSON.stringify(data));
+    throw new Error("Empty response from Claude: " + (data.error ? data.error.message : JSON.stringify(data).slice(0, 200)));
+  }
   return text;
 }
 
