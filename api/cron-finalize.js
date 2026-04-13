@@ -40,29 +40,52 @@ var TITLE_INSTRUCTIONS = {
   ar: "اكتب عنواناً قصيراً بالعربية (3-5 كلمات) يعبّر عن جوهر المحادثة — واضح ومحدد، حتى يتمكن المستخدم من العثور على هذه الجلسة بسهولة. أعد العنوان فقط، بدون علامات اقتباس.",
 };
 
+// Calls Claude with one automatic retry after 1 second if the first attempt fails
 async function callClaude(prompt, maxTokens) {
-  var res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type":      "application/json",
-      "x-api-key":         ANTHROPIC_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model:      "claude-sonnet-4-20250514",
-      max_tokens: maxTokens,
-      messages:   [{ role: "user", content: prompt }],
-    }),
-  });
-  var data = await res.json();
-var text = data.content && data.content[0] && data.content[0].text
-    ? data.content[0].text.trim()
-    : null;
-  if (!text) {
-    console.log("[CLAUDE ERROR]", JSON.stringify(data));
-    throw new Error("Empty response from Claude: " + (data.error ? data.error.message : JSON.stringify(data).slice(0, 200)));
+  var attempts = 0;
+  var lastError = null;
+
+  while (attempts < 2) {
+    attempts++;
+    try {
+      var res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type":      "application/json",
+          "x-api-key":         ANTHROPIC_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model:      "claude-sonnet-4-20250514",
+          max_tokens: maxTokens,
+          messages:   [{ role: "user", content: prompt }],
+        }),
+      });
+      var data = await res.json();
+      var text = data.content && data.content[0] && data.content[0].text
+        ? data.content[0].text.trim()
+        : null;
+
+      if (!text) {
+        console.log("[CLAUDE ERROR] attempt=" + attempts, JSON.stringify(data));
+        lastError = "Empty response from Claude: " +
+          (data.error ? data.error.message : JSON.stringify(data).slice(0, 200));
+        // Wait 1 second before retrying
+        if (attempts < 2) await sleep(1000);
+        continue;
+      }
+
+      if (attempts > 1) console.log("[CLAUDE RETRY SUCCESS] attempt=" + attempts);
+      return text;
+
+    } catch (err) {
+      console.log("[CLAUDE FETCH ERROR] attempt=" + attempts, err.message);
+      lastError = err.message;
+      if (attempts < 2) await sleep(1000);
+    }
   }
-  return text;
+
+  throw new Error(lastError || "Claude failed after 2 attempts");
 }
 
 async function fetchStaleRecords() {
