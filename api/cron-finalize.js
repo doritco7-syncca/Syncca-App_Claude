@@ -2,8 +2,9 @@
 // ─────────────────────────────────────────────────────────────
 // Vercel Cron Job — runs every hour.
 // Finds sessions with a transcript older than 45 minutes where
-// at least one of Title / Session_Insight / Session_Complete is missing,
+// Title or Session_Insight is still missing,
 // then fills only what's missing — never overwrites existing data.
+// Session_Complete is written as a stamp only — never used as a filter.
 //
 // Cron schedule: "0 * * * *" (top of every hour)
 // Manual trigger: GET /api/cron-finalize  (with Authorization header)
@@ -59,10 +60,12 @@ async function callClaude(prompt, maxTokens) {
 }
 
 async function fetchStaleRecords() {
+  // Filter: has transcript + older than STALE_MINUTES + Title OR Insight missing
+  // Session_Complete is intentionally NOT used here — it is write-only
   var filterParts = [
     "LEN({Full_Transcript}) > 0",
     "DATETIME_DIFF(NOW(), {Created_At}, 'minutes') > " + STALE_MINUTES,
-    "OR({Title} = \"\", {Session_Insight} = \"\", {Session_Complete} != \"yes\")",
+    "OR({Title} = \"\", {Session_Insight} = \"\")",
   ];
   var formula = encodeURIComponent("AND(" + filterParts.join(", ") + ")");
 
@@ -89,6 +92,7 @@ async function fetchStaleRecords() {
     offset = data.offset || null;
   } while (offset);
 
+  // Secondary guard: minimum transcript length
   return all.filter(function(rec) {
     var t = (rec.fields && rec.fields.Full_Transcript) || "";
     return t.length >= MIN_TRANSCRIPT;
@@ -124,17 +128,26 @@ module.exports = async function handler(req, res) {
 
     if (batch.length === 0) {
       return res.status(200).json({
-        message: "אין שיחות לטיפול כרגע.",
+        message: "No sessions need processing right now.",
         results: results,
       });
     }
 
     for (var i = 0; i < batch.length; i++) {
       var rec = batch[i];
-      var transcript     = (rec.fields && rec.fields.Full_Transcript) || "";
-      var langCode       = detectLangCode(rec.fields && rec.fields.Language_Used);
-      var existingTitle  = (rec.fields && rec.fields.Title) || "";
-      var existingInsight = (rec.fields && rec.fields.Session_Insight) || "";
+      var transcript = (rec.fields && rec.fields.Full_Transcript) || "";
+      var langCode   = detectLangCode(rec.fields && rec.fields.Language_Used);
+
+      // --- DEBUG: log exactly what Airtable returned for each field ---
+      var rawTitle   = rec.fields ? rec.fields.Title : undefined;
+      var rawInsight = rec.fields ? rec.fields.Session_Insight : undefined;
+      console.log("[DEBUG] rec=" + rec.id +
+        " | Title type=" + typeof rawTitle + " value=" + JSON.stringify(rawTitle) +
+        " | Insight type=" + typeof rawInsight + " value=" + JSON.stringify(rawInsight));
+      // ----------------------------------------------------------------
+
+      var existingTitle   = (rawTitle   != null) ? String(rawTitle).trim()   : "";
+      var existingInsight = (rawInsight != null) ? String(rawInsight).trim() : "";
 
       try {
         var fieldsToWrite = {};
@@ -157,7 +170,7 @@ module.exports = async function handler(req, res) {
           fieldsToWrite.Session_Insight = await callClaude(insightPrompt, 300);
         }
 
-        // Always ensure Session_Complete is marked
+        // Always stamp Session_Complete — write-only, never used as filter
         fieldsToWrite.Session_Complete = "yes";
 
         var patchRes = await fetch(
@@ -194,8 +207,8 @@ module.exports = async function handler(req, res) {
     }
 
     var doneMsg = results.remaining > 0
-      ? "סבב הושלם. נותרו עוד " + results.remaining + " שיחות לסבב הבא."
-      : "כל השיחות הישנות טופלו.";
+      ? "Batch done. " + results.remaining + " sessions remaining for the next run."
+      : "All stale sessions have been processed.";
 
     return res.status(200).json({ message: doneMsg, results: results });
 
