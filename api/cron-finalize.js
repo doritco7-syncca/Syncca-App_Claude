@@ -130,6 +130,7 @@ module.exports = async function handler(req, res) {
     results.processed = batch.length;
 
     if (batch.length === 0) {
+      console.log("[RESULTS]", JSON.stringify(results));
       return res.status(200).json({
         message: "No sessions need processing right now.",
         results: results,
@@ -208,9 +209,11 @@ module.exports = async function handler(req, res) {
       ? "Batch done. " + results.remaining + " sessions remaining for the next run."
       : "All stale sessions have been processed.";
 
+    console.log("[RESULTS]", JSON.stringify(results));
     return res.status(200).json({ message: doneMsg, results: results });
 
   } catch (err) {
+    console.log("[ERROR]", err.message, JSON.stringify(results));
     return res.status(500).json({ error: err.message, results: results });
   }
 };
