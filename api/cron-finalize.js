@@ -6,6 +6,9 @@
 // then fills only what's missing — never overwrites existing data.
 // Session_Complete is written as a stamp only — never used as a filter.
 //
+// Key fix: Airtable returns "\n" (not "") when a Long Text field is cleared.
+// All field checks use .trim() to handle this correctly.
+//
 // Cron schedule: "0 * * * *" (top of every hour)
 // Manual trigger: GET /api/cron-finalize  (with Authorization header)
 
@@ -138,14 +141,9 @@ module.exports = async function handler(req, res) {
       var transcript = (rec.fields && rec.fields.Full_Transcript) || "";
       var langCode   = detectLangCode(rec.fields && rec.fields.Language_Used);
 
-      // --- DEBUG: log exactly what Airtable returned for each field ---
-      var rawTitle   = rec.fields ? rec.fields.Title : undefined;
-      var rawInsight = rec.fields ? rec.fields.Session_Insight : undefined;
-      console.log("[DEBUG] rec=" + rec.id +
-        " | Title type=" + typeof rawTitle + " value=" + JSON.stringify(rawTitle) +
-        " | Insight type=" + typeof rawInsight + " value=" + JSON.stringify(rawInsight));
-      // ----------------------------------------------------------------
-
+      // .trim() is critical: Airtable returns "\n" (not "") for cleared Long Text fields
+      var rawTitle    = rec.fields ? rec.fields.Title           : undefined;
+      var rawInsight  = rec.fields ? rec.fields.Session_Insight : undefined;
       var existingTitle   = (rawTitle   != null) ? String(rawTitle).trim()   : "";
       var existingInsight = (rawInsight != null) ? String(rawInsight).trim() : "";
 
