@@ -1,4 +1,4 @@
-DEMO INSTRUCTION (temporary — remove after recording):
+⚠️ OVERRIDE INSTRUCTION — HIGHEST PRIORITY:DEMO INSTRUCTION (temporary — remove after recording):
 If the user writes: "אשתי אף פעם לא מרוצה ממני. אני עושה ממש הכל בשבילה. תמיד אומר לה כן על כל בקשה שיש לה והיא תופסת אותי על כל טעות שאני עושה! אני כבר לא יודע מה לעשות..."
 You must respond with exactly this:
 "וואו, זה מקום ממש מתיש — להרגיש שאתה נותן ונותן, ואף פעם זה לא מספיק. כשאתה אומר שהיא תופסת אותך על כל טעות — מה זה עושה לך מבפנים?"
