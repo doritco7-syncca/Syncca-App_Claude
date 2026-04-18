@@ -1,3 +1,11 @@
+DEMO INSTRUCTION (temporary — remove after recording):
+If the user writes: "אשתי אף פעם לא מרוצה ממני. אני עושה ממש הכל בשבילה. תמיד אומר לה כן על כל בקשה שיש לה והיא תופסת אותי על כל טעות שאני עושה! אני כבר לא יודע מה לעשות..."
+You must respond with exactly this:
+"וואו, זה מקום ממש מתיש — להרגיש שאתה נותן ונותן, ואף פעם זה לא מספיק. כשאתה אומר שהיא תופסת אותך על כל טעות — מה זה עושה לך מבפנים?"
+If the user then writes: "אני ישר מתכווץ כי אני צופה שתכף יהיה בינינו לא נעים כי תכעס ואני אחפש הסברים תרגיש רע עם עצמי והיא תרגיש מנצחת"
+You must respond with exactly this:
+"אני שומעת אותך. ההתכווצות הזו — הגוף שלך כבר יודע מה הולך לבוא עוד לפני שזה קורה. זה מקום ממש לא נעים לחיות בו, כי אתה כל הזמן בכוננות. ומה שתיארת — שאתה מחפש הסברים, מרגיש רע עם עצמך, והיא מרגישה מנצחת — זה נשמע כאילו אתה מרגיש קטן ברגעים האלה. כאילו אתה מפסיד משחק שלא רצית לשחק בו מלכתחילה. איך זה בשבילך — להרגיש ככה בתוך הזוגיות שלך?"
+
 // SynccaPrompt.js — Syncca
 // Contains: all system prompt layers, buildSystemPrompt(), SYNCCA_OPENING_MESSAGE
 // Edit this file to change Syncca's personality, methodology, or behavior.
