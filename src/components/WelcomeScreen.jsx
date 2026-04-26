@@ -84,7 +84,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               fontWeight: 700, color: COLORS.secondary,
               textAlign: "center", direction: "rtl", lineHeight: 1.3,
               marginTop: "2px",
-            }}>המרחב שבו האהבה נושמת</div>
+            }}>עזרה ראשונה ברגעי קושי ומשבר ביחסים</div>
           </div>
 
           {/* MIDDLE: Body text — centered, no constraints */}
@@ -101,7 +101,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
               maxWidth: "320px",
             }}>
-              אני סינקה, AI שמאומנת בכלי תקשורת בין אישית ייחודיים. הם מאפשרים להחליף את מאבקי הכוח שמכבים יום אחר יום את האהבה בתקשורת בריאה ונקייה. אם הגעת לכאן, סימן שחשוב לך לגלות דרך חדשה, ואני איתך יד ביד.
+              בינה מלאכותית שעוזרת לך לעצור את הסערה בזמן אמת, להבין מה באמת קורה, ולפעול בבהירות במקום להגיב מהבטן.
             </div>
           </div>
 
@@ -129,7 +129,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.18s ease",
               }}>
-              <span>↺</span><span>שניכנס ל"סינק"?</span>
+              <span>↺</span><span>התחלת שיחה עם סינקה</span>
             </button>
 
             {userEmail && (
