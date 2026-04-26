@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#F9F6EE" />
-<meta name="google-site-verification" content="EOU0vMxhXO7bkqzrbp5UwlIGUdKgxUq9znPR_cFrjlQ" />
+    <meta name="google-site-verification" content="EOU0vMxhXO7bkqzrbp5UwlIGUdKgxUq9znPR_cFrjlQ" />
     <!-- רקע שמנת מיידי — לפני שReact עולה, אין לבן -->
     <style>
       html, body, #root {
@@ -12,20 +12,16 @@
         margin: 0; padding: 0;
       }
     </style>
-
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-
     <meta name="description" content="סינקה היא בינה מלאכותית שמנחה אותך דרך קשיים במערכות יחסים עם בני זוג, ילדים, משפחה או עבודה. זמינה בשפה שלך, בכל שעה" />
     <meta name="apple-mobile-web-app-title" content="Syncca" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-
     <title>Syncca AI – מנחה דרך קשיים במערכות יחסים</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&display=swap" rel="stylesheet">
-
     <!-- Open Graph — תצוגה מקדימה בוואטסאפ ורשתות חברתיות -->
     <meta property="og:title"       content="Syncca AI – מנחה דרך קשיים במערכות יחסים" />
     <meta property="og:description" content="סינקה היא בינה מלאכותית שמנחה אותך דרך קשיים במערכות יחסים. בזוגיות, עם הילדים, עם המשפחה או החברים ואפילו בעבודה. זמינה בשפה שלך, בכל שעה." />
@@ -34,6 +30,25 @@
     <meta property="og:type"        content="website" />
     <meta property="og:locale"      content="he_IL" />
     <meta name="twitter:card"       content="summary_large_image" />
+    <!-- Fix: Prevent Google Translate from crashing React's DOM reconciliation -->
+    <script>
+      if (typeof Node === 'function' && Node.prototype) {
+        const originalRemoveChild = Node.prototype.removeChild;
+        Node.prototype.removeChild = function(child) {
+          if (child.parentNode !== this) {
+            return child;
+          }
+          return originalRemoveChild.apply(this, arguments);
+        };
+        const originalInsertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function(newNode, referenceNode) {
+          if (referenceNode && referenceNode.parentNode !== this) {
+            return newNode;
+          }
+          return originalInsertBefore.apply(this, arguments);
+        };
+      }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
