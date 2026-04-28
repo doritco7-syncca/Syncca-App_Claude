@@ -97,7 +97,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             <div style={{
               direction: "rtl", textAlign: "justify",
               fontFamily: "'Alef', sans-serif",
-              fontSize: "clamp(1.0rem,3.5vw,1.2rem)",
+              fontSize: "clamp(1.1rem,3.6vw,1.4rem)",
               color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
               maxWidth: "320px",
             }}>
