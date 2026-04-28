@@ -24,11 +24,11 @@ const LogoSymbol = ({ size = 64 }) => (
 );
 
 const TERMS_TEXT = [
-  "השימוש בסינקה מיועד למשתמשים מעל גיל 18 בלבד.",
-  "המידע והליווי הניתנים על ידי סינקה מבוססים על בינה מלאכותית ונועדו למטרות העשרה, למידה ושיפור התקשורת הבין-אישית בלבד.",
-  "סינקה אינה מהווה תחליף לטיפול פסיכולוגי, ייעוץ זוגי מקצועי או ייעוץ רפואי כלשהו.",
+  "השימוש בSyncca מיועד למשתמשים מעל גיל 18 בלבד.",
+  "המידע והליווי הניתנים על ידי Syncca מבוססים על בינה מלאכותית ונועדו למטרות העשרה, למידה ושיפור התקשורת הבין-אישית בלבד.",
+  "Syncca אינה מהווה תחליף לטיפול פסיכולוגי, ייעוץ זוגי מקצועי או ייעוץ רפואי כלשהו.",
   "השירות אינו מיועד למצבי משבר נפשי דחופים או למקרים הכוללים אלימות. במצבי חירום יש לפנות לגורמים המוסמכים.",
-  "השימוש בסינקה ובכלים המוצעים בה הוא באחריות המשתמשים בלבד.",
+  "השימוש בSyncca ובכלים המוצעים בה הוא באחריות המשתמשים בלבד.",
 ];
 
 function TermsModal({ onClose }) {
@@ -48,7 +48,7 @@ function TermsModal({ onClose }) {
         <div style={{
           fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 700,
           color: "#757575", marginBottom: "16px", textAlign: "center",
-        }}>תנאי שימוש — סינקה</div>
+        }}>תנאי שימוש — Syncca</div>
         {TERMS_TEXT.map((para, i) => (
           <p key={i} style={{
             fontFamily: "'Alef', sans-serif", fontSize: "0.72rem",
@@ -234,7 +234,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                 lineHeight: 1.6,
               }}>
                 {step === "email"
-                  ? <>כדי שסינקה תוכל לשמור עבורך על רצף השיחות והתובנות<br/>— נבקש להזדהות</>
+                  ? <>כדי שSyncca תוכל לשמור עבורך על רצף השיחות והתובנות<br/>— נבקש להזדהות</>
                   : <>שלחנו קוד בן 4 ספרות לכתובת<br/><strong>{email}</strong></>
                 }
               </div>
@@ -290,7 +290,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                     ? <div className="spinner" />
                     : step === "email"
                       ? <><span>✦</span><span>שלחי לי קוד</span></>
-                      : <><span>✦</span><span>כניסה לסינקה</span></>
+                      : <><span>✦</span><span>כניסה לSyncca</span></>
                   }
               </button>
             </div>
@@ -306,7 +306,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               transition: "border-color 0.2s",
             }}>
               <div style={{ marginBottom: "8px" }}>
-                השימוש מיועד לגיל 18 ומעלה. סינקה נועדה ללמידה והתפתחות אישית ואינה מהווה תחליף לייעוץ פסיכולוגי או רפואי מקצועי.
+                השימוש מיועד לגיל 18 ומעלה. Syncca נועדה ללמידה והתפתחות אישית ואינה מהווה תחליף לייעוץ פסיכולוגי או רפואי מקצועי.
               </div>
               <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", direction: "rtl" }}>
                 <input
