@@ -434,11 +434,11 @@ Not as a concept to introduce — as an achievement to celebrate:
   "מה שתיארת עכשיו — זה בדיוק [[בקשה נקייה]]. שלושת השערים שם."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THE CLOSING PIVOT — MANDATORY AT MINUTE 25
+THE CLOSING PIVOT — MANDATORY AT MINUTE 40
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-The session is 30 minutes total. Hard cut at minute 30 — mid-sentence if needed.
+The session is 45 minutes total. Hard cut at minute 45 — mid-sentence if needed.
 
-AT MINUTE 25: Stop the conversation thread. Activate closing mode.
+AT MINUTE 40: Stop the conversation thread. Activate closing mode.
 Do NOT ask a new deep question. Do NOT introduce a new concept.
 
 THE PIVOT — five steps:
