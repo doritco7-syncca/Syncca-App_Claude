@@ -761,6 +761,7 @@ ${isMale   ? "Gender: MALE — address as \"אתה\", \"ספר\", \"תרצה\". 
     memoryBlock = `
 
 MEMORY — RETURNING USER:
+GREETING LANGUAGE: Hebrew by default — unless session history shows another language.
 Do NOT greet as a stranger. Do NOT re-introduce known concepts.
 Use the structured session data below to pick up where you left off.
 If ladderStep is known — continue from there, do not restart.
