@@ -121,49 +121,48 @@ function TimeoutModal({ onClose, logRecordId }) {
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
       <div style={{ background:"#F9F6EE", borderRadius:"24px",
                     border:"1.5px solid rgba(117,117,117,0.12)",
-                    padding:"28px 24px", maxWidth:"380px", width:"100%", direction:"rtl",
+                    padding:"28px 24px", maxWidth:"380px", width:"100%", direction:"ltr",
                     boxShadow:"0 8px 40px rgba(0,0,0,0.12)" }}>
         {!sent ? (
           <>
-            <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.6rem", fontWeight:700,
+            <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.95rem", fontWeight:700,
                           color:"#757575", marginBottom:"10px", textAlign:"center" }}>
-              זמן השיחה הסתיים 🙏
+              Time is up for this session 🙏
             </div>
             <p style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
                         lineHeight:1.7, marginBottom:"18px", textAlign:"center" }}>
-              45 דקות של עבודה אמיתית. כל תובנה שעלתה היום — שייכת לך. נשמח לשמוע מה עלה בשיחה.
+              45 minutes of real work. Every insight that came up today belongs to you. We’d love to hear how it went.
             </p>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
-              placeholder="מה עזר? מה אפשר לשפר?"
+              placeholder="What helped? What can we improve?"
               style={{ width:"100%", height:"80px", border:"1.5px solid rgba(117,117,117,0.2)",
                        borderRadius:"12px", padding:"12px", fontFamily:"'Alef',sans-serif",
                        fontSize:"0.88rem", background:"white", resize:"none", outline:"none",
-                       direction:"rtl", boxSizing:"border-box", lineHeight:1.6 }} />
+                       direction:"ltr", boxSizing:"border-box", lineHeight:1.6 }} />
             <button onClick={handleSendFeedback} style={{ marginTop:"12px", width:"100%", height:"34px",
               background:"#0891b2", color:"white", border:"none", borderRadius:"9999px",
               fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"0.95rem", cursor:"pointer" }}>
-              שליחת פידבק וסיום
+              Send feedback & finish
             </button>
           </>
         ) : (
           <div style={{ textAlign:"center", padding:"12px 0" }}>
             <div style={{ fontSize:"0.9rem", marginBottom:"10px" }}>✦</div>
             <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1rem", fontWeight:700,
-                          color:"#16a34a", marginBottom:"6px" }}>תודה!</div>
+                          color:"#16a34a", marginBottom:"6px" }}>Thank you!</div>
             <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
-                          lineHeight:1.6 }}>תודה! נתראה בסינק הבא.</div>
+                          lineHeight:1.6 }}>See you in the next sync.</div>
           </div>
         )}
         <button onClick={onClose} style={{ marginTop:"10px", width:"100%", height:"30px",
-          background:"transparent", color:"#6b7280", border:"1px solid  #7dd3fc",
+          background:"transparent", color:"#6b7280", border:"1px solid #7dd3fc",
           borderRadius:"9999px", fontFamily:"'Alef',sans-serif", fontSize:"0.9rem", cursor:"pointer" }}>
-          סגירה
+          Close
         </button>
       </div>
     </div>
   );
 }
-
 // ─── Beta modal ───────────────────────────────────────────────────
 function BetaModal({ onClose }) {
   const items = [
