@@ -167,34 +167,37 @@ function TimeoutModal({ onClose, logRecordId }) {
 // ─── Beta modal ───────────────────────────────────────────────────
 function BetaModal({ onClose }) {
   const items = [
-    "Syncca היא המקום שלך כשעולה רצון להבין קצת יותר, ללמוד או ליצור שינוי בתקשורת הבין אישית. היא מבוססת על ידע וניסיון של שנים בליווי זוגות ומשפחות, ונועדה לעזור בזיהוי והבנה של דפוסי תקשורת מזיקים ורעילים ואיך משתחררים מהם.",
-    "במהלך השיחה, יתכן שSyncca תציע מושגים רלבנטיים. הם מיועדים לתת מילים למה שקורה לנו בפנים. ניתן להרחיב אותם (בלחיצה), ואף לשמור אותם בכרטיס האישי (שנמצא בראש הצ'אט).",
-    "כל שיחה מוגבלת ל-45 דקות כדי לאפשר זמן ממוקד לעיבוד והתבוננות.",
+    "Syncca is your space when you want to understand a bit more, learn, or create a change in your interpersonal communication. Grounded in years of experience working with couples and families, it is designed to help identify and understand harmful or toxic communication patterns — and learn how to break free from them.",
+    "During the conversation, Syncca may suggest relevant concepts designed to give words to what we experience inside. You can expand them with a click, and even save them to your personal card at the top of the chat.",
+    "Each conversation is limited to 45 minutes to allow for focused time to process and reflect.",
     "At the end of the conversation, we’d love to get your feedback — it helps us improve.",
   ];
+
   return (
     <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(117,117,117,0.18)",
                   display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }}>
       <div style={{ background:"#f0fdf4", borderRadius:"24px", padding:"28px 24px",
-                    maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
+                    maxWidth:"390px", width:"100%", direction:"ltr", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
+        
         <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.27rem", fontWeight:700,
-                      color:"#757575", marginBottom:"16px", textAlign:"center" }}>Wellcome to Syncca 👋</div>
-        <ol style={{ paddingRight:"18px" }}>
+                      color:"#757575", marginBottom:"16px", textAlign:"center" }}>Welcome to Syncca 👋</div>
+        
+        <ol style={{ paddingLeft:"18px" }}>
           {items.map((item, i) => (
             <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.79rem",
                                  lineHeight:1.65, marginBottom:"10px", color:"#1a1a1a" }}>{item}</li>
           ))}
         </ol>
+        
         <button onClick={onClose} style={{ marginTop:"18px", width:"100%", height:"36px",
           background:"#C62828", color:"white", border:"none", borderRadius:"9999px",
           fontFamily:"'Alef',sans-serif", fontWeight:700, fontSize:"1rem", cursor:"pointer" }}>
-          הבנתי, אפשר להתחיל ✦
+          I understand, let's start ✦
         </button>
       </div>
     </div>
   );
 }
-
 // ─── Resume helper ────────────────────────────────────────────────
 // Returns the latest session if resumable: not complete + within 50 min
 function getResumableSession(history) {
