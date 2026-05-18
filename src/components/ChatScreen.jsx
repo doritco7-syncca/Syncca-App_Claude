@@ -4,6 +4,7 @@
 //   - Page Visibility API: detects return to tab, fires timeout if time ran out
 //   - Beacon sent on visibility change to save transcript
 //   - 5-minute warning and timeout modal changed from red to teal
+//   - Full multilingual UI strings: Hebrew / English / German
 
 import { useState, useRef, useEffect } from "react";
 import { saveFeedback } from "../AirtableService";
@@ -27,6 +28,21 @@ const STONE_SHADOW = [
   "inset 0 1px 0 rgba(255,255,255,0.9)",
 ].join(", ");
 
+// ── Language helpers ──────────────────────────────────────────
+function uiDir(chatLang)   { return chatLang === "he" ? "rtl" : "ltr"; }
+function uiAlign(chatLang) { return chatLang === "he" ? "right" : "left"; }
+function uiStr(chatLang, he, en, de) {
+  if (chatLang === "en") return en;
+  if (chatLang === "de") return de !== undefined ? de : en;
+  return he;
+}
+function voiceLang(chatLang) {
+  if (chatLang === "en") return "en-US";
+  if (chatLang === "de") return "de-DE";
+  return "he-IL";
+}
+
+// ── Logo ──────────────────────────────────────────────────────
 function LogoSymbol({ size = 20 }) {
   return (
     <svg width={size} height={size * 289/357} viewBox="0 0 357 289" fill="none" style={{ display: "block", flexShrink: 0 }}>
@@ -36,6 +52,7 @@ function LogoSymbol({ size = 20 }) {
   );
 }
 
+// ── Concept Tooltip ───────────────────────────────────────────
 function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
   if (!concept) return null;
   return (
@@ -49,7 +66,7 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
         background: "#FDFBF7", borderRadius: "20px",
         boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
         padding: "24px 26px", maxWidth: "480px", width: "100%",
-        direction: "rtl", animation: "tooltipUp 0.22s ease",
+        direction: uiDir(chatLang), animation: "tooltipUp 0.22s ease",
       }}>
         <div style={{
           fontFamily: "'Cormorant Garamond', serif",
@@ -80,7 +97,7 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
             fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.97rem",
             cursor: "pointer",
           }}>
-            {chatLang === "he" ? "✦ שמור מושג זה" : chatLang === "de" ? "✦ Konzept speichern" : "✦ Save concept"}
+            {uiStr(chatLang, "✦ שמור מושג זה", "✦ Save concept", "✦ Konzept speichern")}
           </button>
           <button onClick={onClose} style={{
             height: "44px", padding: "0 18px",
@@ -88,11 +105,12 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
             border: `1px solid ${COLORS.border}`, borderRadius: "9999px",
             fontFamily: "'Alef', sans-serif", cursor: "pointer",
           }}>
-            {chatLang === "he" ? "סגור" : chatLang === "de" ? "Schließen" : "Close"}
+            {uiStr(chatLang, "סגור", "Close", "Schließen")}
           </button>
         </div>
         <button onClick={onClose} style={{
-          position: "absolute", top: "14px", left: "14px",
+          position: "absolute", top: "14px",
+          [chatLang === "he" ? "left" : "right"]: "14px",
           background: "none", border: "none", cursor: "pointer",
           color: COLORS.muted, fontSize: "1.1rem",
         }}>✕</button>
@@ -101,6 +119,7 @@ function ConceptTooltip({ concept, onSave, onClose, chatLang = "he" }) {
   );
 }
 
+// ── Message Text ──────────────────────────────────────────────
 function MessageText({ text, concepts = [], onConceptClick }) {
   if (!concepts.length) return <span style={{ whiteSpace: "pre-wrap" }}>{text}</span>;
   const parts = [];
@@ -129,10 +148,12 @@ function MessageText({ text, concepts = [], onConceptClick }) {
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────
 function stripHeDefiniteArticle(term) {
   return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
 }
 
+// ── Session End Widget ────────────────────────────────────────
 function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId, chatLang = "he", onDeleteConcept, showFeedback = false }) {
   const [activeConcept, setActiveConcept] = useState(null);
   const [feedback, setFeedback]           = useState("");
@@ -184,7 +205,8 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
     <div style={{
       borderTop: `1px solid ${COLORS.border}`,
       background: COLORS.stoneLight,
-      flexShrink: 0, direction: "rtl",
+      flexShrink: 0,
+      direction: uiDir(chatLang),
       maxHeight: "35vh", overflowY: "auto",
     }}>
       {savedConcepts.length > 0 && (
@@ -194,7 +216,9 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "0.9rem", fontWeight: 700,
               color: COLORS.secondary, flexShrink: 0, marginLeft: "2px",
-            }}>✦ שלי:</span>
+            }}>
+              {uiStr(chatLang, "✦ שלי:", "✦ Mine:", "✦ Meine:")}
+            </span>
             {savedConcepts.map((c, i) => (
               <div key={i} style={{ display: "inline-flex", alignItems: "center", gap: "2px" }}>
                 <button onClick={() => toggleConcept(c)} style={(() => {
@@ -211,7 +235,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
                 })()}>{resolveWord(c)}</button>
                 <button
                   onClick={(e) => { e.stopPropagation(); if (activeConcept?.word === c.word) setActiveConcept(null); onDeleteConcept?.(c); }}
-                  title="הסר מושג"
+                  title={uiStr(chatLang, "הסר מושג", "Remove concept", "Konzept entfernen")}
                   style={{
                     background: "none", border: "none", cursor: "pointer",
                     color: "rgba(180,80,0,0.5)", fontSize: "0.65rem",
@@ -245,13 +269,23 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
           )}
         </div>
       )}
-      {showFeedback && !sent && <div style={{
-        padding: "8px 16px 4px", direction: "rtl",
-        fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
-        color: COLORS.secondary, lineHeight: 1.6,
-      }}>
-        תודה לך על השיתוף 🙏 נשמח למשוב: איך הרגשת עם הממשק של סינקה? נשקול כל הערה או הצעה כדי להשתפר.
-      </div>}
+
+      {showFeedback && !sent && (
+        <div style={{
+          padding: "8px 16px 4px",
+          direction: uiDir(chatLang),
+          fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
+          color: COLORS.secondary, lineHeight: 1.6,
+        }}>
+          {uiStr(
+            chatLang,
+            "תודה לך על השיתוף 🙏 נשמח למשוב: איך הרגשת עם הממשק של סינקה? נשקול כל הערה או הצעה כדי להשתפר.",
+            "Thank you for being here 🙏 We'd love your feedback: how did your experience with Syncca feel? Every thought helps us grow.",
+            "Danke, dass du da warst 🙏 Wir freuen uns über dein Feedback: Wie war dein Erlebnis mit Syncca? Jeder Gedanke hilft uns zu wachsen."
+          )}
+        </div>
+      )}
+
       <div style={{ padding: "7px 16px 10px", display: showFeedback ? "flex" : "none", gap: "7px", alignItems: "center" }}>
         {!sent ? (
           <>
@@ -259,13 +293,20 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               value={feedback}
               onChange={e => setFeedback(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") handleSendFeedback(); }}
-              placeholder="מקום לפידבק על השיחה..."
+              placeholder={uiStr(
+                chatLang,
+                "מקום לפידבק על השיחה...",
+                "Share your thoughts on the conversation...",
+                "Teile deine Gedanken zum Gespräch..."
+              )}
               style={{
                 flex: 1, height: "34px", borderRadius: "9999px",
                 border: `1.5px solid ${COLORS.border}`,
                 padding: "0 13px",
                 fontFamily: "'Alef', sans-serif", fontSize: "0.9rem",
-                background: "white", outline: "none", direction: "rtl",
+                background: "white", outline: "none",
+                direction: uiDir(chatLang),
+                textAlign: uiAlign(chatLang),
               }}
             />
             <button onClick={handleSendFeedback} disabled={sending || !feedback.trim()} style={{
@@ -275,19 +316,24 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
               fontFamily: "'Alef', sans-serif", fontWeight: 600, fontSize: "0.66rem",
               cursor: feedback.trim() ? "pointer" : "not-allowed",
               opacity: feedback.trim() ? 1 : 0.5,
-            }}>שליחה ✓</button>
+            }}>
+              {uiStr(chatLang, "שליחה ✓", "Send ✓", "Senden ✓")}
+            </button>
           </>
         ) : (
           <div style={{
             flex: 1, textAlign: "center", color: "#16a34a",
             fontFamily: "'Alef', sans-serif", fontSize: "0.9rem", fontWeight: 600,
-          }}>תודה שהיית כאן 🙏</div>
+          }}>
+            {uiStr(chatLang, "תודה שהיית כאן 🙏", "Thank you for being here 🙏", "Danke, dass du da warst 🙏")}
+          </div>
         )}
       </div>
     </div>
   );
 }
 
+// ── Chat Screen ───────────────────────────────────────────────
 export default function ChatScreen({
   userEmail = "", firstName = "",
   messages = [], isLoading = false,
@@ -308,7 +354,7 @@ export default function ChatScreen({
     }
     return SESSION_SECS;
   });
-  const [timedOut, setTimedOut]     = useState(false);
+  const [timedOut, setTimedOut]       = useState(false);
   const [showWarning, setShowWarning] = useState(() => {
     if (sessionStartTime) {
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
@@ -316,13 +362,13 @@ export default function ChatScreen({
     }
     return false;
   });
-  const bottomRef    = useRef(null);
-  const timedOutRef  = useRef(false); // ref copy so visibility handler can read it
+  const bottomRef   = useRef(null);
+  const timedOutRef = useRef(false);
 
   const displayName = firstName?.trim() ||
     (userEmail?.includes("@") ? userEmail.split("@")[0] : "");
 
-  // ── Timer — calculates from real clock each tick ──────────────
+  // ── Timer — calculates from real clock each tick ──────────
   useEffect(() => {
     if (timedOut || secondsLeft <= 0) return;
     const id = setInterval(() => {
@@ -363,23 +409,19 @@ export default function ChatScreen({
     return () => clearInterval(id);
   }, [timedOut, sessionStartTime]);
 
-  // ── Page Visibility — fires when user returns to inactive tab ─
+  // ── Page Visibility ───────────────────────────────────────
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.visibilityState !== "visible") return;
       if (timedOutRef.current) return;
-
       const elapsed = Math.floor((Date.now() - new Date(sessionStartTime)) / 1000);
       const remaining = Math.max(0, SESSION_SECS - elapsed);
-
       if (remaining <= 0) {
-        // Time ran out while tab was inactive — fire timeout now
         setSecondsLeft(0);
         setTimedOut(true);
         timedOutRef.current = true;
         onTimeout?.();
       } else {
-        // Time not yet up — just correct the display
         setSecondsLeft(remaining);
         if (remaining <= 300) setShowWarning(true);
       }
@@ -393,6 +435,7 @@ export default function ChatScreen({
   }, [messages]);
 
   function applyVoiceCorrections(text) {
+    if (chatLang !== "he") return text;
     let result = text;
     Object.entries(VOICE_DICTIONARY).forEach(([wrong, correct]) => {
       const regex = new RegExp(wrong, "gi");
@@ -403,10 +446,17 @@ export default function ChatScreen({
 
   function startVoice() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("הדפדפן שלך אינו תומך בזיהוי קול"); return; }
+    if (!SR) {
+      alert(uiStr(chatLang,
+        "הדפדפן שלך אינו תומך בזיהוי קול",
+        "Your browser doesn't support voice recognition",
+        "Dein Browser unterstützt keine Spracherkennung"
+      ));
+      return;
+    }
     if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
     const rec = new SR();
-    rec.lang = "he-IL";
+    rec.lang = voiceLang(chatLang);
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     rec.onstart  = () => setIsListening(true);
@@ -459,7 +509,8 @@ export default function ChatScreen({
           padding: 10px 18px 10px 44px; font-size: 1.12rem;
           font-family: 'Alef', sans-serif;
           background: white; outline: none;
-          direction: rtl; text-align: right;
+          direction: ${chatLang === "he" ? "rtl" : "ltr"};
+          text-align: ${chatLang === "he" ? "right" : "left"};
           transition: border-color 0.15s;
           box-sizing: border-box; resize: none; overflow-y: auto; line-height: 1.45;
         }
@@ -505,13 +556,16 @@ export default function ChatScreen({
             flexShrink: 0,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 60 }}>
-              <button onClick={onLogout} title="יציאה" style={{
-                background: "none", border: "none", cursor: "pointer",
-                padding: "4px", lineHeight: 1, display: "flex", alignItems: "center",
-                transition: "transform 0.15s",
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+              <button
+                onClick={onLogout}
+                title={uiStr(chatLang, "יציאה", "Logout", "Abmelden")}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: "4px", lineHeight: 1, display: "flex", alignItems: "center",
+                  transition: "transform 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
               >
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={COLORS.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 6l6 6-6 6"/>
@@ -535,20 +589,32 @@ export default function ChatScreen({
               {displayName && (
                 <div style={{
                   fontFamily: "'Alef', sans-serif", fontSize: "0.99rem", fontWeight: 600,
-                  color: COLORS.secondary, direction: "rtl",
-                }}>{`עם ${displayName}`}</div>
+                  color: COLORS.secondary, direction: uiDir(chatLang),
+                }}>
+                  {uiStr(chatLang, `עם ${displayName}`, `with ${displayName}`, `mit ${displayName}`)}
+                </div>
               )}
             </div>
 
             <div style={{ minWidth: 60, display: "flex", justifyContent: "flex-end", gap: "4px" }}>
-              <button className="icon-btn" onClick={onOpenHistory} title="היסטוריית שיחות" style={{ padding: "6px" }}>
+              <button
+                className="icon-btn"
+                onClick={onOpenHistory}
+                title={uiStr(chatLang, "היסטוריית שיחות", "Conversation history", "Gesprächsverlauf")}
+                style={{ padding: "6px" }}
+              >
                 <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
                   <rect width="18" height="2" rx="1" fill="currentColor"/>
                   <rect y="6" width="18" height="2" rx="1" fill="currentColor"/>
                   <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
                 </svg>
               </button>
-              <button className="icon-btn" onClick={onOpenPersonalCard} title="כרטיס אישי" style={{ fontSize: "1.3rem" }}>👤</button>
+              <button
+                className="icon-btn"
+                onClick={onOpenPersonalCard}
+                title={uiStr(chatLang, "כרטיס אישי", "Personal card", "Persönliche Karte")}
+                style={{ fontSize: "1.3rem" }}
+              >👤</button>
             </div>
           </div>
 
@@ -566,18 +632,22 @@ export default function ChatScreen({
                   fontSize: "0.66rem", fontWeight: 600, color: COLORS.muted,
                   marginBottom: "3px", paddingLeft: "4px", paddingRight: "4px",
                 }}>
-                  {msg.role === "user" ? "אני" : "Syncca"}
+                  {msg.role === "user"
+                    ? uiStr(chatLang, "אני", "Me", "Ich")
+                    : "Syncca"}
                 </div>
                 <div style={msg.role === "user" ? {
                   background: COLORS.primaryLight, borderRadius: "18px 0 18px 18px",
                   padding: "13px 17px", fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
-                  color: COLORS.text, lineHeight: 1.68, direction: "rtl", textAlign: "right",
+                  color: COLORS.text, lineHeight: 1.68,
+                  direction: uiDir(chatLang), textAlign: uiAlign(chatLang),
                   maxWidth: "85%", wordBreak: "break-word",
                 } : {
                   background: "#FDFBF7", border: `1.5px solid ${COLORS.primaryLight}`,
                   borderRadius: "0 18px 18px 18px",
                   padding: "13px 17px", fontFamily: "'Alef', sans-serif", fontSize: "1.02rem",
-                  color: COLORS.text, lineHeight: 1.68, direction: "rtl", textAlign: "right",
+                  color: COLORS.text, lineHeight: 1.68,
+                  direction: uiDir(chatLang), textAlign: uiAlign(chatLang),
                   maxWidth: "92%", wordBreak: "break-word",
                 }}>
                   {isLoading && i === messages.length - 1 && msg.role === "syncca" ? (
@@ -592,7 +662,10 @@ export default function ChatScreen({
                     fontSize: "0.6rem", color: COLORS.muted,
                     marginTop: "3px", paddingLeft: "4px", paddingRight: "4px",
                   }}>
-                    {new Date(msg.timestamp).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(msg.timestamp).toLocaleTimeString(
+                      chatLang === "he" ? "he-IL" : chatLang === "de" ? "de-DE" : "en-US",
+                      { hour: "2-digit", minute: "2-digit" }
+                    )}
                   </div>
                 )}
               </div>
@@ -610,7 +683,7 @@ export default function ChatScreen({
             <div ref={bottomRef} />
           </div>
 
-          {/* 5-MINUTE WARNING — teal, rounded */}
+          {/* 5-MINUTE WARNING */}
           {showWarning && !timedOut && (
             <div style={{
               background: COLORS.tealLight,
@@ -619,13 +692,18 @@ export default function ChatScreen({
               margin: "8px 12px",
               padding: "12px 16px",
               display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-              direction: "rtl", flexShrink: 0, gap: "8px",
+              direction: uiDir(chatLang), flexShrink: 0, gap: "8px",
             }}>
               <span style={{
                 fontFamily: "'Alef', sans-serif", fontSize: "0.94rem",
                 fontWeight: 700, color: COLORS.teal, lineHeight: 1.6,
               }}>
-                סליחה {displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך.
+                {uiStr(
+                  chatLang,
+                  `סליחה ${displayName || ""}, אנחנו לקראת סיום. זה זמן טוב לכתוב לי מתוך התובנות מה השיחה העלתה עבורך.`,
+                  `${displayName ? displayName + ", " : ""}we're coming to a close. This is a good moment to share — what has this conversation brought up for you?`,
+                  `${displayName ? displayName + ", " : ""}wir kommen zum Ende. Dies ist ein guter Moment zu teilen — was hat dieses Gespräch in dir aufgeworfen?`
+                )}
               </span>
               <button onClick={() => setShowWarning(false)} style={{
                 background: "none", border: "none", cursor: "pointer",
@@ -649,37 +727,47 @@ export default function ChatScreen({
               }}>🔒</div>
               <div style={{
                 fontSize: "0.6rem", color: COLORS.muted,
-                fontFamily: "'Alef', sans-serif", direction: "rtl",
+                fontFamily: "'Alef', sans-serif", direction: uiDir(chatLang),
               }}>
-                {input.length > 0 ? `${input.length} תווים` : ""}
+                {input.length > 0
+                  ? uiStr(chatLang, `${input.length} תווים`, `${input.length} chars`, `${input.length} Zeichen`)
+                  : ""}
               </div>
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <button className="send-btn" style={{ flexShrink: 0 }}
                 onClick={handleSend} disabled={!input.trim() || timedOut}>➤</button>
               <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
-  {/* Mirror div — drives height, invisible */}
-  <div aria-hidden="true" style={{
-    visibility: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word",
-    padding: "10px 18px 10px 44px", fontSize: "1.12rem",
-    fontFamily: "'Alef', sans-serif", lineHeight: 1.45,
-    minHeight: "clamp(38px, 6vh, 44px)", maxHeight: "160px",
-    overflowY: "hidden", boxSizing: "border-box", borderRadius: "22px",
-  }}>
-    {input || " "}
-  </div>
-  <textarea className="chat-input"
-    placeholder={timedOut ? "השיחה הסתיימה" : "כאן כותבים..."}
-    value={input}
-    rows={1}
-    style={{ position: "absolute", inset: 0, height: "100%" }}
-    onChange={e => setInput(e.target.value)}
-    onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
-    disabled={timedOut} />
-  <button
+                {/* Mirror div — drives height, invisible */}
+                <div aria-hidden="true" style={{
+                  visibility: "hidden", whiteSpace: "pre-wrap", wordBreak: "break-word",
+                  padding: "10px 18px 10px 44px", fontSize: "1.12rem",
+                  fontFamily: "'Alef', sans-serif", lineHeight: 1.45,
+                  minHeight: "clamp(38px, 6vh, 44px)", maxHeight: "160px",
+                  overflowY: "hidden", boxSizing: "border-box", borderRadius: "22px",
+                }}>
+                  {input || " "}
+                </div>
+                <textarea
+                  className="chat-input"
+                  placeholder={timedOut
+                    ? uiStr(chatLang, "השיחה הסתיימה", "Our session has ended", "Unsere Sitzung ist beendet")
+                    : uiStr(chatLang, "כאן כותבים...", "Write here...", "Hier schreiben...")
+                  }
+                  value={input}
+                  rows={1}
+                  style={{ position: "absolute", inset: 0, height: "100%" }}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && e.shiftKey) e.preventDefault(); }}
+                  disabled={timedOut}
+                />
+                <button
                   className={`mic-btn${isListening ? " listening" : ""}`}
                   onClick={startVoice} disabled={timedOut}
-                  title={isListening ? "עצור הקלטה" : "הקלטה קולית"}
+                  title={isListening
+                    ? uiStr(chatLang, "עצור הקלטה", "Stop recording", "Aufnahme stoppen")
+                    : uiStr(chatLang, "הקלטה קולית", "Voice input", "Spracheingabe")
+                  }
                   style={{
                     position: "absolute", left: "6px", top: "50%",
                     transform: "translateY(-50%)",
