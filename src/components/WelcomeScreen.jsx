@@ -133,7 +133,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
                 transform: hovered ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.18s ease",
               }}>
-              <span>↺</span><span>כניסה ל- Syncca</span>
+              <span>↺</span><span>enter Syncca</span>
             </button>
 
             {userEmail && (
