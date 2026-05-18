@@ -102,7 +102,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
     color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
     maxWidth: "320px",
   }}>
-    For the moments when something feels off — and for the ones when you simply want to understand more
+    For the moments when something feels off, and for the ones when you simply want to understand more
   </div>
 </div>
 
