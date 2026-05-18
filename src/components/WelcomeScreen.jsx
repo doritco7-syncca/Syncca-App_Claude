@@ -87,23 +87,24 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
             }}>Your Compass for Human Connection</div>
           </div>
 
-          {/* MIDDLE: Body text — centered, no constraints */}
-          <div className="wr" style={{
-            display: "flex", flexDirection: "column",
-            alignItems: "center",
-            paddingTop: "clamp(12px, 4vh, 28px)",
-            width: "100%",
-          }}>
-            <div style={{
-              direction: "rtl", textAlign: "justify",
-              fontFamily: "'Alef', sans-serif",
-              fontSize: "clamp(1rem,2.5vw,1.2rem)",
-              color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
-              maxWidth: "320px",
-            }}>
-              For the moments when something feels off — and for the ones when you simply want to understand more
-            </div>
-          </div>
+       {/* MIDDLE: Body text — centered, no constraints */}
+<div className="wr" style={{
+  display: "flex", flexDirection: "column",
+  alignItems: "center",
+  paddingTop: "clamp(12px, 4vh, 28px)",
+  width: "100%",
+}}>
+  <div style={{
+    direction: "ltr",         {/* שינוי משמאל לימין */}
+    textAlign: "center",      {/* מירכוז הטקסט למראה מאוזן באנגלית */}
+    fontFamily: "'Alef', sans-serif",
+    fontSize: "clamp(1rem,2.5vw,1.2rem)",
+    color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
+    maxWidth: "320px",
+  }}>
+    For the moments when something feels off — and for the ones when you simply want to understand more
+  </div>
+</div>
 
           {/* Spacer */}
           <div style={{ flex: 1 }} />
