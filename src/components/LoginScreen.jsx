@@ -73,7 +73,235 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [step, setStep]           = useState("email"); // "email" | "verify"
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState("");
-  const isRateLimit = error.includes("Glad to have you back") || error.includes("שמחה שחזרת");
   const [btnHover, setBtnHover]   = useState(false);
   const [showTerms, setShowTerms]     = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem("syncca_terms_accepted") ===
+  const [termsAccepted, setTermsAccepted] = useState(() => localStorage.getItem("syncca_terms_accepted") === "true");
+  const [termsShake, setTermsShake]         = useState(false);
+
+  const codeRef = useRef(null);
+
+  // Focus code input as soon as the verify step appears
+  useEffect(() => {
+    if (step === "verify") {
+      setTimeout(() => codeRef.current?.focus(), 50);
+    }
+  }, [step]);
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  async function handleSendCode() {
+    if (!isValidEmail) { setError("Please enter a valid email address"); return; }
+    if (!termsAccepted) {
+      setTermsShake(true);
+      setTimeout(() => setTermsShake(false), 700);
+      return;
+    }
+    setError(""); setLoading(true);
+    try {
+      const { generateCode, sendVerificationCode } = await import("../emailService");
+      const { saveVerificationCode } = await import("../AirtableService");
+      const newCode = generateCode();
+      await saveVerificationCode(email.trim(), newCode);
+      const result = await sendVerificationCode(email.trim(), newCode);
+      if (!result.success) {
+        setError("Error sending code, please try again");
+      } else {
+        setStep("verify");
+      }
+    } catch (e) {
+      console.error("[handleSendCode]", e);
+      setError("An error occurred, please try again");
+    } finally { setLoading(false); }
+  }
+
+  async function handleVerifyCode() {
+    if (code.length !== 4) { setError("Please enter a 4-digit code"); return; }
+    setError(""); setLoading(true);
+    try {
+      const { verifyCode } = await import("../AirtableService");
+      const result = await verifyCode(email.trim(), code.trim());
+      if (!result.success) {
+        setError(result.reason === "wrong_code" ? "Incorrect code, please try again" : "Something went wrong, please try again");
+      } else {
+        await onLogin?.(email.trim());
+      }
+    } catch (e) {
+      let msg = e.message || "An error occurred, please try again";
+      if (msg.includes("שמחה שחזרת")) {
+        msg = "Glad to have you back! Too many attempts, please try again in a few moments.";
+      }
+      setError(msg);
+    } finally { setLoading(false); }
+  }
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Alef:wght@400;700&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          15%       { transform: translateX(-6px); }
+          30%       { transform: translateX(6px); }
+          45%       { transform: translateX(-5px); }
+          60%       { transform: translateX(5px); }
+          75%       { transform: translateX(-3px); }
+          90%       { transform: translateX(3px); }
+        }
+        .terms-shake { animation: shake 0.6s ease; }
+        @keyframes stoneRise {
+          from { opacity: 0; transform: translateY(28px) scale(0.982); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .login-slab { animation: stoneRise 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+        .lr { opacity: 0; animation: fadeUp 0.48s ease both; }
+        .lr:nth-child(1) { animation-delay: 0.18s; }
+        .lr:nth-child(2) { animation-delay: 0.30s; }
+        .lr:nth-child(3) { animation-delay: 0.42s; }
+        .lr:nth-child(4) { animation-delay: 0.54s; }
+        .lr:nth-child(5) { animation-delay: 0.64s; }
+        .lr:nth-child(6) { animation-delay: 0.72s; }
+        .syncca-field {
+          width: 100%; height: clamp(42px, 7vh, 52px);
+          background: #f0fdf4; border: 1.5px solid transparent;
+          border-radius: 9999px; padding: 0 22px;
+          font-family: 'Alef', sans-serif; font-size: 1rem;
+          color: #1a1a1a; outline: none; transition: border-color 0.18s;
+          direction: ltr; text-align: center;
+        }
+        .syncca-field:focus { border-color: #757575; }
+        .syncca-field.err   { border-color: #dc2626; }
+        .syncca-field::placeholder { color: #6b7280; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+          width: 18px; height: 18px;
+          border: 2px solid rgba(255,255,255,0.35);
+          border-top-color: #fff; border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+      `}</style>
+
+      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+
+      <div style={{
+        minHeight: "100dvh", height: "100dvh", background: COLORS.frame,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "10px", fontFamily: "'Alef', sans-serif",
+      }}>
+        <div className="login-slab" style={{
+          background: COLORS.stone, borderRadius: "32px", boxShadow: STONE_SHADOW,
+          width: "100%", maxWidth: "400px",
+          height: "calc(100dvh - 20px)", maxHeight: "880px",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "space-between",
+          padding: "clamp(28px,7vh,72px) clamp(28px,7vw,44px) clamp(36px,7vh,56px)",
+          overflow: "hidden",
+        }}>
+
+          {/* TOP: Logo + Syncca + heading */}
+          <div className="lr" style={{
+            display: "flex", flexDirection: "column",
+            alignItems: "center", gap: "10px",
+          }}>
+            <LogoSymbol size={62} />
+            <div style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(2.8rem,9vw,3.4rem)", fontWeight: 700,
+              color: COLORS.primary, letterSpacing: "-0.01em", lineHeight: 1,
+            }}>Syncca</div>
+            <div style={{
+              fontFamily: "'Alef', sans-serif",
+              fontSize: "clamp(1.25rem,4.2vw,1.5rem)",
+              fontWeight: 700, color: COLORS.secondary,
+              direction: "ltr", textAlign: "center", lineHeight: 1.3,
+              marginTop: "2px",
+            }}>Welcome!</div>
+          </div>
+
+          {/* MIDDLE+BOTTOM */}
+          <div style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: "12px", width: "100%",
+          }}>
+            <div className="lr" style={{ width: "100%" }}>
+              <div style={{
+                fontFamily: "'Alef', sans-serif", fontSize: "0.82rem",
+                color: COLORS.secondary,
+                textAlign: "center", direction: "ltr", marginBottom: "10px",
+                lineHeight: 1.6,
+              }}>
+                {step === "email"
+                  ? <>To save your conversation history and insights,<br/>please sign in below.</>
+                  : <>We sent a 4-digit verification code to<br/><strong>{email}</strong></>
+                }
+              </div>
+              {step === "email" ? (
+                <input
+                  className={`syncca-field${error ? " err" : ""}`}
+                  type="email" placeholder="your@email.com" value={email}
+                  onChange={e => { setEmail(e.target.value); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleSendCode()}
+                  autoComplete="email" inputMode="email"
+                />
+              ) : (
+                <input
+                  className={`syncca-field${error ? " err" : ""}`}
+                  type="text" placeholder="_ _ _ _" value={code}
+                  onChange={e => { setCode(e.target.value.replace(/\D/g,"")); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleVerifyCode()}
+                  maxLength={4} inputMode="numeric"
+                  ref={codeRef}
+                  style={{ textAlign: "center", letterSpacing: "0.5em", fontSize: "1.8rem", fontFamily: "'Courier New', monospace", fontWeight: 700 }}
+                />
+              )}
+              {error && (
+                <div style={{
+                  color: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "#1565C0" : "#dc2626",
+                  border: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "1.5px solid #BBDEFB" : "none",
+                  background: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "#E3F2FD" : "transparent",
+                  borderRadius: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "12px" : "0",
+                  padding: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "10px 14px" : "0 8px",
+                  fontSize: "0.82rem", textAlign: "center",
+                  direction: "ltr", marginTop: "10px",
+                  fontFamily: "'Alef', sans-serif",
+                  lineHeight: 1.6,
+                }}>{error}</div>
+              )}
+            </div>
+
+            {/* Button */}
+            <div className="lr" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+              <button onClick={step === "email" ? handleSendCode : handleVerifyCode} disabled={loading}
+                onMouseEnter={() => setBtnHover(true)} onMouseLeave={() => setBtnHover(false)}
+                style={{
+                  background: loading ? COLORS.primaryHover : (btnHover ? COLORS.primaryHover : COLORS.primary),
+                  color: "#fff", border: "none", borderRadius: "9999px",
+                  fontFamily: "'Alef', sans-serif", fontSize: "1rem", fontWeight: 700,
+                  height: "36px", width: "75%", cursor: loading ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+                  boxShadow: btnHover && !loading ? "0 8px 28px rgba(198,40,40,0.35)" : "0 4px 18px rgba(198,40,40,0.25)",
+                  transform: btnHover && !loading ? "translateY(-2px)" : "translateY(0)",
+                  transition: "all 0.18s ease",
+                }}>
+                {loading
+                    ? <div className="spinner" />
+                    : step === "email"
+                      ? <><span>✦</span><span>Send me a code</span></>
+                      : <><span>✦</span><span>Enter Syncca</span></>
+                  }
+              </button>
+            </div>
+
+            <div style={{ flex: 1 }} />
+
+            {/* Disclaimer + checkbox */}
+            <div className={`lr${termsShake ? " terms-shake" : ""}`} style={{
+              fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
+              textAlign: "left", direction: "ltr", lineHeight: 1.7, maxWidth: "280px",
+              border: `2px solid ${termsShake ? "#C62828" : termsAccepted ? "rgba(46,125,50,0.4)" : "rgba(198,40,40,0.3
