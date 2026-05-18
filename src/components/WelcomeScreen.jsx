@@ -84,7 +84,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               fontWeight: 700, color: COLORS.secondary,
               textAlign: "center", direction: "rtl", lineHeight: 1.3,
               marginTop: "2px",
-            }}>עזרה ראשונה ברגעי קושי ומשבר ביחסים</div>
+            }}>Your Compass for Human Connection</div>
           </div>
 
           {/* MIDDLE: Body text — centered, no constraints */}
@@ -101,7 +101,7 @@ export default function WelcomeScreen({ userEmail = "", onEnter, onLogout }) {
               color: COLORS.text, lineHeight: 1.9, opacity: 0.8,
               maxWidth: "320px",
             }}>
-              בינה מלאכותית שעוזרת לך לעצור את הסערה בזמן אמת, להבין מה באמת קורה, ולפעול בבהירות במקום להגיב מהבטן.
+              For the moments when something feels off — and for the ones when you simply want to understand more
             </div>
           </div>
 
