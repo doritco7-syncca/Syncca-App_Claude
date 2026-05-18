@@ -170,7 +170,7 @@ function BetaModal({ onClose }) {
     "Syncca היא המקום שלך כשעולה רצון להבין קצת יותר, ללמוד או ליצור שינוי בתקשורת הבין אישית. היא מבוססת על ידע וניסיון של שנים בליווי זוגות ומשפחות, ונועדה לעזור בזיהוי והבנה של דפוסי תקשורת מזיקים ורעילים ואיך משתחררים מהם.",
     "במהלך השיחה, יתכן שSyncca תציע מושגים רלבנטיים. הם מיועדים לתת מילים למה שקורה לנו בפנים. ניתן להרחיב אותם (בלחיצה), ואף לשמור אותם בכרטיס האישי (שנמצא בראש הצ'אט).",
     "כל שיחה מוגבלת ל-45 דקות כדי לאפשר זמן ממוקד לעיבוד והתבוננות.",
-    "בסוף השיחה, נשמח לקבל פידבק — זה עוזר לנו להשתפר.",
+    "At the end of the conversation, we’d love to get your feedback — it helps us improve.",
   ];
   return (
     <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(117,117,117,0.18)",
@@ -178,7 +178,7 @@ function BetaModal({ onClose }) {
       <div style={{ background:"#f0fdf4", borderRadius:"24px", padding:"28px 24px",
                     maxWidth:"390px", width:"100%", direction:"rtl", boxShadow:"0 8px 40px rgba(0,0,0,0.15)" }}>
         <div style={{ fontFamily:"'Alef',sans-serif", fontSize:"1.27rem", fontWeight:700,
-                      color:"#757575", marginBottom:"16px", textAlign:"center" }}>טוב שהגעת לSyncca 👋</div>
+                      color:"#757575", marginBottom:"16px", textAlign:"center" }}>Wellcome to Syncca 👋</div>
         <ol style={{ paddingRight:"18px" }}>
           {items.map((item, i) => (
             <li key={i} style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.79rem",
@@ -377,7 +377,7 @@ useEffect(() => {
             }));
           const resumeNote = {
             role: "syncca", concepts: [], timestamp: new Date().toISOString(),
-            text: "ברוכה השבה 🙏 ממשיכים מאיפה שהפסקנו.",
+            text: "Wellcome back!🙏Picking up where we left off.",
           };
           setMessages(resumeMessages.length > 0
             ? [...resumeMessages, resumeNote]
@@ -482,7 +482,7 @@ useEffect(() => {
         }));
       const resumeNote = {
         role: "syncca", concepts: [], timestamp: new Date().toISOString(),
-        text: "ברוכה השבה 🙏 ממשיכים מאיפה שהפסקנו.",
+        text: "Wellcome back!🙏Picking up where we left off.",
       };
       setMessages(resumeMessages.length > 0
         ? [...resumeMessages, resumeNote]
@@ -585,7 +585,7 @@ useEffect(() => {
           .catch(e => console.error("[handleSend] emergency sync failed:", e));
       }
       setMessages(prev => [...prev, {
-        role: "syncca", text: "מצטערת, הייתה תקלה טכנית. נסי שוב.",
+        role: "syncca", text: "Sorry, a technical error, Please try again.",
         concepts: [], timestamp: new Date().toISOString(),
       }]);
     } finally {
