@@ -523,11 +523,10 @@ useEffect(() => {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
 
-    if (messages.filter(m => m.role === "user").length === 0) {
-      const isHebrew = /[\u05D0-\u05EA]/.test(text);
-      const isGerman = !isHebrew && /[äöüÄÖÜß]|(\b(ich|du|ist|das|die|der|und|nicht|mit|wie)\b)/i.test(text);
-      setChatLang(isHebrew ? "he" : isGerman ? "de" : "en");
-    }
+const isHebrew = /[\u05D0-\u05EA]/.test(text);
+const isGerman = !isHebrew && /[äöüÄÖÜß]|(\b(ich|du|ist|das|die|der|und|nicht|mit|wie)\b)/i.test(text);
+const detectedLang = isHebrew ? "he" : isGerman ? "de" : "en";
+setChatLang(detectedLang);
 
     setIsLoading(true);
 
