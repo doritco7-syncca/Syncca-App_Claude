@@ -134,6 +134,12 @@ export default function LoginScreen({ onLogin, onBack }) {
     } finally { setLoading(false); }
   }
 
+  // פונקציית עזר לבדיקה אם מדובר בשגיאת הגבלת קצב - מונע תקלות קומפילציה
+  const checkIsRateLimit = () => {
+    if (!error) return false;
+    return error.includes("Glad to have you back") || error.includes("שמחה שחזרת");
+  };
+
   return (
     <>
       <style>{`
@@ -262,11 +268,11 @@ export default function LoginScreen({ onLogin, onBack }) {
               )}
               {error && (
                 <div style={{
-                  color: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "#1565C0" : "#dc2626",
-                  border: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "1.5px solid #BBDEFB" : "none",
-                  background: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "#E3F2FD" : "transparent",
-                  borderRadius: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "12px" : "0",
-                  padding: (error.includes("Glad to have you back") || error.includes("שמחה שחזרת")) ? "10px 14px" : "0 8px",
+                  color: checkIsRateLimit() ? "#1565C0" : "#dc2626",
+                  border: checkIsRateLimit() ? "1.5px solid #BBDEFB" : "none",
+                  background: checkIsRateLimit() ? "#E3F2FD" : "transparent",
+                  borderRadius: checkIsRateLimit() ? "12px" : "0",
+                  padding: checkIsRateLimit() ? "10px 14px" : "0 8px",
                   fontSize: "0.82rem", textAlign: "center",
                   direction: "ltr", marginTop: "10px",
                   fontFamily: "'Alef', sans-serif",
@@ -304,4 +310,58 @@ export default function LoginScreen({ onLogin, onBack }) {
             <div className={`lr${termsShake ? " terms-shake" : ""}`} style={{
               fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", color: COLORS.muted,
               textAlign: "left", direction: "ltr", lineHeight: 1.7, maxWidth: "280px",
-              border: `2px solid ${termsShake ? "#C62828" : termsAccepted ? "rgba(46,125,50,0.4)" : "rgba(198,40,40,0.3
+              border: `2px solid ${termsShake ? "#C62828" : termsAccepted ? "rgba(46,125,50,0.4)" : "rgba(198,40,40,0.3)"}`,
+              borderRadius: "10px", padding: "10px 14px", marginTop: "8px",
+              transition: "border-color 0.2s",
+            }}>
+              <div style={{ marginBottom: "8px" }}>
+                Intended for ages 18+. Syncca is designed for personal learning and development and is not a substitute for professional clinical counseling or medical advice.
+              </div>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", direction: "ltr" }}>
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={e => { setTermsAccepted(e.target.checked); if (e.target.checked) localStorage.setItem("syncca_terms_accepted", "true"); setError(""); }}
+                  style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: COLORS.primary }}
+                />
+                <span>
+                  I agree to the 
+                  <button onClick={() => setShowTerms(true)} style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: COLORS.primary, fontFamily: "'Alef', sans-serif",
+                    fontSize: "0.79rem", fontWeight: 700, textDecoration: "underline", padding: "0 4px",
+                  }}>Terms of Use</button>
+                </span>
+              </label>
+            </div>
+
+            <div className="lr" style={{
+              fontFamily: "'Alef', sans-serif", fontSize: "0.6rem", fontWeight: 700,
+              letterSpacing: "0.13em", textTransform: "uppercase",
+              color: COLORS.primary, textAlign: "center",
+            }}> SECURE &amp; PRIVATE CONNECTION </div>
+            {step === "verify" && (
+              <button onClick={() => { setStep("email"); setCode(""); setError(""); }}
+                style={{ background:"none", border:"none", cursor:"pointer",
+                  fontFamily:"'Alef', sans-serif", fontSize:"0.78rem",
+                  color: COLORS.muted, direction:"ltr" }}>
+                → Change email address
+              </button>
+            )}
+
+            {onBack && (
+              <div className="lr">
+                <button onClick={onBack} style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: COLORS.muted, fontSize: "0.82rem", fontFamily: "'Alef', sans-serif",
+                  textDecoration: "underline", textDecorationColor: "#d1d5db",
+                }}>Back to home</button>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
+}
