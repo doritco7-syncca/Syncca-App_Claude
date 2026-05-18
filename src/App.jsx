@@ -551,7 +551,7 @@ setChatLang(detectedLang);
       const { visibleText, securityAlert } = parseResponse(rawResponse);
       if (securityAlert) securityAlertRef.current = true;
 
-      const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon, chatLang);
+      const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon, detectedLang);
       if (concepts.length > 0) {
         const newWords = concepts
           .map(c => c.word || c.englishTerm)
