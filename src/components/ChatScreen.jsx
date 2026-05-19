@@ -575,7 +575,7 @@ export default function ChatScreen({
                 fontFamily: "'Alef', sans-serif", fontSize: "0.79rem", fontWeight: 600,
                 color: isLow ? COLORS.teal : COLORS.muted,
                 letterSpacing: "0.03em", transition: "color 0.4s",
-              }}>⏱ {mins}:{secs}</span><span style={{fontSize:"0.6rem", color:"red"}}>{chatLang}</span>
+              }}>⏱ {mins}:{secs}</span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", flex: 1 }}>
