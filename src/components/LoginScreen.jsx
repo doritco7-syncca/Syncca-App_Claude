@@ -296,11 +296,13 @@ export default function LoginScreen({ onLogin, onBack }) {
                   transition: "all 0.18s ease",
                 }}>
                 {loading
-                    ? <div className="spinner" />
-                    : step === "email"
-                      ? <><span>✦</span><span>Send me a code</span></>
-                      : <><span>✦</span><span>Enter Syncca</span></>
-                  }
+                  ? <div className="spinner" />
+    : step === "email"
+      ? process.env.REACT_APP_DEMO_MODE === "true"
+        ? <><span>✦</span><span>Enter Syncca →</span></>
+        : <><span>✦</span><span>Send me a code</span></>
+      : <><span>✦</span><span>Enter Syncca</span></>
+  }
               </button>
             </div>
 
