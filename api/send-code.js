@@ -12,6 +12,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing to or code" });
   }
 
+  // ─── DEMO MODE: bypass email verification ───────────────────────
+if (process.env.DEMO_MODE === "true") {
+  console.log(`[send-code] DEMO_MODE active — skipping Resend for: ${to}`);
+  return res.status(200).json({ success: true, demo: true });
+}
+// ────────────────────────────────────────────────────────────────
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) {
     console.error("[send-code] RESEND_API_KEY not set");
