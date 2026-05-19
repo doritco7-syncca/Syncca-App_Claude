@@ -220,7 +220,7 @@ export default function App() {
   const [recordId,  setRecordId]  = useState(() => localStorage.getItem("syncca_record_id") || "");
 
   const [messages,         setMessages]         = useState([]);
-  const [chatLang,         setChatLang]         = useState("he");
+  const [chatLang,         setChatLang]         = useState("en");
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [savedConcepts,    setSavedConcepts]    = useState([]);
   const [isLoading,        setIsLoading]        = useState(false);
