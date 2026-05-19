@@ -103,11 +103,13 @@ export default function LoginScreen({ onLogin, onBack }) {
       const newCode = generateCode();
       await saveVerificationCode(email.trim(), newCode);
       const result = await sendVerificationCode(email.trim(), newCode);
-      if (!result.success) {
-        setError("Error sending code, please try again");
-      } else {
-        setStep("verify");
-      }
+    if (!result.success) {
+  setError("Error sending code, please try again");
+} else if (result.demo) {
+  await onLogin?.(email.trim());
+} else {
+  setStep("verify");
+}
     } catch (e) {
       console.error("[handleSendCode]", e);
       setError("An error occurred, please try again");
