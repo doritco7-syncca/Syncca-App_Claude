@@ -16,7 +16,7 @@ export async function sendVerificationCode(toEmail, code) {
       console.error("[emailService] error:", data);
       return { success: false, reason: "send_failed", error: data };
     }
-    return { success: true };
+     return { success: true, demo: data.demo || false };
   } catch (e) {
     console.error("[emailService] network error:", e.message);
     return { success: false, reason: "network_error" };
