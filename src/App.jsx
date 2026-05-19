@@ -27,11 +27,11 @@ function shouldShowBetaModal(email) {
 }
 
 function getOpeningMessage(syncCount, firstName, gender) {
-  if (!syncCount || syncCount <= 1) return SYNCCA_OPENING_MESSAGE["he"];
+  if (!syncCount || syncCount <= 1) return SYNCCA_OPENING_MESSAGE["en"];
   const name   = firstName ? ` ${firstName}` : "";
   const isFem  = gender === "Female" || gender === "אישה";
   const action = isFem ? "תרצי" : "תרצה";
-  return `היי${name}, טוב לראות אותך שוב 🙏\nעל מה ${action} לעבוד היום?`;
+return `Hi${name} 🙏 Good to see you again. What would you like to work on today?`;
 }
 
 function countUserMessages(transcript) {
