@@ -5,6 +5,30 @@ import { useState, useEffect } from "react";
 import { fetchFullHistory } from "../AirtableService";
 import { getConceptColors } from "../conceptColors";
 
+// ── i18n helpers ────────────────────────────────────────────
+function uiStr(chatLang, he, en, de) {
+  if (chatLang === "en") return en;
+  if (chatLang === "de") return de !== undefined ? de : en;
+  return he;
+}
+function uiDir(chatLang)   { return chatLang === "he" ? "rtl" : "ltr"; }
+function uiAlign(chatLang) { return chatLang === "he" ? "right" : "left"; }
+
+function formatDate(iso, chatLang) {
+  if (!iso) return "";
+  const locale = chatLang === "he" ? "he-IL" : chatLang === "de" ? "de-DE" : "en-US";
+  const d = new Date(iso);
+  return d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+}
+
+function formatTime(iso, chatLang) {
+  if (!iso) return "";
+  const locale = chatLang === "he" ? "he-IL" : chatLang === "de" ? "de-DE" : "en-US";
+  const d = new Date(iso);
+  return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+}
+// ────────────────────────────────────────────────────────────
+
 const COLORS = {
   stone:     "#F9F6EE",
   frame:     "#E8E0F0",
@@ -31,25 +55,17 @@ function LogoSymbol({ size = 20 }) {
   );
 }
 
-function formatDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return d.toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" });
-}
-
-function formatTime(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
-}
-
-export default function HistoryScreen({ username, firstName, onClose, conceptLexicon = [], savedConcepts = [], onSaveConcept }) {
-  const [sessions, setSessions] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-  const [expanded, setExpanded]             = useState(null);
-  const [transcriptOpen, setTranscriptOpen] = useState(null);
-  const [activeConcept, setActiveConcept]   = useState(null); // { word, explanation, sessionIdx }
+export default function HistoryScreen({
+  username, firstName, onClose,
+  conceptLexicon = [], savedConcepts = [], onSaveConcept,
+  chatLang = "en",   // ← defaults to English
+}) {
+  const [sessions,        setSessions]        = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [error,           setError]           = useState("");
+  const [expanded,        setExpanded]        = useState(null);
+  const [transcriptOpen,  setTranscriptOpen]  = useState(null);
+  const [activeConcept,   setActiveConcept]   = useState(null);
 
   function findConceptEntry(word) {
     if (!word) return null;
@@ -58,15 +74,13 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
       e.word?.toLowerCase() === w ||
       e.englishTerm?.toLowerCase() === w ||
       e.aliases?.some(a => a.toLowerCase().trim() === w) ||
-      // partial match: stored word is substring of lexicon entry (e.g. "לימבית" → "מערכת לימבית")
       (w.length >= 3 && e.word?.toLowerCase().includes(w)) ||
-      // partial match: lexicon entry is substring of stored word
       (e.word?.length >= 3 && w.includes(e.word?.toLowerCase()))
     );
   }
+
   const storageKey = username ? `syncca_hidden_sessions_${username}` : null;
 
-  // Load previously deleted session IDs from localStorage
   const deletedIds = (() => {
     try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); }
     catch { return []; }
@@ -75,9 +89,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
   function deleteSession(id, e) {
     e.stopPropagation();
     e.preventDefault();
-    // Remove from UI immediately
     setSessions(prev => prev.filter(s => s.id !== id));
-    // Persist deletion in localStorage
     if (storageKey) {
       const updated = [...deletedIds, id];
       localStorage.setItem(storageKey, JSON.stringify(updated));
@@ -85,25 +97,36 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
   }
 
   useEffect(() => {
-    if (!username) { setLoading(false); setError("לא נמצא מזהה משתמש."); return; }
+    if (!username) {
+      setLoading(false);
+      setError(uiStr(chatLang,
+        "לא נמצא מזהה משתמש.",
+        "No user ID found.",
+        "Keine Benutzer-ID gefunden."
+      ));
+      return;
+    }
     fetchFullHistory(username, 30)
       .then(data => {
         const withContent = data.filter(s =>
           s.transcript?.trim() || s.insight?.trim() || s.concepts?.length > 0 || s.feedback?.trim()
         );
-        // FIX: Sort newest-first client-side as a safety net.
-        // The Airtable sort query can silently break when passed through the /api/airtable proxy
-        // because the proxy URL-encodes the full path — causing sort params to be misinterpreted.
-        // Client-side sort guarantees correct order regardless of proxy behavior.
         const sorted = [...withContent].sort(
           (a, b) => new Date(b.date) - new Date(a.date)
         );
         setSessions(sorted.filter(s => !deletedIds.includes(s.id)));
         setLoading(false);
       })
-      .catch(e => { console.error("[HistoryScreen]", e); setError(e?.message || "שגיאה בטעינת השיחות."); setLoading(false); });
+      .catch(e => {
+        console.error("[HistoryScreen]", e);
+        setError(e?.message || uiStr(chatLang,
+          "שגיאה בטעינת השיחות.",
+          "Error loading conversations.",
+          "Fehler beim Laden der Gespräche."
+        ));
+        setLoading(false);
+      });
   }, [username]);
-
 
   const name = firstName ? `, ${firstName}` : "";
 
@@ -123,7 +146,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
         boxShadow: CARD_SHADOW,
         display: "flex", flexDirection: "column",
         overflow: "hidden",
-        direction: "rtl",
+        direction: uiDir(chatLang),
       }}>
 
         {/* ── HEADER ─────────────────────────────────────────── */}
@@ -146,7 +169,13 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                   fontFamily: "'Alef', sans-serif",
                   fontSize: "0.95rem", fontWeight: 700,
                   color: COLORS.secondary, letterSpacing: "0.01em",
-                }}>היסטוריית השיחות שלי</span>
+                }}>
+                  {uiStr(chatLang,
+                    "היסטוריית השיחות שלי",
+                    "My Conversation History",
+                    "Mein Gesprächsverlauf"
+                  )}
+                </span>
               </div>
               {firstName && (
                 <div style={{
@@ -156,7 +185,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                 }}>{firstName}</div>
               )}
             </div>
-            <div style={{ width: 28 }} /> {/* spacer to balance the ✕ */}
+            <div style={{ width: 28 }} />
           </div>
         </div>
 
@@ -168,7 +197,9 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Alef', sans-serif",
               fontSize: "1rem", color: COLORS.muted,
-            }}>טוענת שיחות...</div>
+            }}>
+              {uiStr(chatLang, "טוענת שיחות...", "Loading conversations...", "Gespräche werden geladen...")}
+            </div>
           )}
 
           {!loading && error && (
@@ -184,14 +215,19 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
               textAlign: "center", marginTop: "60px",
               fontFamily: "'Alef', sans-serif",
               fontSize: "1rem", color: COLORS.muted,
-            }}>עדיין אין שיחות שמורות{name}.</div>
+            }}>
+              {uiStr(chatLang,
+                `עדיין אין שיחות שמורות${name}.`,
+                `No saved conversations yet${name}.`,
+                `Noch keine gespeicherten Gespräche${name}.`
+              )}
+            </div>
           )}
 
           {!loading && !error && sessions.map((s, i) => {
-            const isOpen = expanded === i;
-            const hasConcepts  = s.concepts?.length > 0;
-            const hasInsight   = !!s.insight;
-            const hasFeedback  = !!s.feedback;
+            const isOpen        = expanded === i;
+            const hasConcepts   = s.concepts?.length > 0;
+            const hasFeedback   = !!s.feedback;
             const hasTranscript = !!s.transcript;
 
             return (
@@ -205,19 +241,21 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                 boxShadow: "0 2px 8px rgba(117,117,117,0.05)",
                 position: "relative",
               }}>
-                {/* Delete button — outside clickable area */}
+
+                {/* Delete button */}
                 <button
                   onClick={e => deleteSession(s.id, e)}
-                  title="מחק שיחה"
+                  title={uiStr(chatLang, "מחק שיחה", "Delete session", "Gespräch löschen")}
                   style={{
-                    position: "absolute", top: 10, left: 10,
+                    position: "absolute", top: 10,
+                    [chatLang === "he" ? "left" : "right"]: 10,
                     background: "none", border: "none", cursor: "pointer",
                     color: COLORS.muted, fontSize: "0.9rem",
                     padding: "4px 6px", borderRadius: 8,
                     lineHeight: 1, zIndex: 10,
                   }}>🗑</button>
 
-                {/* Card header — always visible */}
+                {/* Card header */}
                 <div
                   onClick={() => setExpanded(isOpen ? null : i)}
                   style={{
@@ -225,9 +263,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     cursor: "pointer",
                   }}>
 
-                  {/* Top row: number + date + delete + chevron */}
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    {/* Session circle — newest session gets highest number and red highlight */}
                     <div style={{
                       width: 34, height: 34, borderRadius: "50%",
                       background: i === 0 ? COLORS.primary : COLORS.frame,
@@ -237,24 +273,24 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                       fontSize: "1rem", fontWeight: 400, flexShrink: 0,
                     }}>{sessions.length - i}</div>
 
-                    {/* Date + time */}
                     <div style={{ flex: 1 }}>
                       <div style={{
                         fontFamily: "'Alef', sans-serif",
                         fontSize: "0.95rem", fontWeight: 400,
                         color: COLORS.secondary,
-                      }}>{formatDate(s.date)}</div>
+                      }}>{formatDate(s.date, chatLang)}</div>
                       <div style={{
                         fontFamily: "'Alef', sans-serif",
                         fontSize: "0.76rem", color: COLORS.muted,
                         marginTop: "1px",
                       }}>
-                        {formatTime(s.date)}
-                        {s.duration ? ` · ${s.duration} דקות` : ""}
+                        {formatTime(s.date, chatLang)}
+                        {s.duration
+                          ? ` · ${s.duration} ${uiStr(chatLang, "דקות", "min", "Min.")}`
+                          : ""}
                       </div>
                     </div>
 
-                    {/* Chevron */}
                     <span style={{
                       color: COLORS.muted, fontSize: "0.75rem",
                       transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
@@ -262,18 +298,16 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     }}>▼</span>
                   </div>
 
-                {/* Title — visible in collapsed state */}
                   {s.title && (
                     <div style={{
                       marginTop: "6px",
                       fontFamily: "'Alef', sans-serif",
                       fontSize: "1rem", fontWeight: 700,
                       color: COLORS.success,
-                      direction: "rtl",
+                      direction: uiDir(chatLang),
                     }}>{s.title}</div>
                   )}
 
-                  {/* Preview row: concept count only */}
                   {hasConcepts && (
                     <div style={{ marginTop: "8px" }}>
                       <div style={{
@@ -284,7 +318,13 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                         fontFamily: "'Alef', sans-serif",
                         fontSize: "0.74rem", fontWeight: 400,
                         display: "inline-block",
-                      }}>{s.concepts.length} מושגים שהוזכרו בשיחה</div>
+                      }}>
+                        {s.concepts.length} {uiStr(chatLang,
+                          "מושגים שהוזכרו בשיחה",
+                          "concepts mentioned in this session",
+                          "Konzepte in diesem Gespräch"
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -296,7 +336,8 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                     padding: "clamp(8px,2vh,14px) 16px clamp(8px,2vh,16px)",
                     display: "flex", flexDirection: "column", gap: "12px",
                   }}>
-                     {/* Concepts */}
+
+                    {/* Concepts */}
                     {hasConcepts && (
                       <div>
                         <div style={{
@@ -304,7 +345,13 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           fontSize: "0.66rem", fontWeight: 700,
                           color: COLORS.secondary, marginBottom: "6px",
                           textTransform: "uppercase", letterSpacing: "0.04em",
-                        }}>מושגים שהוזכרו בשיחה – לחיצה עליהם לפירוט ושמירה</div>
+                        }}>
+                          {uiStr(chatLang,
+                            "מושגים שהוזכרו בשיחה – לחיצה עליהם לפירוט ושמירה",
+                            "Concepts mentioned – tap to view details and save",
+                            "Konzepte – tippen zum Anzeigen und Speichern"
+                          )}
+                        </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                           {s.concepts.map((c, ci) => {
                             const entry = findConceptEntry(c);
@@ -328,7 +375,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                                 {onSaveConcept && entry && !alreadySaved && (
                                   <button
                                     onClick={() => onSaveConcept({ word: displayWord, explanation: entry.explanation, category: entry.category })}
-                                    title="שמור מושג זה"
+                                    title={uiStr(chatLang, "שמור מושג זה", "Save this concept", "Konzept speichern")}
                                     style={{
                                       background: "none", border: "none", cursor: "pointer",
                                       color: getConceptColors(entry).text,
@@ -343,58 +390,74 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           })}
                         </div>
 
-                        {/* Concept explanation */}
-                        {activeConcept?.sessionIdx === i && (() => { const ae = findConceptEntry(activeConcept.word); return ae && (
-                          <div style={{
-                            marginTop: "8px",
-                            background: getConceptColors(ae).headerBg,
-                            border: `1.5px solid ${getConceptColors(ae).border}`,
-                            borderRadius: 12, padding: "10px 14px",
-                            direction: "rtl", position: "relative",
-                          }}>
+                        {/* Concept explanation panel */}
+                        {activeConcept?.sessionIdx === i && (() => {
+                          const ae = findConceptEntry(activeConcept.word);
+                          return ae && (
                             <div style={{
-                              fontFamily: "'Alef', sans-serif",
-                              fontSize: "0.88rem", fontWeight: 700,
-                              color: COLORS.secondary, marginBottom: "4px",
-                            }}>{ae.word}</div>
-                            <div style={{
-                              fontFamily: "'Alef', sans-serif",
-                              fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.65,
-                            }}>{ae.explanation}</div>
-                            <button onClick={() => setActiveConcept(null)} style={{
-                              position: "absolute", top: 8, left: 10,
-                              background: "none", border: "none", cursor: "pointer",
-                              color: COLORS.muted, fontSize: "0.75rem",
-                            }}>✕</button>
-                            {(() => {
-                              const alreadySaved = savedConcepts.some(sc => sc.word === ae.word);
-                              return !alreadySaved ? (
-                                <button
-                                  onClick={() => onSaveConcept?.({
-                                    word: ae.word,
-                                    explanation: ae.explanation,
-                                    category: ae.category,
-                                  })}
-                                  style={{
-                                    marginTop: "10px", width: "100%",
-                                    padding: "6px", borderRadius: 9999,
-                                    background: getConceptColors(ae).bg,
-                                    border: `1.5px solid ${getConceptColors(ae).border}`,
-                                    color: getConceptColors(ae).text,
+                              marginTop: "8px",
+                              background: getConceptColors(ae).headerBg,
+                              border: `1.5px solid ${getConceptColors(ae).border}`,
+                              borderRadius: 12, padding: "10px 14px",
+                              direction: uiDir(chatLang), position: "relative",
+                            }}>
+                              <div style={{
+                                fontFamily: "'Alef', sans-serif",
+                                fontSize: "0.88rem", fontWeight: 700,
+                                color: COLORS.secondary, marginBottom: "4px",
+                              }}>{ae.word}</div>
+                              <div style={{
+                                fontFamily: "'Alef', sans-serif",
+                                fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.65,
+                              }}>{ae.explanation}</div>
+                              <button onClick={() => setActiveConcept(null)} style={{
+                                position: "absolute", top: 8,
+                                [chatLang === "he" ? "left" : "right"]: 10,
+                                background: "none", border: "none", cursor: "pointer",
+                                color: COLORS.muted, fontSize: "0.75rem",
+                              }}>✕</button>
+                              {(() => {
+                                const alreadySaved = savedConcepts.some(sc => sc.word === ae.word);
+                                return !alreadySaved ? (
+                                  <button
+                                    onClick={() => onSaveConcept?.({
+                                      word: ae.word,
+                                      explanation: ae.explanation,
+                                      category: ae.category,
+                                    })}
+                                    style={{
+                                      marginTop: "10px", width: "100%",
+                                      padding: "6px", borderRadius: 9999,
+                                      background: getConceptColors(ae).bg,
+                                      border: `1.5px solid ${getConceptColors(ae).border}`,
+                                      color: getConceptColors(ae).text,
+                                      fontFamily: "'Alef', sans-serif",
+                                      fontSize: "0.78rem", fontWeight: 700,
+                                      cursor: "pointer",
+                                    }}>
+                                    {uiStr(chatLang,
+                                      "✦ שמור מושג זה בכרטיס האישי",
+                                      "✦ Save this concept to my profile",
+                                      "✦ Konzept im Profil speichern"
+                                    )}
+                                  </button>
+                                ) : (
+                                  <div style={{
+                                    marginTop: "8px", textAlign: "center",
+                                    color: "#16a34a", fontSize: "0.78rem",
                                     fontFamily: "'Alef', sans-serif",
-                                    fontSize: "0.78rem", fontWeight: 700,
-                                    cursor: "pointer",
-                                  }}>✦ שמור מושג זה בכרטיס האישי</button>
-                              ) : (
-                                <div style={{
-                                  marginTop: "8px", textAlign: "center",
-                                  color: "#16a34a", fontSize: "0.78rem",
-                                  fontFamily: "'Alef', sans-serif",
-                                }}>✓ נשמר בכרטיס האישי</div>
-                              );
-                            })()}
-                          </div>
-                        ); })()} 
+                                  }}>
+                                    {uiStr(chatLang,
+                                      "✓ נשמר בכרטיס האישי",
+                                      "✓ Saved to your profile",
+                                      "✓ Im Profil gespeichert"
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
 
@@ -406,7 +469,9 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                           fontSize: "0.85rem", fontWeight: 400,
                           color: COLORS.secondary, marginBottom: "6px",
                           letterSpacing: "0.02em",
-                        }}>✦ פידבק</div>
+                        }}>
+                          {uiStr(chatLang, "✦ פידבק", "✦ Feedback", "✦ Feedback")}
+                        </div>
                         <div style={{
                           fontFamily: "'Alef', sans-serif",
                           fontSize: "0.72rem",
@@ -434,7 +499,7 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                             transform: transcriptOpen === i ? "rotate(180deg)" : "rotate(0deg)",
                             transition: "transform 0.2s", display: "inline-block", fontSize: "0.65rem",
                           }}>▼</span>
-                          ✦ השיחה המלאה
+                          {uiStr(chatLang, "✦ השיחה המלאה", "✦ Full Conversation", "✦ Vollständiges Gespräch")}
                         </button>
                         {transcriptOpen === i && (
                           <div style={{
@@ -443,12 +508,11 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                             padding: "12px 14px",
                             maxHeight: "300px",
                             overflowY: "auto",
-                            direction: "rtl",
+                            direction: uiDir(chatLang),
                           }}>
                             {s.transcript.split("\n").filter(Boolean).map((line, li) => {
-                              const isUser    = line.startsWith("[User]:");
-                              const isSyncca  = line.startsWith("[Syncca]:");
-                              const text      = line.replace(/^\[(User|Syncca)\]:\s*/, "");
+                              const isUser = line.startsWith("[User]:");
+                              const text   = line.replace(/^\[(User|Syncca)\]:\s*/, "");
                               return (
                                 <div key={li} style={{
                                   marginBottom: "8px",
@@ -479,7 +543,13 @@ export default function HistoryScreen({ username, firstName, onClose, conceptLex
                         fontFamily: "'Alef', sans-serif",
                         fontSize: "0.82rem", color: COLORS.muted,
                         textAlign: "center", padding: "8px 0",
-                      }}>אין פרטים נוספים לשיחה זו.</div>
+                      }}>
+                        {uiStr(chatLang,
+                          "אין פרטים נוספים לשיחה זו.",
+                          "No additional details for this session.",
+                          "Keine weiteren Details für dieses Gespräch."
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
