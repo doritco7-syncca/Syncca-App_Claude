@@ -194,7 +194,6 @@ export async function createSessionLog(userRecordId) {
     Created_At:      new Date().toISOString(),
     Full_Transcript: "",
     Feedback:        "",
-    Language_Used:   "Hebrew",
   };
   if (userRecordId) fields.User_Link = [userRecordId];
   const data = await airtableFetch("Conversation_Logs", {
