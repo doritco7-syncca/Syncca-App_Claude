@@ -762,6 +762,7 @@ setChatLang(detectedLang);
           savedConcepts={savedConcepts}
           onSaveConcept={handleSaveConcept}
           onClose={() => setScreen("chat")}
+          chatLang={chatLang}
         />
       )}
       {showBetaModal    && <BetaModal onClose={() => setShowBetaModal(false)} />}
