@@ -58,7 +58,7 @@ function LogoSymbol({ size = 20 }) {
 export default function HistoryScreen({
   username, firstName, onClose,
   conceptLexicon = [], savedConcepts = [], onSaveConcept,
-  chatLang = "en",   // ← defaults to English
+  chatLang = "en",
 }) {
   const [sessions,        setSessions]        = useState([]);
   const [loading,         setLoading]         = useState(true);
@@ -356,11 +356,6 @@ export default function HistoryScreen({
                           {s.concepts.map((c, ci) => {
                             const entry = findConceptEntry(c);
                             const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
-                             </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                          {s.concepts.map((c, ci) => {
-                            const entry = findConceptEntry(c);
-                            const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
                             const displayWord = chatLang === "en"
                               ? (entry?.englishTerm || entry?.word || c.replace(/[\[\]]/g, ""))
                               : chatLang === "de"
@@ -383,7 +378,7 @@ export default function HistoryScreen({
                                   }}>{entry ? "✦ " : ""}{displayWord}</span>
                                 {onSaveConcept && entry && !alreadySaved && (
                                   <button
-                                    onClick={() => onSaveConcept({ word: displayWord, explanation: entry.explanation, category: entry.category })}
+                                    onClick={() => onSaveConcept({ word: entry.word, explanation: entry.explanation, category: entry.category })}
                                     title={uiStr(chatLang, "שמור מושג זה", "Save this concept", "Konzept speichern")}
                                     style={{
                                       background: "none", border: "none", cursor: "pointer",
@@ -414,11 +409,23 @@ export default function HistoryScreen({
                                 fontFamily: "'Alef', sans-serif",
                                 fontSize: "0.88rem", fontWeight: 700,
                                 color: COLORS.secondary, marginBottom: "4px",
-                              }}>{ae.word}</div>
+                              }}>
+                                {chatLang === "en"
+                                  ? (ae.englishTerm || ae.word)
+                                  : chatLang === "de"
+                                    ? (ae.germanTerm || ae.englishTerm || ae.word)
+                                    : ae.word}
+                              </div>
                               <div style={{
                                 fontFamily: "'Alef', sans-serif",
                                 fontSize: "0.82rem", color: COLORS.text, lineHeight: 1.65,
-                              }}>{ae.explanation}</div>
+                              }}>
+                                {chatLang === "en"
+                                  ? (ae.explanationEN || ae.explanation)
+                                  : chatLang === "de"
+                                    ? (ae.explanationDE || ae.explanationEN || ae.explanation)
+                                    : ae.explanation}
+                              </div>
                               <button onClick={() => setActiveConcept(null)} style={{
                                 position: "absolute", top: 8,
                                 [chatLang === "he" ? "left" : "right"]: 10,
