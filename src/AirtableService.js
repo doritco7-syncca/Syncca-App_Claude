@@ -194,6 +194,8 @@ export async function createSessionLog(userRecordId) {
     Created_At:      new Date().toISOString(),
     Full_Transcript: "",
     Feedback:        "",
+    // Language_Used is intentionally omitted here —
+    // it will be set correctly at end of session via syncSession / finalizeSession
   };
   if (userRecordId) fields.User_Link = [userRecordId];
   const data = await airtableFetch("Conversation_Logs", {
@@ -258,7 +260,7 @@ export async function fetchSessionHistory(username, limit = 5) {
                            .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
         duration:        rec.fields?.Session_Duration_Minutes  || null,
         feedback:        rec.fields?.Feedback                  || "",
-        language:        rec.fields?.Language_Used             || "Hebrew",
+        language:        rec.fields?.Language_Used             || "en",
         insight:         rec.fields?.Session_Insight           || "",
         ladderStep:      rec.fields?.Ladder_Step_Reached       || null,
         emotionalArc:    rec.fields?.Emotional_Arc             || "",
@@ -341,7 +343,7 @@ export async function fetchFullHistory(username, limit = 10) {
                          .split(",").map(s => s.trim().replace(/[\[\]]/g, "")).filter(Boolean),
       duration:        rec.fields?.Session_Duration_Minutes  || null,
       feedback:        rec.fields?.Feedback                  || "",
-      language:        rec.fields?.Language_Used             || "Hebrew",
+      language:        rec.fields?.Language_Used             || "en",
       insight:         rec.fields?.Session_Insight           || "",
       transcript:      rec.fields?.Full_Transcript           || "",
       ladderStep:      rec.fields?.Ladder_Step_Reached       || null,
