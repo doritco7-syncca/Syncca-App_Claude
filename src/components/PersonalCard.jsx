@@ -315,7 +315,6 @@ export default function PersonalCard({
                direction: uiDir(chatLang),
              }}>
                {uiStr(chatLang, "הכרטיס האישי שלי", "My Personal Card", "Meine persönliche Karte")}
-               {" · "}{chatLang}
              </div>
             </div>
 
