@@ -18,15 +18,15 @@ const MIN_TRANSCRIPT = 300;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function detectLangCode(languageUsed = "") {
-  const val = languageUsed.toLowerCase().trim();
-  if (val === "hebrew" || val === "he") return "he";
-  if (val === "german"  || val === "de") return "de";
-  if (val === "french"  || val === "fr") return "fr";
-  if (val === "arabic"  || val === "ar") return "ar";
+function detectLangFromTranscript(transcript = "") {
+  const hebrewChars = (transcript.match(/[\u0590-\u05FF]/g) || []).length;
+  const latinChars  = (transcript.match(/[a-zA-Z]/g) || []).length;
+  const germanChars = (transcript.match(/[äöüÄÖÜß]/g) || []).length;
+  if (germanChars > 20)         return "de";
+  if (hebrewChars > latinChars) return "he";
+  if (latinChars > hebrewChars) return "en";
   return "en";
 }
-
 const TITLE_INSTRUCTIONS = {
   he: "כתוב כותרת קצרה בעברית (3-5 מילים)שנותנת את תמצית השיחה. רק הכותרת, ללא גרשיים.",
   en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
@@ -94,7 +94,7 @@ module.exports = async function handler(req, res) {
 
     for (const rec of batch) {
       const transcript = rec.fields.Full_Transcript;
-      const langCode   = detectLangCode(rec.fields?.Language_Used);
+      const langCode   = detectLangFromTranscript(transcript);
       try {
         const title   = await callClaude(`${TITLE_INSTRUCTIONS[langCode] || TITLE_INSTRUCTIONS.en}\n\nתמליל:\n${transcript.slice(-2000)}`, 30);
         const insight = await callClaude(`You are analyzing a therapy-style conversation between Syncca and a user.\nWrite 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, what emerged, and where they ended up emotionally.\nReturn only the Hebrew summary, no quotes, no titles.\n\nTranscript:\n${transcript.slice(-3000)}`, 300);
