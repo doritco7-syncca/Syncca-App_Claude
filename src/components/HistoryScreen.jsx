@@ -356,8 +356,17 @@ export default function HistoryScreen({
                           {s.concepts.map((c, ci) => {
                             const entry = findConceptEntry(c);
                             const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
-                            const displayWord = entry?.word || c.replace(/[\[\]]/g, "");
-                            const alreadySaved = savedConcepts.some(sc => sc.word === displayWord);
+                             </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          {s.concepts.map((c, ci) => {
+                            const entry = findConceptEntry(c);
+                            const isActive = activeConcept?.word === c && activeConcept?.sessionIdx === i;
+                            const displayWord = chatLang === "en"
+                              ? (entry?.englishTerm || entry?.word || c.replace(/[\[\]]/g, ""))
+                              : chatLang === "de"
+                                ? (entry?.germanTerm || entry?.englishTerm || entry?.word || c.replace(/[\[\]]/g, ""))
+                                : (entry?.word || c.replace(/[\[\]]/g, ""));
+                            const alreadySaved = savedConcepts.some(sc => sc.word === (entry?.word || c.replace(/[\[\]]/g, "")));
                             return (
                               <div key={ci} style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
                                 <span
