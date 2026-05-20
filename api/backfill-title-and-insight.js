@@ -18,6 +18,7 @@ const MIN_TRANSCRIPT = 300;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// Detects language from transcript text — does not rely on Language_Used field
 function detectLangFromTranscript(transcript = "") {
   const hebrewChars = (transcript.match(/[\u0590-\u05FF]/g) || []).length;
   const latinChars  = (transcript.match(/[a-zA-Z]/g) || []).length;
@@ -27,6 +28,7 @@ function detectLangFromTranscript(transcript = "") {
   if (latinChars > hebrewChars) return "en";
   return "en";
 }
+
 const TITLE_INSTRUCTIONS = {
   he: "כתוב כותרת קצרה בעברית (3-5 מילים)שנותנת את תמצית השיחה. רק הכותרת, ללא גרשיים.",
   en: "Write a short title in English (3–5 words) capturing the emotional journey — poetic, not clinical. Return only the title, no quotes.",
@@ -95,6 +97,7 @@ module.exports = async function handler(req, res) {
     for (const rec of batch) {
       const transcript = rec.fields.Full_Transcript;
       const langCode   = detectLangFromTranscript(transcript);
+      const langLabel  = langCode === "he" ? "Hebrew" : langCode === "de" ? "German" : "English";
       try {
         const title   = await callClaude(`${TITLE_INSTRUCTIONS[langCode] || TITLE_INSTRUCTIONS.en}\n\nתמליל:\n${transcript.slice(-2000)}`, 30);
         const insight = await callClaude(`You are analyzing a therapy-style conversation between Syncca and a user.\nWrite 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, what emerged, and where they ended up emotionally.\nReturn only the Hebrew summary, no quotes, no titles.\n\nTranscript:\n${transcript.slice(-3000)}`, 300);
@@ -102,11 +105,15 @@ module.exports = async function handler(req, res) {
         await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${TABLE}/${rec.id}`, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ fields: { Title: title, Session_Insight: insight } }),
+          body: JSON.stringify({ fields: {
+            Title: title,
+            Session_Insight: insight,
+            Language_Used: langLabel,
+          }}),
         });
 
         results.succeeded++;
-        results.details.push({ id: rec.id, title, insight: insight.slice(0, 60) + "…" });
+        results.details.push({ id: rec.id, title, lang: langLabel, insight: insight.slice(0, 60) + "…" });
         await sleep(300);
       } catch (err) {
         results.failed++;
