@@ -49,8 +49,11 @@ function parseBracketConcepts(text, conceptLexicon, lang = "he") {
     const t = term.trim();
     const stripped = stripHeDefiniteArticle(t);
     const tLower = t.toLowerCase();
+    // FIX: also try without leading "the " so [[The Compliance-War Cycle]] matches "Compliance-War Cycle"
+    const tNormalized = tLower.replace(/^the\s+/, "");
     const entry =
       conceptLexicon.find(c => c.englishTerm?.toLowerCase() === tLower) ||
+      conceptLexicon.find(c => c.englishTerm?.toLowerCase() === tNormalized) ||
       conceptLexicon.find(c => c.word === t) ||
       conceptLexicon.find(c => c.word === stripped) ||
       conceptLexicon.find(c =>
@@ -74,6 +77,8 @@ function parseBracketConcepts(text, conceptLexicon, lang = "he") {
       explanationEN: entry?.explanationEN || "",
       explanationDE: entry?.explanationDE || "",
       category:      entry?.category      || "",
+      // FIX: flag whether this concept was actually found in the lexicon (Airtable)
+      matched:       !!entry,
     });
     return displayTerm;
   });
@@ -101,7 +106,7 @@ const FALLBACK_LEXICON = [
   { englishTerm: "Zero-Sanction Policy", category: "Clean Request sets love free", word: "אפס סנקציות", explanation: "הסכמה פנימית לא להגיב בסנקציה אם הוא/היא יגיד לא לבקשה." },
   { englishTerm: "Yes From Love", category: "Keeping Love Alive",       word: "כן שבא מאהבה",        explanation: "כשאין פחד מסנקציה, ה'כן' של הפרטנר בא מרצון אמיתי ואהבה." },
   { englishTerm: "No From Self-Protection", category: "Keeping Love Alive", word: "לא שבא מהגנה עצמית", explanation: "לא שמגיע מתוך שמירה על הצרכים, הערכים, או הגבולות שלי." },
-  { englishTerm: "Compliance-War Cycle", category: "Survival & Toxins", word: "מחזור ריצוי-מלחמה",   explanation: "הדפוס שבו ריצוי מצטבר לטינה שמתפוצצת למלחמה — ואז חוזרים לריצוי." },
+  { englishTerm: "Compliance-War Cycle", category: "Survival & Toxins", word: "מעגל הריצוי והמלחמה",  explanation: "הדפוס שבו ריצוי מצטבר לטינה שמתפוצצת למלחמה — ואז חוזרים לריצוי." },
 ];
 
 // ─── Timeout modal ────────────────────────────────────────────────
@@ -131,7 +136,7 @@ function TimeoutModal({ onClose, logRecordId }) {
             </div>
             <p style={{ fontFamily:"'Alef',sans-serif", fontSize:"0.88rem", color:"#374151",
                         lineHeight:1.7, marginBottom:"18px", textAlign:"center" }}>
-              45 minutes of real work. Every insight that came up today belongs to you. We’d love to hear how it went.
+              45 minutes of real work. Every insight that came up today belongs to you. We'd love to hear how it went.
             </p>
             <textarea value={feedback} onChange={e => setFeedback(e.target.value)}
               placeholder="What helped? What can we improve?"
@@ -169,7 +174,7 @@ function BetaModal({ onClose }) {
     "Syncca is your space when you want to understand a bit more, learn, or create a change in your interpersonal communication. Grounded in years of experience working with couples and families, it is designed to help identify and understand harmful or toxic communication patterns — and learn how to break free from them.",
     "During the conversation, Syncca may suggest relevant concepts designed to give words to what we experience inside. You can expand them with a click, and even save them to your personal card at the top of the chat.",
     "Each conversation is limited to 45 minutes to allow for focused time to process and reflect.",
-    "At the end of the conversation, we’d love to get your feedback — it helps us improve.",
+    "At the end of the conversation, we'd love to get your feedback — it helps us improve.",
   ];
 
   return (
@@ -553,8 +558,11 @@ setChatLang(detectedLang);
 
       const { cleanText, concepts } = parseBracketConcepts(visibleText, conceptLexicon, detectedLang);
       if (concepts.length > 0) {
+        // FIX: only store concepts that were actually matched in the lexicon (Airtable)
+        // Unmatched terms (raw bracketed text with no lexicon entry) are silently dropped
         const newWords = concepts
-          .map(c => c.word || c.englishTerm)
+          .filter(c => c.matched)
+          .map(c => c.word)
           .filter(w => w && !conceptsIntroducedRef.current.includes(w));
         if (newWords.length > 0)
           conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
