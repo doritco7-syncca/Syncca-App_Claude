@@ -373,15 +373,28 @@ useEffect(() => {
           const originalStart = resumable.date ? new Date(resumable.date) : new Date();
           setSessionStartTime(originalStart);
           sessionStartTimeRef.current = originalStart;
-          const resumeMessages = (resumable.transcript || "")
-            .split("\n")
-            .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
-            .map(l => ({
-              role:      l.startsWith("[User]:") ? "user" : "syncca",
-              text:      l.replace(/^\[(User|Syncca)\]: /, ""),
-              concepts:  [],
-              timestamp: new Date().toISOString(),
-            }));
+         const resumeMessages = (() => {
+            const lines = (resumable.transcript || "").split("\n");
+            const msgs = [];
+            let currentRole = null;
+            let currentText = [];
+            for (const line of lines) {
+              if (line.startsWith("[User]: ")) {
+                if (currentRole) msgs.push({ role: currentRole, text: currentText.join("\n"), concepts: [], timestamp: new Date().toISOString() });
+                currentRole = "user";
+                currentText = [line.replace(/^\[User\]: /, "")];
+              } else if (line.startsWith("[Syncca]: ")) {
+                if (currentRole) msgs.push({ role: currentRole, text: currentText.join("\n"), concepts: [], timestamp: new Date().toISOString() });
+                currentRole = "syncca";
+                currentText = [line.replace(/^\[Syncca\]: /, "")];
+              } else if (currentRole) {
+                currentText.push(line);
+              }
+            }
+            if (currentRole && currentText.length > 0)
+              msgs.push({ role: currentRole, text: currentText.join("\n"), concepts: [], timestamp: new Date().toISOString() });
+            return msgs;
+          })();
           const resumeNote = {
             role: "syncca", concepts: [], timestamp: new Date().toISOString(),
             text: "Wellcome back!🙏Picking up where we left off.",
@@ -478,15 +491,28 @@ useEffect(() => {
       const originalStart = resumable.date ? new Date(resumable.date) : new Date();
       setSessionStartTime(originalStart);
       sessionStartTimeRef.current = originalStart;
-      const resumeMessages = (resumable.transcript || "")
-        .split("\n")
-        .filter(l => l.startsWith("[User]:") || l.startsWith("[Syncca]:"))
-        .map(l => ({
-          role:      l.startsWith("[User]:") ? "user" : "syncca",
-          text:      l.replace(/^\[(User|Syncca)\]: /, ""),
-          concepts:  [],
-          timestamp: new Date().toISOString(),
-        }));
+     const resumeMessages = (() => {
+            const lines = (resumable.transcript || "").split("\n");
+            const msgs = [];
+            let currentRole = null;
+            let currentText = [];
+            for (const line of lines) {
+              if (line.startsWith("[User]: ")) {
+                if (currentRole) msgs.push({ role: currentRole, text: currentText.join("\n"), concepts: [], timestamp: new Date().toISOString() });
+                currentRole = "user";
+                currentText = [line.replace(/^\[User\]: /, "")];
+              } else if (line.startsWith("[Syncca]: ")) {
+                if (currentRole) msgs.push({ role: currentRole, text: currentText.join("\n"), concepts: [], timestamp: new Date().toISOString() });
+                currentRole = "syncca";
+                currentText = [line.replace(/^\[Syncca\]: /, "")];
+              } else if (currentRole) {
+                currentText.push(line);
+              }
+            }
+            if (currentRole && currentText.length > 0)
+              msgs.push({ role: currentRole, text: currentText.join("\n"), concepts: [], timestamp: new Date().toISOString() });
+            return msgs;
+          })();
       const resumeNote = {
         role: "syncca", concepts: [], timestamp: new Date().toISOString(),
         text: "Wellcome back!🙏Picking up where we left off.",
