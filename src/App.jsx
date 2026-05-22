@@ -244,6 +244,19 @@ export default function App() {
   const sessionStartTimeRef    = useRef(null);
 
   useEffect(() => { savedConceptsRef.current = savedConcepts; }, [savedConcepts]);
+  useEffect(() => {
+ if (conceptLexicon === FALLBACK_LEXICON) return;
+  setSavedConcepts(prev => prev.map(c => {
+    const entry = conceptLexicon.find(e =>
+      e.englishTerm === c.englishTerm || e.word === c.word || e.englishTerm === c.word
+    );
+    return entry
+      ? { word: entry.word, englishTerm: entry.englishTerm,
+          explanation: entry.explanation, explanationEN: entry.explanationEN,
+          explanationDE: entry.explanationDE, category: entry.category }
+      : c;
+  }));
+}, [conceptLexicon]);
 
   // ── Save session on tab close ─────────────────────────────────
   // Beacon ONLY saves transcript + title. Never generates insight.
