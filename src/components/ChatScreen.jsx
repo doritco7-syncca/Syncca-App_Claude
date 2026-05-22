@@ -182,8 +182,18 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
     return entry?.word || concept.word || concept.englishTerm;
   }
 
-  function resolveExplanation(concept) {
-    const entry = findEntry(concept);
+ function resolveExplanation(concept) {
+  const entry = findEntry(concept);
+  console.log("[Syncca debug]", {
+    displayWord: concept.displayWord,
+    englishTerm: concept.englishTerm,
+    word: concept.word,
+    matched: concept.matched,
+    concept_explanationEN: concept.explanationEN,
+    entry_found: !!entry,
+    entry_explanationEN: entry?.explanationEN,
+    chatLang,
+  });
     if (chatLang === "en") return entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
     if (chatLang === "de") return entry?.explanationDE || concept.explanationDE || entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
     return entry?.explanation || concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
