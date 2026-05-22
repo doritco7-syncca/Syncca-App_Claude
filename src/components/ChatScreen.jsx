@@ -161,6 +161,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   const [sending, setSending]             = useState(false);
 
   function findEntry(concept) {
+    if (t.includes("separateness")) console.log("[lexicon check]", conceptLexicon.map(c => c.englishTerm));
     const t = (concept.englishTerm || concept.word || "").toLowerCase();
     const w = (concept.word || "").toLowerCase();
     return conceptLexicon.find(c =>
