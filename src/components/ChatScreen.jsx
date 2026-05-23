@@ -733,10 +733,6 @@ export default function ChatScreen({
             }}>
               <div style={{
                 fontSize: "0.6rem", color: COLORS.muted,
-                fontFamily: "'Alef', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase",
-              }}>🔒</div>
-              <div style={{
-                fontSize: "0.6rem", color: COLORS.muted,
                 fontFamily: "'Alef', sans-serif", direction: uiDir(chatLang),
               }}>
                 {input.length > 0
