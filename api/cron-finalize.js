@@ -23,12 +23,15 @@ const STALE_MINUTES  = 45;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function detectLangCode(languageUsed) {
-  var val = (languageUsed || "").toLowerCase().trim();
-  if (val === "hebrew" || val === "he") return "he";
-  if (val === "german"  || val === "de") return "de";
-  if (val === "french"  || val === "fr") return "fr";
-  if (val === "arabic"  || val === "ar") return "ar";
+// Detects language from transcript text — does not rely on Language_Used field
+function detectLangFromTranscript(transcript) {
+  var text       = transcript || "";
+  var hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
+  var latinChars  = (text.match(/[a-zA-Z]/g) || []).length;
+  var germanChars = (text.match(/[äöüÄÖÜß]/g) || []).length;
+  if (germanChars > 20)         return "de";
+  if (hebrewChars > latinChars) return "he";
+  if (latinChars > hebrewChars) return "en";
   return "en";
 }
 
@@ -38,6 +41,12 @@ var TITLE_INSTRUCTIONS = {
   de: "Schreibe einen kurzen Titel auf Deutsch (3-5 Woerter), der den Kern des Gespraechs zusammenfasst — klar und konkret, damit der Nutzer diese Sitzung leicht wiederfinden kann. Nur den Titel, keine Anfuehrungszeichen.",
   fr: "Ecris un titre court en francais (3 a 5 mots) qui capture l'essentiel de la conversation — clair et precis, pour que l'utilisateur puisse retrouver facilement cette session. Renvoie uniquement le titre, sans guillemets.",
   ar: "اكتب عنواناً قصيراً بالعربية (3-5 كلمات) يعبّر عن جوهر المحادثة — واضح ومحدد، حتى يتمكن المستخدم من العثور على هذه الجلسة بسهولة. أعد العنوان فقط، بدون علامات اقتباس.",
+};
+
+var INSIGHT_INSTRUCTIONS = {
+  he: "אתה מנתח שיחה בין Syncca לבין יוזר.\nכתוב 2-3 משפטים בעברית (גוף שלישי) שמסכמים: מה הנושא שהיוזר הביא, מה עלה בשיחה, ואיפה הגיעו רגשית.\nחשוב: כתוב סיכום תמיד, גם אם לא הייתה תובנה או שינוי.\nאם לא הייתה תנועה רגשית, ציין את הנושא ואת הנקודה שבה הסתיימה השיחה.\nהחזר רק את המשפטים, ללא כותרת, ללא תוספות.",
+  en: "You are analyzing a therapy-style conversation between Syncca and a user.\nWrite 2-3 sentences in English (third person) summarizing: what topic the user brought, what emerged, and where they ended up emotionally.\nAlways write a summary, even if there was no clear insight or shift.\nIf there was no emotional movement, state the topic and where the conversation ended.\nReturn only the sentences, no title, no extras.",
+  de: "Du analysierst ein therapeutisches Gespräch zwischen Syncca und einem Nutzer.\nSchreibe 2-3 Sätze auf Deutsch (dritte Person), die zusammenfassen: welches Thema der Nutzer mitgebracht hat, was in dem Gespräch aufgetaucht ist und wo sie emotional gelandet sind.\nSchreibe immer eine Zusammenfassung, auch wenn es keine klare Erkenntnis oder Veränderung gab.\nGib nur die Sätze zurück, ohne Titel oder Zusätze.",
 };
 
 // Calls Claude with one automatic retry after 1 second if the first attempt fails
@@ -70,7 +79,6 @@ async function callClaude(prompt, maxTokens) {
         console.log("[CLAUDE ERROR] attempt=" + attempts, JSON.stringify(data));
         lastError = "Empty response from Claude: " +
           (data.error ? data.error.message : JSON.stringify(data).slice(0, 200));
-        // Wait 1 second before retrying
         if (attempts < 2) await sleep(1000);
         continue;
       }
@@ -89,8 +97,6 @@ async function callClaude(prompt, maxTokens) {
 }
 
 async function fetchStaleRecords() {
-  // Filter: has transcript + older than STALE_MINUTES + Title OR Insight missing
-  // Session_Complete is intentionally NOT used here — it is write-only
   var filterParts = [
     "LEN({Full_Transcript}) > 0",
     "DATETIME_DIFF(NOW(), {Created_At}, 'minutes') > " + STALE_MINUTES,
@@ -121,7 +127,6 @@ async function fetchStaleRecords() {
     offset = data.offset || null;
   } while (offset);
 
-  // Secondary guard: minimum transcript length
   return all.filter(function(rec) {
     var t = (rec.fields && rec.fields.Full_Transcript) || "";
     return t.length >= MIN_TRANSCRIPT;
@@ -130,7 +135,6 @@ async function fetchStaleRecords() {
 
 module.exports = async function handler(req, res) {
 
-  // Security: validate cron secret
   if (CRON_SECRET) {
     var authHeader = req.headers["authorization"] || "";
     if (authHeader !== "Bearer " + CRON_SECRET) {
@@ -166,9 +170,9 @@ module.exports = async function handler(req, res) {
     for (var i = 0; i < batch.length; i++) {
       var rec = batch[i];
       var transcript = (rec.fields && rec.fields.Full_Transcript) || "";
-      var langCode   = detectLangCode(rec.fields && rec.fields.Language_Used);
+      var langCode   = detectLangFromTranscript(transcript);
+      var langLabel  = langCode === "he" ? "Hebrew" : langCode === "de" ? "German" : "English";
 
-      // .trim() is critical: Airtable returns "\n" (not "") for cleared Long Text fields
       var rawTitle    = rec.fields ? rec.fields.Title           : undefined;
       var rawInsight  = rec.fields ? rec.fields.Session_Insight : undefined;
       var existingTitle   = (rawTitle   != null) ? String(rawTitle).trim()   : "";
@@ -186,16 +190,13 @@ module.exports = async function handler(req, res) {
 
         // Generate Session_Insight only if missing
         if (!existingInsight) {
-          var insightPrompt =
-            "You are analyzing a therapy-style conversation between Syncca and a user.\n" +
-            "Write 2-3 sentences in Hebrew (third person) summarizing: what topic the user brought, " +
-            "what emerged, and where they ended up emotionally.\n" +
-            "Return only the Hebrew summary, no quotes, no titles.\n\n" +
-            "Transcript:\n" + transcript.slice(-3000);
+          var insightInstruction = INSIGHT_INSTRUCTIONS[langCode] || INSIGHT_INSTRUCTIONS.en;
+          var insightPrompt = insightInstruction + "\n\nTranscript:\n" + transcript.slice(-3000);
           fieldsToWrite.Session_Insight = await callClaude(insightPrompt, 300);
         }
 
-        // Always stamp Session_Complete — write-only, never used as filter
+        // Always write Language_Used and Session_Complete
+        fieldsToWrite.Language_Used    = langLabel;
         fieldsToWrite.Session_Complete = "yes";
 
         var patchRes = await fetch(
@@ -218,6 +219,7 @@ module.exports = async function handler(req, res) {
         results.succeeded++;
         results.details.push({
           id:      rec.id,
+          lang:    langLabel,
           filled:  Object.keys(fieldsToWrite),
           title:   fieldsToWrite.Title || existingTitle,
           insight: ((fieldsToWrite.Session_Insight || existingInsight) + "").slice(0, 80) + "...",
