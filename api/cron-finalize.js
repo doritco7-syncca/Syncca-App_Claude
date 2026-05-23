@@ -18,8 +18,8 @@ const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY;
 const CRON_SECRET    = process.env.CRON_SECRET;
 const TABLE          = "Conversation_Logs";
 const BATCH_SIZE     = 15;
-const MIN_TRANSCRIPT = 300;
-const STALE_MINUTES  = 45;
+const MIN_TRANSCRIPT = 500;
+const STALE_MINUTES  = 5;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
