@@ -1,6 +1,6 @@
 // api/cron-finalize.js — Syncca
 // ─────────────────────────────────────────────────────────────
-// Vercel Cron Job — runs every hour.
+// Vercel Cron Job — runs every 15 minutes.
 // Finds sessions with a transcript older than 45 minutes where
 // Title or Session_Insight is still missing,
 // then fills only what's missing — never overwrites existing data.
@@ -9,7 +9,7 @@
 // Key fix: Airtable returns "\n" (not "") when a Long Text field is cleared.
 // All field checks use .trim() to handle this correctly.
 //
-// Cron schedule: "0 * * * *" (top of every hour)
+// Cron schedule: "*/15 * * * *" (quarter of every hour)
 // Manual trigger: GET /api/cron-finalize  (with Authorization header)
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
