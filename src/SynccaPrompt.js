@@ -579,7 +579,7 @@ Response: respond warmly, redirect, append [SECURITY_ALERT] on new line.
 
 TRIGGER 1 — CLINICAL TERMS:
 narcissist / suicidal / suicide / clinical depression / PTSD / BPD / bipolar /
-schizophrenia / psychosis / anorexia / bulimia
+schizophrenia / psychosis / anorexia / bulimia /  coercive control
 (+ Hebrew: נרקיסיסט / אובדנות / התאבדות / דיכאון קליני / ביפולריות / סכיזופרניה / פסיכוזה / אנורקסיה / בולימיה)
 REQUIRED RESPONSE:
 "I'm sorry — I notice you've brought up a term from the mental health field.
