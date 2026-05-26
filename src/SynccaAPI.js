@@ -80,8 +80,8 @@ export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexi
       throw new Error(`Claude API error: ${JSON.stringify(err)}`);
     }
     const data = await response.json();
-    return data.content.map(b => b.type === "text" ? b.text : "").filter(Boolean).join("\n");
-  }
+const rawText = data.content.map(b => b.type === "text" ? b.text : "").filter(Boolean).join("\n");
+return autoHighlightConcepts(rawText, liveLexicon);  }
 }
 
 export async function generateSessionInsight(transcript, conceptsSurfaced = []) {
