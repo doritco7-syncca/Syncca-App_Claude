@@ -3,7 +3,58 @@
 // Edit this file for model changes, token limits, or API behavior.
 
 import { buildSystemPrompt } from "./SynccaPrompt.js";
+// Auto-brackets first-mention lexicon concepts Syncca wrote as plain text.
+// Runs as a post-processor on every response, before returning to the UI.
+function autoHighlightConcepts(rawText, liveLexicon) {
+  if (!liveLexicon || liveLexicon.length === 0) return rawText;
 
+  // Isolate the hidden meta block — never modify it
+  const metaRegex = /<!--SYNCCA_META[\s\S]*?-->/;
+  const metaMatch = rawText.match(metaRegex);
+  const metaBlock = metaMatch ? metaMatch[0] : "";
+  let visibleText = rawText.replace(metaRegex, "");
+
+  // Record concepts already bracketed by Syncca
+  const alreadyBracketed = new Set();
+  const bracketRegex = /\[\[([^\]]+)\]\]/g;
+  let m;
+  while ((m = bracketRegex.exec(visibleText)) !== null) {
+    alreadyBracketed.add(m[1].trim().toLowerCase());
+  }
+
+  let addedCount = 0;
+  const MAX_AUTO = 3;
+
+  for (const concept of liveLexicon) {
+    if (addedCount >= MAX_AUTO) break;
+
+    const termEn = concept.englishTerm;
+    if (!termEn || alreadyBracketed.has(termEn.toLowerCase())) continue;
+
+    const escaped = termEn.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`\\b${escaped}\\b`, "i");
+
+    // Split on existing [[brackets]] — only replace in plain-text segments
+    const parts = visibleText.split(/(\[\[[^\]]+\]\])/);
+    let found = false;
+    const newParts = parts.map(part => {
+      if (found || part.startsWith("[[")) return part;
+      if (regex.test(part)) {
+        found = true;
+        return part.replace(regex, `[[${termEn}]]`);
+      }
+      return part;
+    });
+
+    if (found) {
+      visibleText = newParts.join("");
+      alreadyBracketed.add(termEn.toLowerCase());
+      addedCount++;
+    }
+  }
+
+  return metaBlock ? visibleText + "\n" + metaBlock : visibleText;
+}
 export async function sendToSyncca(messages, sessionMinutesElapsed = 0, liveLexicon = null, previousConcepts = [], userProfile = {}, sessionHistory = []) {
   const body = JSON.stringify({
     model:      "claude-sonnet-4-6",
