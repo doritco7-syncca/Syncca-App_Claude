@@ -1,9 +1,9 @@
 // ============================================================
 // components/SessionTimer.jsx
-// ROLE: Displays the 30-minute session timer as a gentle arc
+// ROLE: Displays the 45-minute session timer as a gentle arc
 // that fills over time. At 25 minutes remaining, the arc
 // pulses softly to signal the Time Wrap. Calls onEnd() when
-// the full 30 minutes have elapsed. All durations are props
+// the full 45 minutes have elapsed. All durations are props
 // so they can be changed from ChatContainer without touching
 // this file.
 // ============================================================
