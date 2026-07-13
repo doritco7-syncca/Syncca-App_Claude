@@ -67,15 +67,18 @@ export default function HistoryScreen({
   const [transcriptOpen,  setTranscriptOpen]  = useState(null);
   const [activeConcept,   setActiveConcept]   = useState(null);
 
+ // NOTE: near-identical exact-match logic also exists in
+  // ChatScreen.jsx (findEntry) and PersonalCard.jsx.
+  // If you ever change matching rules — update all three.
   function findConceptEntry(word) {
     if (!word) return null;
-    const w = word.toLowerCase().trim().replace(/[\[\]]/g, "");
-    return conceptLexicon.find(e =>
-      e.word?.toLowerCase() === w ||
-      e.englishTerm?.toLowerCase() === w ||
-      e.aliases?.some(a => a.toLowerCase().trim() === w) ||
-      (w.length >= 3 && e.word?.toLowerCase().includes(w)) ||
-      (e.word?.length >= 3 && w.includes(e.word?.toLowerCase()))
+    const w = word.trim().replace(/[\[\]]/g, "");
+    const wLower = w.toLowerCase();
+    return (
+      conceptLexicon.find(e => e.word?.trim() === w) ||
+      conceptLexicon.find(e => e.englishTerm?.trim().toLowerCase() === wLower) ||
+      conceptLexicon.find(e => e.aliases?.some(a => a.trim() === w)) ||
+      null
     );
   }
 
