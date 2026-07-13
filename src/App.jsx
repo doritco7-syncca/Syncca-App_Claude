@@ -607,8 +607,7 @@ setChatLang(detectedLang);
           conceptsIntroducedRef.current = [...conceptsIntroducedRef.current, ...newWords];
       }
 
-      const fullTranscript = transcriptBeforeAI + "\n[Syncca]: " + cleanText;
-      fullTranscriptRef.current = fullTranscript;
+      const fullTranscript = transcriptBeforeAI + "\n[Syncca]: " + cleanText.replace(/\n{2,}/g, "\n");      fullTranscriptRef.current = fullTranscript;
 
       setMessages(prev => [...prev, {
         role: "syncca", text: cleanText, concepts,
