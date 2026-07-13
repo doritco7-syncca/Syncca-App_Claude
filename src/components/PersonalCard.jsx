@@ -126,23 +126,24 @@ export default function PersonalCard({
     return (term || "").split(" ").map(w => w.startsWith("ה") && w.length > 2 ? w.slice(1) : w).join(" ");
   }
 
+// NOTE: near-identical exact-match logic also exists in
+  // ChatScreen.jsx (findEntry) and HistoryScreen.jsx (findConceptEntry).
+  // If you ever change matching rules — update all three.
   function findEntry(c) {
-    const t = (c.englishTerm || c.word || "").toLowerCase();
-    const w = (c.word || "").toLowerCase();
-    return conceptLexicon.find(e =>
-      e.englishTerm === t || e.englishTerm === w ||
-      e.word?.toLowerCase() === w || e.word?.toLowerCase() === t ||
-      e.aliases?.some(a => a === w || a === t ||
-        stripHe(a) === stripHe(w) || stripHe(a) === stripHe(t)) ||
-      (w.length >= 3 && e.word?.toLowerCase().includes(w)) ||
-      (e.word?.length >= 3 && w.includes(e.word?.toLowerCase()))
+    const t = (c.englishTerm || "").trim().toLowerCase();
+    const w = (c.word || "").trim();
+    return (
+      (t && conceptLexicon.find(e => e.englishTerm?.trim().toLowerCase() === t)) ||
+      (w && conceptLexicon.find(e => e.word?.trim() === w)) ||
+      (w && conceptLexicon.find(e => e.englishTerm?.trim().toLowerCase() === w.toLowerCase())) ||
+      (w && conceptLexicon.find(e => e.aliases?.some(a => a.trim() === w))) ||
+      null
     );
   }
-
   function resolveWord(c) {
     const entry = findEntry(c);
     if (chatLang === "en") return entry?.englishTerm || c.englishTerm || c.word;
-    if (chatLang === "de") return entry?.wordDE || entry?.englishTerm || c.englishTerm || c.word;
+    if (chatLang === "de") return entry?.germanTerm || c.germanTerm || entry?.englishTerm || c.englishTerm || c.word;
     return entry?.word || c.word || c.englishTerm;
   }
 
