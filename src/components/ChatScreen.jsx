@@ -160,18 +160,15 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   const [sent, setSent]                   = useState(false);
   const [sending, setSending]             = useState(false);
 
-  function findEntry(concept) {
-    const t = (concept.englishTerm || concept.word || "").toLowerCase();
-    const w = (concept.word || "").toLowerCase();
-    return conceptLexicon.find(c =>
-      c.englishTerm?.toLowerCase() === t ||
-      c.englishTerm?.toLowerCase() === w ||
-      c.word?.toLowerCase() === w ||
-      c.word?.toLowerCase() === t ||
-      c.aliases?.some(a => a === w || a === t ||
-        stripHeDefiniteArticle(a) === stripHeDefiniteArticle(w)) ||
-      (w.length >= 3 && c.word?.toLowerCase().includes(w)) ||
-      (c.word?.length >= 3 && w.includes(c.word?.toLowerCase()))
+ function findEntry(concept) {
+    const t = (concept.englishTerm || "").trim().toLowerCase();
+    const w = (concept.word || "").trim();
+    return (
+      (t && conceptLexicon.find(c => c.englishTerm?.trim().toLowerCase() === t)) ||
+      (w && conceptLexicon.find(c => c.word?.trim() === w)) ||
+      (w && conceptLexicon.find(c => c.englishTerm?.trim().toLowerCase() === w.toLowerCase())) ||
+      (w && conceptLexicon.find(c => c.aliases?.some(a => a.trim() === w))) ||
+      null
     );
   }
 
@@ -183,17 +180,7 @@ function SessionEndWidget({ savedConcepts = [], conceptLexicon = [], logRecordId
   }
 
  function resolveExplanation(concept) {
-  const entry = findEntry(concept);
-  console.log("[Syncca debug]", {
-    displayWord: concept.displayWord,
-    englishTerm: concept.englishTerm,
-    word: concept.word,
-    matched: concept.matched,
-    concept_explanationEN: concept.explanationEN,
-    entry_found: !!entry,
-    entry_explanationEN: entry?.explanationEN,
-    chatLang,
-  });
+    const entry = findEntry(concept)
     if (chatLang === "en") return entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
     if (chatLang === "de") return entry?.explanationDE || concept.explanationDE || entry?.explanationEN || concept.explanationEN || entry?.explanation || "";
     return entry?.explanation || concept.explanation || "מושג מרכזי בשפה של זוגיות נקייה.";
